@@ -1,0 +1,42 @@
+# Include the default Flutter lint rules
+include: package:flutter_lints/flutter.yaml
+# This imports a set of pre-defined rules from Flutter lints package
+# giving your project a strong baseline of best practices.
+
+linter:
+  rules:
+    # Enforce PascalCase for class and type names
+    camel_case_types: true
+    # Require constants to use UPPER_SNAKE_CASE
+    constant_identifier_names: true
+    # Enforce snake_case for library/file names
+    library_names: true
+    # Enforce camelCase for variable and method names
+    non_constant_identifier_names: true
+    # Prefer single quotes for strings instead of double quotes
+    prefer_single_quotes: true
+    # Prefer using const constructors when possible for performance
+    prefer_const_constructors: true
+    # Prefer const for literals like lists, maps, and sets
+    prefer_const_literals_to_create_immutables: true
+    # Prefer making fields final if they are not reassigned
+    prefer_final_fields: true
+    # Avoid leaving print statements in code
+    avoid_print: true
+    # Warn if constructor parameters are unused
+    avoid_unused_constructor_parameters: true
+    # Avoid passing booleans as positional parameters
+    avoid_positional_boolean_parameters: true
+    # Ensure control statements (if, for, while) have bodies on new lines
+    always_put_control_body_on_new_line: true
+    # Require explicit types everywhere
+    always_specify_types: true
+    # Enforce using @override annotation when overriding methods
+    annotate_overrides: true
+
+analyzer:
+  strong-mode:
+    # Disallow implicit casting between types; must cast explicitly
+    implicit-casts: false
+    # Disallow dynamic types by default; forces explicit types
+    implicit-dynamic: false
