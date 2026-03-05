@@ -1,0 +1,142 @@
+# GitHub Workflow Guide
+
+## 1. Branch Naming Convention
+
+All branches must follow this naming pattern:
+
+| Team | Feature Branch | Fix Branch |
+|------|---------------|------------|
+| **Backend** | `feature/be-&lt;description&gt;` | `fix/be-&lt;description&gt;` |
+| **Frontend** | `feature/fe-&lt;description&gt;` | `fix/fe-&lt;description&gt;` |
+| **Cross-Platform** | `feature/cross-&lt;description&gt;` | `fix/cross-&lt;description&gt;` |
+| **DevOps** | `feature/devops-&lt;description&gt;` | `fix/devops-&lt;description&gt;` |
+| **Testing** | `feature/test-&lt;description&gt;` | `fix/test-&lt;description&gt;` |
+
+### Examples:
+- `feature/be-user-authentication`
+- `feature/fe-login-page`
+- `fix/be-database-connection`
+- `fix/fe-button-styling`
+- `feature/cross-offline-mode`
+- `fix/cross-api-sync`
+
+### ❌ Invalid branch names:
+- `user-auth` (missing prefix)
+- `feature-backend-login` (wrong format)
+- `fix/login` (missing team code)
+- `new-feature` (missing prefix and team)
+
+---
+
+## 2. Pull Request Process
+
+Complete workflow from start to finish:
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  1. Create  │───▶│  2. Push    │───▶│  3. Open PR │
+│   Branch    │    │   Commits   │    │   to main   │
+└─────────────┘    └─────────────┘    └──────┬──────┘
+│
+┌─────────────┐    ┌─────────────┐    ┌──────▼──────┐
+│  7. Delete  │◀───│  6. Merge   │◀───│  4. Leader  │
+│   Branch    │    │   to main   │    │   Reviews   │
+└─────────────┘    └─────────────┘    └─────────────┘
+│
+▼
+┌─────────────────┐
+│  5. CI Checks   │
+│     Pass        │
+└─────────────────┘
+
+
+
+### Detailed Steps:
+
+#### Step 1: Create Branch
+```bash
+# Make sure you're on main and it's up to date
+git checkout main
+git pull origin main
+
+# Create your feature/fix branch
+git checkout -b feature/be-user-login
+
+# Make your changes
+git add .
+git commit -m "feat(be): add user login endpoint"
+
+
+git push -u origin feature/be-user-login
+
+Step 4: Open Pull Request
+Go to GitHub repository
+Click the yellow banner "Compare & pull request"
+Fill in PR template:
+Title: Brief description (e.g., "Add user authentication")
+Description: What changed, why, and testing done
+Assign 1 sub-team leader as reviewer
+Click "Create pull request"
+Step 5: Code Review
+Sub-team leader reviews code
+Address any feedback with new commits
+Re-request review after changes
+Step 6: CI Checks
+Automated checks run on every push
+All checks must pass before merging
+Fix any failing checks
+Step 7: Merge
+Click "Squash and merge" button
+Delete branch after merging
+Step 8: Cleanup
+bash
+Copy
+git checkout main
+git pull origin main
+git branch -d feature/be-user-login        # Delete local
+git push origin --delete feature/be-user-login  # Delete re
+
+All commits must follow Conventional Commits format:
+plain
+Copy
+<type>(<scope>): <subject>
+
+[optional body]
+
+[optional footer]
+
+Type	Use When
+feat	New feature
+fix	Bug fix
+docs	Documentation only changes
+style	Code style changes (formatting, semicolons, etc)
+refactor	Code change that neither fixes a bug nor adds a feature
+test	Adding or correcting tests
+chore	Build process, dependencies, or auxiliary tool changes
+Scopes:
+Table
+Copy
+
+Scope	Team
+be	Backend
+fe	Frontend
+cross	Cross-Platform/Mobile
+devops	DevOps/Infrastructure
+test	Testing
+
+
+FOR Example :
+# Feature commits
+feat(be): add JWT authentication middleware
+feat(fe): create login page component
+feat(cross): implement offline sync
+
+# Fix commits
+fix(be): resolve database connection timeout
+fix(fe): correct button alignment on mobile
+fix(cross): fix audio player crash
+
+# Other commits
+docs: update API documentation
+test(be): add unit tests for user service
+chore(devops): setup GitHub Actions workflow
+style(fe): format CSS files
+refactor(be): simplify user query logic
