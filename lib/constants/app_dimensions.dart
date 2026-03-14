@@ -1,4 +1,3 @@
-// lib/constants/app_dimensions.dart
 class AppDimensions {
   // ─── SPACING ──────────────────────────────────────────────
   // Used for padding, margins, and gaps between elements

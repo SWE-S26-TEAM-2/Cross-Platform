@@ -1,17 +1,21 @@
-class Track {
+class Album {
   final String id;
   final String title;
   final String artist;
   final String artworkUrl;
+  final int trackCount;
+  final int releaseYear;
   final int likeCount;
-  final int duration;
+  final List<String> trackIds;
 
-  const Track({
+  const Album({
     required this.id,
     required this.title,
     required this.artist,
     required this.artworkUrl,
+    required this.trackCount,
+    required this.releaseYear,
     required this.likeCount,
-    required this.duration,
+    this.trackIds = const [],
   });
 }
