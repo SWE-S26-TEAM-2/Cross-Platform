@@ -16,8 +16,10 @@ class SoundCloudApp extends StatelessWidget {
       title: 'SoundCloud',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme, //Take the styling from the app_theme.dart file
-      // home: const HomeScreen(), commented out for now, will be replaced by welcome screen
-      home: const WelcomeScreen(), // Temporary welcome screen for auth flow
+      // home:
+      //     const HomeScreen(), //commented out for now, will be replaced by welcome screen
+      home:
+          const WelcomeScreen(), // Temporary welcome screen for auth flow (Now this is commented to test the home page)
     );
   }
 }

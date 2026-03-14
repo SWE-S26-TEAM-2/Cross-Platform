@@ -15,15 +15,10 @@ class WelcomeScreen extends StatelessWidget {
           padding: const EdgeInsets.all(AppDimensions.spaceMedium),
           child: Column(
             children: [
-
               const Spacer(),
 
               /// Logo (temporary icon)
-              const Icon(
-                Icons.music_note,
-                color: AppColors.primary,
-                size: 48,
-              ),
+              const Icon(Icons.music_note, color: AppColors.primary, size: 48),
 
               const SizedBox(height: AppDimensions.spaceLarge),
 

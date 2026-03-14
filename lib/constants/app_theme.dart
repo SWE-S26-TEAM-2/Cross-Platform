@@ -1,5 +1,3 @@
-// lib/constants/app_theme.dart
-
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_text_styles.dart';
