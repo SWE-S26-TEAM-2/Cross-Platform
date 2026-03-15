@@ -15,21 +15,26 @@ class WelcomeScreen extends StatelessWidget {
           padding: const EdgeInsets.all(AppDimensions.spaceMedium),
           child: Column(
             children: [
-
               const Spacer(),
 
               /// Logo (temporary icon)
-              const Icon(
-                Icons.music_note,
-                color: AppColors.primary,
-                size: 48,
+              // const Icon(
+              //   Icons.music_note,
+              //   color: AppColors.primary,
+              //   size: 48,
+              // ),
+              const Image(
+                image: AssetImage('assets/images/soundcloud_logo.png'),
+                width: 120,
+                height: 120,
+                
               ),
 
               const SizedBox(height: AppDimensions.spaceLarge),
 
               /// Title
-              Text(
-                "Where artists\n& fans connect.",
+              const Text(
+                'Where artists\n& fans connect.',
                 textAlign: TextAlign.center,
                 style: AppTextStyles.heading1,
               ),
@@ -41,9 +46,9 @@ class WelcomeScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, "/signup");
+                    Navigator.pushNamed(context, '/signup');
                   },
-                  child: const Text("Create an account"),
+                  child: const Text('Create an account'),
                 ),
               ),
 
@@ -54,9 +59,9 @@ class WelcomeScreen extends StatelessWidget {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, "/login");
+                    Navigator.pushNamed(context, '/login');
                   },
-                  child: const Text("Log in"),
+                  child: const Text('Log in'),
                 ),
               ),
 
