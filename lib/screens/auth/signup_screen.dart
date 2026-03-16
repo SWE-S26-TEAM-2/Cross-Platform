@@ -13,7 +13,8 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
   @override
   void dispose() {
@@ -44,19 +45,14 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Create account'),
-      ),
+      appBar: AppBar(title: const Text('Create account')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.spaceMedium),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Create your account',
-                style: AppTextStyles.heading1,
-              ),
+              const Text('Create your account', style: AppTextStyles.heading1),
               const SizedBox(height: AppDimensions.spaceSmall),
               const Text(
                 'Sign up with email address',
@@ -93,11 +89,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     // temporary action for now
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Signup button pressed'),
-                      ),
-                    );
+                    Navigator.pushNamed(context, '/home');
                   },
                   child: const Text('Create account'),
                 ),

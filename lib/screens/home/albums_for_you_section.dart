@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
-import '../constants/app_text_styles.dart';
-import '../constants/app_dimensions.dart';
-import '../models/station.dart';
+import '../../constants/app_colors.dart';
+import '../../constants/app_text_styles.dart';
+import '../../constants/app_dimensions.dart';
+import '../../models/album.dart';
 
-class DiscoverWithStations extends StatelessWidget {
+class AlbumsForYouSection extends StatelessWidget {
   final String sectionTitle;
-  final List<Station> albums;
-  final void Function(Station)? onAlbumTap;
+  final List<Album> albums;
+  final void Function(Album)? onAlbumTap;
 
-  const DiscoverWithStations({
+  const AlbumsForYouSection({
     super.key,
     required this.sectionTitle,
     required this.albums,
@@ -71,7 +71,7 @@ class DiscoverWithStations extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            '${albums[i].basedOn} · ${albums[i].trackCount} tracks',
+                            '${albums[i].artist} · ${albums[i].trackCount} tracks',
                             style: AppTextStyles.caption,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

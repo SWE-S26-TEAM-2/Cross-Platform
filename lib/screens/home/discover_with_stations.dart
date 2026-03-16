@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
-import '../constants/app_text_styles.dart';
-import '../constants/app_dimensions.dart';
-import '../models/track.dart';
+import '../../constants/app_colors.dart';
+import '../../constants/app_text_styles.dart';
+import '../../constants/app_dimensions.dart';
+import '../../models/station.dart';
 
-class MoreLikeSection extends StatelessWidget {
+class DiscoverWithStations extends StatelessWidget {
   final String sectionTitle;
-  final List<Track> tracks;
-  final void Function(Track)? onTrackTap;
+  final List<Station> albums;
+  final void Function(Station)? onAlbumTap;
 
-  const MoreLikeSection({
+  const DiscoverWithStations({
     super.key,
     required this.sectionTitle,
-    required this.tracks,
-    this.onTrackTap,
+    required this.albums,
+    this.onAlbumTap,
   });
 
   @override
@@ -29,7 +29,7 @@ class MoreLikeSection extends StatelessWidget {
         ),
         const SizedBox(height: AppDimensions.spaceSmall),
         SizedBox(
-          height: 180,
+          height: 210,
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(
@@ -37,9 +37,9 @@ class MoreLikeSection extends StatelessWidget {
             ),
             child: Row(
               children: [
-                for (int i = 0; i < tracks.length; i++) ...[
+                for (int i = 0; i < albums.length; i++) ...[
                   GestureDetector(
-                    onTap: () => onTrackTap?.call(tracks[i]),
+                    onTap: () => onAlbumTap?.call(albums[i]),
                     child: SizedBox(
                       width: 150,
                       child: Column(
@@ -49,29 +49,29 @@ class MoreLikeSection extends StatelessWidget {
                             borderRadius: BorderRadius.circular(
                               AppDimensions.borderRadiusSmall,
                             ),
-                            child: tracks[i].artworkUrl.isNotEmpty
+                            child: albums[i].artworkUrl.isNotEmpty
                                 ? Image.network(
-                                    tracks[i].artworkUrl,
+                                    albums[i].artworkUrl,
                                     width: 150,
-                                    height: 130,
+                                    height: 150,
                                     fit: BoxFit.cover,
                                     headers: const {
                                       'User-Agent': 'Mozilla/5.0',
                                     },
                                     errorBuilder: (_, __, ___) =>
-                                        const _PlaceholderThumb(),
+                                        const _PlaceholderCover(),
                                   )
-                                : const _PlaceholderThumb(),
+                                : const _PlaceholderCover(),
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            tracks[i].title,
+                            albums[i].title,
                             style: AppTextStyles.artistName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            tracks[i].artist,
+                            '${albums[i].basedOn} · ${albums[i].trackCount} tracks',
                             style: AppTextStyles.caption,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -80,7 +80,7 @@ class MoreLikeSection extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (i < tracks.length - 1)
+                  if (i < albums.length - 1)
                     const SizedBox(width: AppDimensions.spaceSmall),
                 ],
               ],
@@ -92,19 +92,16 @@ class MoreLikeSection extends StatelessWidget {
   }
 }
 
-class _PlaceholderThumb extends StatelessWidget {
-  const _PlaceholderThumb();
+class _PlaceholderCover extends StatelessWidget {
+  const _PlaceholderCover();
+
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 150,
-      height: 130,
+      height: 150,
       color: AppColors.waveformInactive,
-      child: const Icon(
-        Icons.queue_music,
-        color: AppColors.textMuted,
-        size: 40,
-      ),
+      child: const Icon(Icons.album, color: AppColors.textMuted, size: 40),
     );
   }
 }
