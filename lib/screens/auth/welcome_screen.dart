@@ -30,6 +30,7 @@ class WelcomeScreen extends StatelessWidget {
                 
               ),
 
+
               const SizedBox(height: AppDimensions.spaceLarge),
 
               /// Title

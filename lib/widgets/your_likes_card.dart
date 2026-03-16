@@ -33,6 +33,7 @@ class YourLikesCard extends StatelessWidget {
           child: Row(
             children: [
               SizedBox(
+                //This sized box is teh the heart emoji (Shape + Border)
                 width: 52,
                 height: 52,
                 child: Stack(
@@ -63,7 +64,7 @@ class YourLikesCard extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const Spacer(),
+              const Spacer(), //Like Flex in CSSS
               Container(
                 decoration: const BoxDecoration(
                   color: Colors.black38,
@@ -75,7 +76,7 @@ class YourLikesCard extends StatelessWidget {
                     color: Colors.white,
                     size: 20,
                   ),
-                  onPressed: () {},
+                  onPressed: () {}, // To be implemented
                 ),
               ),
             ],
@@ -83,6 +84,7 @@ class YourLikesCard extends StatelessWidget {
         ),
 
         Padding(
+          //Like Column and Row but has Gridview (Square like shape)
           padding: const EdgeInsets.only(
             left: AppDimensions.spaceMedium,
             right: AppDimensions.spaceMedium,
@@ -90,17 +92,16 @@ class YourLikesCard extends StatelessWidget {
           ),
           child: GridView.count(
             crossAxisCount: 2,
-            shrinkWrap: true,
+            shrinkWrap:
+                true, //Throws an error if removed (Grid try to fill the whole page although it is inside a colums)
             physics: const NeverScrollableScrollPhysics(),
             crossAxisSpacing: AppDimensions.spaceSmall,
             mainAxisSpacing: AppDimensions.spaceSmall,
             childAspectRatio: 2.8,
-            children: tracks
-                .map(
-                  (track) =>
-                      _TrackGridTile(title: track.title, artist: track.artist),
-                )
-                .toList(),
+            children: [
+              for (final track in tracks)
+                _TrackGridTile(title: track.title, artist: track.artist),
+            ],
           ),
         ),
       ],
@@ -123,6 +124,7 @@ class _TrackGridTile extends StatelessWidget {
       child: Row(
         children: [
           ClipRRect(
+            //Container but it can cut parts of burders (To have smooth top left and bottom right corners but hsarp at the right half )
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(AppDimensions.borderRadiusSmall),
               bottomLeft: Radius.circular(AppDimensions.borderRadiusSmall),
@@ -138,7 +140,7 @@ class _TrackGridTile extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: AppDimensions.spaceSmall),
+          const SizedBox(width: AppDimensions.spaceSmall), //BReak
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

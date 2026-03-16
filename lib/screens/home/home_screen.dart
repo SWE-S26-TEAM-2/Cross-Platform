@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import '../../constants/app_dimensions.dart';
 import '../../mock_data/mock_tracks.dart';
 import '../../widgets/your_likes_card.dart';
+import '../../widgets/today_pick_card.dart';
+import '../../widgets/more_like_section.dart';
+import '../../widgets/albums_for_you_section.dart';
+import '../../widgets/discover_with_stations.dart';
+import '../../mock_data/mock_albums.dart';
+import '../../mock_data/mock_stations.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -27,7 +33,39 @@ class HomeScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: AppDimensions.spaceSmall),
-            YourLikesCard(tracks: MockTracks.likedTracks),
+
+            // ── Your Likes ──────────────────────────────────
+            const YourLikesCard(tracks: MockTracks.likedTracks),
+            const SizedBox(height: AppDimensions.spaceLarge), //break
+            // ── Today's Pick ────────────────────────────────
+            TodayPickCard(
+              track: MockTracks.hotTrack,
+              onPlay: () {
+                //To be Implemented
+              },
+            ),
+            const SizedBox(height: AppDimensions.spaceLarge), //break
+            // ── More of what you like ───────────────────────
+            const MoreLikeSection(
+              sectionTitle: 'More of what you like',
+              tracks: MockTracks.recommendedTracks,
+            ),
+            const SizedBox(height: AppDimensions.spaceLarge), //break
+            // ── Mixed for you ───────────────────────────────
+            const MoreLikeSection(
+              sectionTitle: 'Mixed for You',
+              tracks: MockTracks.likedTracks,
+            ),
+            const SizedBox(height: AppDimensions.spaceLarge), //break
+            const AlbumsForYouSection(
+              sectionTitle: 'Albums for You',
+              albums: MockAlbums.featuredAlbums,
+            ),
+            const SizedBox(height: AppDimensions.spaceLarge), //break
+            const DiscoverWithStations(
+              sectionTitle: 'Discover With Stations',
+              albums: MockStations.featuredStations,
+            ),
           ],
         ),
       ),

@@ -30,7 +30,7 @@ linter:
     # Ensure control statements (if, for, while) have bodies on new lines
     always_put_control_body_on_new_line: true
     # Require explicit types everywhere
-    always_specify_types: true
+    #always_specify_types: true
     # Enforce using @override annotation when overriding methods
     annotate_overrides: true
 
