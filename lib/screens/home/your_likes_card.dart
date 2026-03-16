@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../constants/app_dimensions.dart';
-import '../constants/app_colors.dart';
-import '../models/track.dart';
+import '../../constants/app_dimensions.dart';
+import '../../constants/app_colors.dart';
+import '../../models/track.dart';
 
 class YourLikesCard extends StatelessWidget {
   final List<Track> tracks;

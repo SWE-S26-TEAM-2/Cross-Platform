@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
-import '../constants/app_text_styles.dart';
-import '../constants/app_dimensions.dart';
-import '../models/track.dart';
+import '../../constants/app_colors.dart';
+import '../../constants/app_text_styles.dart';
+import '../../constants/app_dimensions.dart';
+import '../../models/track.dart';
 
 class TodayPickCard extends StatelessWidget {
   final Track track;

@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
-import '../constants/app_text_styles.dart';
-import '../constants/app_dimensions.dart';
-import '../models/album.dart';
+import '../../constants/app_colors.dart';
+import '../../constants/app_text_styles.dart';
+import '../../constants/app_dimensions.dart';
+import '../../models/track.dart';
 
-class AlbumsForYouSection extends StatelessWidget {
+class MoreLikeSection extends StatelessWidget {
   final String sectionTitle;
-  final List<Album> albums;
-  final void Function(Album)? onAlbumTap;
+  final List<Track> tracks;
+  final void Function(Track)? onTrackTap;
 
-  const AlbumsForYouSection({
+  const MoreLikeSection({
     super.key,
     required this.sectionTitle,
-    required this.albums,
-    this.onAlbumTap,
+    required this.tracks,
+    this.onTrackTap,
   });
 
   @override
@@ -29,7 +29,7 @@ class AlbumsForYouSection extends StatelessWidget {
         ),
         const SizedBox(height: AppDimensions.spaceSmall),
         SizedBox(
-          height: 210,
+          height: 180,
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(
@@ -37,9 +37,9 @@ class AlbumsForYouSection extends StatelessWidget {
             ),
             child: Row(
               children: [
-                for (int i = 0; i < albums.length; i++) ...[
+                for (int i = 0; i < tracks.length; i++) ...[
                   GestureDetector(
-                    onTap: () => onAlbumTap?.call(albums[i]),
+                    onTap: () => onTrackTap?.call(tracks[i]),
                     child: SizedBox(
                       width: 150,
                       child: Column(
@@ -49,29 +49,29 @@ class AlbumsForYouSection extends StatelessWidget {
                             borderRadius: BorderRadius.circular(
                               AppDimensions.borderRadiusSmall,
                             ),
-                            child: albums[i].artworkUrl.isNotEmpty
+                            child: tracks[i].artworkUrl.isNotEmpty
                                 ? Image.network(
-                                    albums[i].artworkUrl,
+                                    tracks[i].artworkUrl,
                                     width: 150,
-                                    height: 150,
+                                    height: 130,
                                     fit: BoxFit.cover,
                                     headers: const {
                                       'User-Agent': 'Mozilla/5.0',
                                     },
                                     errorBuilder: (_, __, ___) =>
-                                        const _PlaceholderCover(),
+                                        const _PlaceholderThumb(),
                                   )
-                                : const _PlaceholderCover(),
+                                : const _PlaceholderThumb(),
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            albums[i].title,
+                            tracks[i].title,
                             style: AppTextStyles.artistName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            '${albums[i].artist} · ${albums[i].trackCount} tracks',
+                            tracks[i].artist,
                             style: AppTextStyles.caption,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -80,7 +80,7 @@ class AlbumsForYouSection extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (i < albums.length - 1)
+                  if (i < tracks.length - 1)
                     const SizedBox(width: AppDimensions.spaceSmall),
                 ],
               ],
@@ -92,16 +92,19 @@ class AlbumsForYouSection extends StatelessWidget {
   }
 }
 
-class _PlaceholderCover extends StatelessWidget {
-  const _PlaceholderCover();
-
+class _PlaceholderThumb extends StatelessWidget {
+  const _PlaceholderThumb();
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 150,
-      height: 150,
+      height: 130,
       color: AppColors.waveformInactive,
-      child: const Icon(Icons.album, color: AppColors.textMuted, size: 40),
+      child: const Icon(
+        Icons.queue_music,
+        color: AppColors.textMuted,
+        size: 40,
+      ),
     );
   }
 }

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:my_project/widgets/mini_player.dart';
 import '../../constants/app_dimensions.dart';
 import '../../mock_data/mock_tracks.dart';
-import '../../widgets/your_likes_card.dart';
-import '../../widgets/today_pick_card.dart';
-import '../../widgets/more_like_section.dart';
-import '../../widgets/albums_for_you_section.dart';
-import '../../widgets/discover_with_stations.dart';
+import 'your_likes_card.dart';
+import 'today_pick_card.dart';
+import 'more_like_section.dart';
+import 'albums_for_you_section.dart';
+import 'discover_with_stations.dart';
 import '../../mock_data/mock_albums.dart';
 import '../../mock_data/mock_stations.dart';
 
@@ -68,6 +69,17 @@ class HomeScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          MiniPlayer(
+            onPlay: () {
+              //to be implemented
+            },
+            track: MockTracks.recommendedTracks[0],
+          ),
+        ],
       ),
     );
   }
