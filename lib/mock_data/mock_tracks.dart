@@ -9,6 +9,8 @@ class MockTracks {
       artworkUrl: 'https://picsum.photos/seed/track1/150/150',
       likeCount: 142000,
       duration: 198,
+      audioPath:
+          'assets/audio/tadashikeiji-gods-got-my-love-life-handled-319926.mp3',
     ),
     Track(
       id: '2',
@@ -17,6 +19,8 @@ class MockTracks {
       artworkUrl: 'https://picsum.photos/seed/track2/150/150',
       likeCount: 98700,
       duration: 177,
+      audioPath:
+          'assets/audio/tadashikeiji-gods-got-my-love-life-handled-319926.mp3',
     ),
     Track(
       id: '3',
@@ -25,6 +29,8 @@ class MockTracks {
       artworkUrl: 'https://picsum.photos/seed/track3/150/150',
       likeCount: 210500,
       duration: 200,
+      audioPath:
+          'assets/audio/tadashikeiji-gods-got-my-love-life-handled-319926.mp3',
     ),
     Track(
       id: '4',
@@ -33,6 +39,8 @@ class MockTracks {
       artworkUrl: 'https://picsum.photos/seed/track4/150/150',
       likeCount: 187300,
       duration: 312,
+      audioPath:
+          'assets/audio/tadashikeiji-gods-got-my-love-life-handled-319926.mp3',
     ),
   ];
 
@@ -43,6 +51,8 @@ class MockTracks {
     artworkUrl: 'https://picsum.photos/seed/track5/150/150',
     likeCount: 82000,
     duration: 228,
+    audioPath:
+        'assets/audio/tadashikeiji-gods-got-my-love-life-handled-319926.mp3',
   );
 
   static const List<Track> recommendedTracks = [
@@ -53,6 +63,8 @@ class MockTracks {
       artworkUrl: 'https://picsum.photos/seed/track6/150/150',
       likeCount: 54000,
       duration: 149,
+      audioPath:
+          'assets/audio/tadashikeiji-gods-got-my-love-life-handled-319926.mp3',
     ),
     Track(
       id: '7',
@@ -61,6 +73,8 @@ class MockTracks {
       artworkUrl: 'https://picsum.photos/seed/track7/150/150',
       likeCount: 76800,
       duration: 231,
+      audioPath:
+          'assets/audio/tadashikeiji-gods-got-my-love-life-handled-319926.mp3',
     ),
     Track(
       id: '8',
@@ -69,6 +83,8 @@ class MockTracks {
       artworkUrl: 'https://picsum.photos/seed/track8/150/150',
       likeCount: 43200,
       duration: 183,
+      audioPath:
+          'assets/audio/tadashikeiji-gods-got-my-love-life-handled-319926.mp3',
     ),
     Track(
       id: '9',
@@ -77,6 +93,8 @@ class MockTracks {
       artworkUrl: 'https://picsum.photos/seed/track9/150/150',
       likeCount: 91500,
       duration: 178,
+      audioPath:
+          'assets/audio/tadashikeiji-gods-got-my-love-life-handled-319926.mp3',
     ),
   ];
 }
