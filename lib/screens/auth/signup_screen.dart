@@ -89,7 +89,8 @@ class _SignupScreenState extends State<SignupScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     // temporary action for now
-                    Navigator.pushNamed(context, '/home');
+                    Navigator.pushNamed(context, '/root');
+                    //Navigator.pushNamed(context, '/home');
                   },
                   child: const Text('Create account'),
                 ),

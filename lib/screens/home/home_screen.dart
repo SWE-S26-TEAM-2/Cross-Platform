@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_project/navigation/bottom_nav_bar.dart';
 import 'package:my_project/widgets/mini_player.dart';
 import '../../constants/app_dimensions.dart';
 import '../../mock_data/mock_tracks.dart';
@@ -70,17 +71,18 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          MiniPlayer(
-            onPlay: () {
-              //to be implemented
-            },
-            track: MockTracks.recommendedTracks[0],
-          ),
-        ],
-      ),
+      // bottomNavigationBar: Column(
+      //   mainAxisSize: MainAxisSize.min,
+      //   children: [
+      //     MiniPlayer(
+      //       onPlay: () {
+      //         //to be implemented
+      //       },
+      //       track: MockTracks.recommendedTracks[0],
+      //     ),
+      //     BottomNavBar(),
+      //   ],
+      // ),
     );
   }
 }
