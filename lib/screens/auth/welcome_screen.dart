@@ -27,9 +27,7 @@ class WelcomeScreen extends StatelessWidget {
                 image: AssetImage('assets/images/soundcloud_logo.png'),
                 width: 120,
                 height: 120,
-                
               ),
-
 
               const SizedBox(height: AppDimensions.spaceLarge),
 
