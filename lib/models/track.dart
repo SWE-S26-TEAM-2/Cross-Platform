@@ -5,6 +5,7 @@ class Track {
   final String artworkUrl;
   final int likeCount;
   final int duration;
+  final String audioPath;
 
   const Track({
     required this.id,
@@ -13,5 +14,6 @@ class Track {
     required this.artworkUrl,
     required this.likeCount,
     required this.duration,
+    required this.audioPath,
   });
 }
