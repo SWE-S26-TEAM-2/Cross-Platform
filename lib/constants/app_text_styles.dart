@@ -39,4 +39,11 @@ class AppTextStyles {
     fontWeight: FontWeight.w600,
     letterSpacing: 0.5,
   );
+
+  static const TextStyle socialButton = TextStyle(
+    color: AppColors.surface,
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+  );
+
 }
