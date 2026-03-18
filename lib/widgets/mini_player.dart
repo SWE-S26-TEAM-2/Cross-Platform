@@ -5,10 +5,16 @@ import 'package:my_project/constants/app_text_styles.dart';
 import 'package:my_project/models/track.dart';
 
 class MiniPlayer extends StatelessWidget {
-  const MiniPlayer({super.key, required this.onPlay, required this.track});
+  const MiniPlayer({
+    super.key,
+    required this.onPlay,
+    required this.track,
+    required this.isPlaying,
+  });
 
   final VoidCallback? onPlay;
   final Track track;
+  final bool isPlaying;
 
   @override
   Widget build(BuildContext context) {
