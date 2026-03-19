@@ -79,7 +79,9 @@ flutter:
   assets:
     - assets/images/soundcloud_logo.png
     - assets/audio/
-    
+    - assets/images/splash_logo.png
+    - assets/images/google_logo.png
+    - assets/images/facebook_logo.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
