@@ -21,7 +21,7 @@ class _RootScreenState extends State<RootScreen> {
   int _selectedIndex = 0;
   final AudioPlayer _player = AudioPlayer();
   bool _isPlaying = false;
-  Track _currentTrack = MockTracks.hotTrack;
+  Track? _currentTrack;
 
   @override
   void dispose() {
@@ -29,47 +29,48 @@ class _RootScreenState extends State<RootScreen> {
     super.dispose();
   }
 
-  @override
-  void initState() {
-    // runs once when screen first opens
-    super.initState();
-    _initPlayer(); // calls your preload function
-  }
+  // @override
+  // void initState() {
+  //   // runs once when screen first opens
+  //   super.initState();
+  //   _initPlayer(); // calls your preload function
+  // }
 
-  Future<void> _initPlayer() async {
-    await _player.setAsset(
-      MockTracks.hotTrack.audioPath,
-    ); // s preloads the audio
-  }
+  // Future<void> _initPlayer() async {
+  //   await _player.setAsset(
+  //     MockTracks.hotTrack.audioPath,
+  //   ); // s preloads the audio
+  // }
 
   Future<void> _handlePlay(Track track) async {
     print('=== HANDLE PLAY CALLED ===');
     print('Track: ${track.title}');
     print('Path: ${track.audioPath}');
 
-    final path = track.audioPath;
-    if (path.isEmpty) {
+    if (track.audioPath.isEmpty) {
       print('=== PATH IS EMPTY, RETURNING ===');
       return;
     }
 
     print('=== CALLING PLAYER ===');
 
-    if (_currentTrack.id == track.id && _isPlaying) {
+    if (_currentTrack?.id == track.id && _isPlaying) {
       await _player.pause();
       setState(() => _isPlaying = false);
       print('=== PLAYER PAUSED ===');
-    } else if (_currentTrack.id == track.id && !_isPlaying) {
-      await _player.play();
-      setState(() => _isPlaying = true);
-      print('=== PLAYER RESUMED ===');
     } else {
-      await _player.setAsset(path);
-      await _player.play();
+      if (_currentTrack?.id != track.id) {
+        await _player.setAsset(track.audioPath);
+        print('=== NEW TRACK LOADED ===');
+      }
+      _player.play();
+
+      ///Without await as the .play was waiting for the entire song to finish
       setState(() {
         _currentTrack = track;
         _isPlaying = true;
       });
+      print('=== PLAYER PLAYING ===');
     }
   }
 
@@ -98,9 +99,9 @@ class _RootScreenState extends State<RootScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           MiniPlayer(
-            track: _currentTrack,
+            track: _currentTrack!,
             isPlaying: _isPlaying,
-            onPlay: () => _handlePlay(_currentTrack),
+            onPlay: () => _handlePlay(_currentTrack!),
           ),
           BottomNavBar(
             onTabSelected: (index) => setState(() => _selectedIndex = index),
