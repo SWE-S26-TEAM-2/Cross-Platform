@@ -21,8 +21,8 @@ class _RootScreenState extends State<RootScreen> {
   int _selectedIndex = 0;
   final AudioPlayer _player = AudioPlayer();
   bool _isPlaying = false;
-  Track? _currentTrack;
-
+  bool _hasLoaded = false;
+  Track _currentTrack = MockTracks.hotTrack;
   @override
   void dispose() {
     _player.dispose();
@@ -54,12 +54,13 @@ class _RootScreenState extends State<RootScreen> {
 
     print('=== CALLING PLAYER ===');
 
-    if (_currentTrack?.id == track.id && _isPlaying) {
+    if (_currentTrack.id == track.id && _isPlaying) {
       await _player.pause();
       setState(() => _isPlaying = false);
       print('=== PLAYER PAUSED ===');
     } else {
-      if (_currentTrack?.id != track.id) {
+      if (_currentTrack.id != track.id || !_hasLoaded) {
+        _hasLoaded = true;
         await _player.setAsset(track.audioPath);
         print('=== NEW TRACK LOADED ===');
       }
@@ -99,7 +100,7 @@ class _RootScreenState extends State<RootScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           MiniPlayer(
-            track: _currentTrack!,
+            track: _currentTrack,
             isPlaying: _isPlaying,
             onPlay: () => _handlePlay(_currentTrack!),
           ),
