@@ -6,9 +6,9 @@ import 'package:my_project/widgets/mini_player.dart';
 import 'package:my_project/navigation/bottom_nav_bar.dart';
 import 'package:my_project/screens/home/home_screen.dart';
 import 'package:my_project/screens/home/temp_feed_screen.dart';
-import 'package:my_project/screens/home/temp_library_screen.dart';
 import 'package:my_project/screens/home/temp_upgrade_screen.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:my_project/screens/library/library_screen.dart';
 
 class RootScreen extends StatefulWidget {
   const RootScreen({super.key});
