@@ -84,7 +84,7 @@ class _RootScreenState extends State<RootScreen> {
     const SearchScreen(),
 
     /// 3
-    const TempLibraryScreen(),
+    LibraryScreen(),
 
     /// 4
     const TempUpgradeScreen(),
