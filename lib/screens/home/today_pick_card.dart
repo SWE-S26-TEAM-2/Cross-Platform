@@ -6,9 +6,9 @@ import '../../models/track.dart';
 
 class TodayPickCard extends StatelessWidget {
   final Track track;
-  final VoidCallback? onPlay;
+  final void Function(Track)? onTrackTap;
 
-  const TodayPickCard({super.key, required this.track, this.onPlay});
+  const TodayPickCard({super.key, required this.track, this.onTrackTap});
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +84,9 @@ class TodayPickCard extends StatelessWidget {
                       ),
                       const SizedBox(width: AppDimensions.spaceSmall),
                       GestureDetector(
-                        onTap: onPlay,
+                        onTap: track != null
+                            ? () => onTrackTap?.call(track)
+                            : null,
                         child: Container(
                           width: 48,
                           height: 48,

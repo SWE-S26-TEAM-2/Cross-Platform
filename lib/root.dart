@@ -77,7 +77,7 @@ class _RootScreenState extends State<RootScreen> {
 
   List<Widget> _buildScreens() => [
     // 0
-    const HomeScreen(),
+    HomeScreen(onTrackTap: _handlePlay),
 
     /// 1
     const TempFeedScreen(),
