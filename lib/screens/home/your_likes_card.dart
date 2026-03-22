@@ -5,7 +5,9 @@ import '../../models/track.dart';
 
 class YourLikesCard extends StatelessWidget {
   final List<Track> tracks;
-  const YourLikesCard({super.key, required this.tracks});
+  final void Function(Track)? onTrackTap;
+
+  const YourLikesCard({super.key, required this.tracks, this.onTrackTap});
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +102,12 @@ class YourLikesCard extends StatelessWidget {
             childAspectRatio: 2.8,
             children: [
               for (final track in tracks)
-                _TrackGridTile(title: track.title, artist: track.artist),
+                _TrackGridTile(
+                  title: track.title,
+                  artist: track.artist,
+                  track: track,
+                  onTrackTap: onTrackTap,
+                ),
             ],
           ),
         ),
@@ -112,64 +119,75 @@ class YourLikesCard extends StatelessWidget {
 class _TrackGridTile extends StatelessWidget {
   final String title;
   final String artist;
-  const _TrackGridTile({required this.title, required this.artist});
+  final Track? track;
+  final void Function(Track)? onTrackTap;
+
+  const _TrackGridTile({
+    required this.title,
+    required this.artist,
+    this.track,
+    this.onTrackTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF212121),
-        borderRadius: BorderRadius.circular(AppDimensions.borderRadiusSmall),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            //Container but it can cut parts of burders (To have smooth top left and bottom right corners but hsarp at the right half )
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(AppDimensions.borderRadiusSmall),
-              bottomLeft: Radius.circular(AppDimensions.borderRadiusSmall),
-            ),
-            child: Container(
-              width: 52,
-              height: double.infinity,
-              color: const Color(0xFF2E2E2E),
-              child: const Icon(
-                Icons.music_note,
-                color: AppColors.primary,
-                size: 20,
+    return GestureDetector(
+      onTap: track != null ? () => onTrackTap?.call(track!) : null,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF212121),
+          borderRadius: BorderRadius.circular(AppDimensions.borderRadiusSmall),
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              //Container but it can cut parts of burders (To have smooth top left and bottom right corners but hsarp at the right half )
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(AppDimensions.borderRadiusSmall),
+                bottomLeft: Radius.circular(AppDimensions.borderRadiusSmall),
+              ),
+              child: Container(
+                width: 52,
+                height: double.infinity,
+                color: const Color(0xFF2E2E2E),
+                child: const Icon(
+                  Icons.music_note,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: AppDimensions.spaceSmall), //BReak
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+            const SizedBox(width: AppDimensions.spaceSmall), //BReak
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  artist,
-                  style: const TextStyle(
-                    color: Color(0xFF888888),
-                    fontSize: 11,
+                  const SizedBox(height: 2),
+                  Text(
+                    artist,
+                    style: const TextStyle(
+                      color: Color(0xFF888888),
+                      fontSize: 11,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
