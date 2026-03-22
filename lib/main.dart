@@ -5,6 +5,7 @@ import 'screens/auth/signup_screen.dart';
 import 'root.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/forget_password_screen.dart';
+import 'screens/profile/profile_screen.dart';
 
 void main() {
   runApp(const SoundCloudApp());
@@ -19,7 +20,7 @@ class SoundCloudApp extends StatelessWidget {
       title: 'SoundCloud',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home: const WelcomeScreen(),
+      home: const ProfileScreen(), //const WelcomeScreen(),
       routes: {
         '/signup': (context) => const SignupScreen(),
         '/login': (context) => const LoginScreen(),

@@ -5,6 +5,10 @@ class User {
   final String? userName;
   final String? avatarUrl;
   final String? password;
+  final String? location;
+  final int? followers;
+  final int? following;
+
 
   const User({
     this.id,
@@ -12,6 +16,9 @@ class User {
     this.userName,
     this.avatarUrl,
     this.password,
+    this.location,
+    this.followers,
+    this.following,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
@@ -19,5 +26,8 @@ class User {
     email: json['email'],
     userName: json['username'],
     avatarUrl: json['avatar_url'],
-  );
+    location: json['location'],
+    followers: json['followers'],
+    following: json['following'],
+  );  
 }
