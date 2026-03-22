@@ -20,7 +20,7 @@ class SoundCloudApp extends StatelessWidget {
       title: 'SoundCloud',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home: const ProfileScreen(), //const WelcomeScreen(),
+      home: const WelcomeScreen(),
       routes: {
         '/signup': (context) => const SignupScreen(),
         '/login': (context) => const LoginScreen(),
