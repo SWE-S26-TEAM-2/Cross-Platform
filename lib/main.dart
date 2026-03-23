@@ -3,6 +3,8 @@ import 'constants/app_theme.dart';
 import 'screens/auth/welcome_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'root.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/auth/forget_password_screen.dart';
 
 void main() {
   runApp(const SoundCloudApp());
@@ -20,7 +22,9 @@ class SoundCloudApp extends StatelessWidget {
       home: const WelcomeScreen(),
       routes: {
         '/signup': (context) => const SignupScreen(),
+        '/login': (context) => const LoginScreen(),
         '/root': (context) => const RootScreen(),
+        '/forgot_password': (context) => const ForgotPasswordScreen(),
       },
     );
   }

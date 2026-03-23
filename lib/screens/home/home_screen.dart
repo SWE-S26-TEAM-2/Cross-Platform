@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_project/navigation/bottom_nav_bar.dart';
-import 'package:my_project/widgets/mini_player.dart';
+import 'package:my_project/models/track.dart';
 import '../../constants/app_dimensions.dart';
 import '../../mock_data/mock_tracks.dart';
 import 'your_likes_card.dart';
@@ -12,7 +11,8 @@ import '../../mock_data/mock_albums.dart';
 import '../../mock_data/mock_stations.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  final void Function(Track)? onTrackTap;
+  const HomeScreen({super.key, this.onTrackTap});
 
   @override
   Widget build(BuildContext context) {
@@ -37,26 +37,26 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: AppDimensions.spaceSmall),
 
             // ── Your Likes ──────────────────────────────────
-            const YourLikesCard(tracks: MockTracks.likedTracks),
-            const SizedBox(height: AppDimensions.spaceLarge), //break
-            // ── Today's Pick ────────────────────────────────
-            TodayPickCard(
-              track: MockTracks.hotTrack,
-              onPlay: () {
-                //To be Implemented
-              },
+            YourLikesCard(
+              tracks: MockTracks.likedTracks,
+              onTrackTap: onTrackTap,
             ),
             const SizedBox(height: AppDimensions.spaceLarge), //break
+            // ── Today's Pick ────────────────────────────────
+            TodayPickCard(track: MockTracks.hotTrack, onTrackTap: onTrackTap),
+            const SizedBox(height: AppDimensions.spaceLarge), //break
             // ── More of what you like ───────────────────────
-            const MoreLikeSection(
+            MoreLikeSection(
               sectionTitle: 'More of what you like',
               tracks: MockTracks.recommendedTracks,
+              onTrackTap: onTrackTap,
             ),
             const SizedBox(height: AppDimensions.spaceLarge), //break
             // ── Mixed for you ───────────────────────────────
-            const MoreLikeSection(
+            MoreLikeSection(
               sectionTitle: 'Mixed for You',
               tracks: MockTracks.likedTracks,
+              onTrackTap: onTrackTap, // 👈 add this
             ),
             const SizedBox(height: AppDimensions.spaceLarge), //break
             const AlbumsForYouSection(
