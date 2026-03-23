@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_project/mock_data/mock_tracks.dart';
 import 'package:my_project/models/track.dart';
+import 'package:my_project/screens/feed/feed_screen.dart';
 import 'package:my_project/screens/search/search_screen.dart';
 import 'package:my_project/widgets/mini_player.dart';
 import 'package:my_project/navigation/bottom_nav_bar.dart';
@@ -80,7 +81,7 @@ class _RootScreenState extends State<RootScreen> {
     HomeScreen(onTrackTap: _handlePlay),
 
     /// 1
-    const TempFeedScreen(),
+    const FeedScreen(),
 
     /// 2
     const SearchScreen(),

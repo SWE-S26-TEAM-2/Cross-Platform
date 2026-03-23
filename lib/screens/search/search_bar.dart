@@ -3,7 +3,14 @@ import 'package:my_project/constants/app_colors.dart';
 import 'package:my_project/constants/app_dimensions.dart';
 
 class SearchBar1 extends StatefulWidget {
-  const SearchBar1({super.key});
+  final TextEditingController controller;
+  final Function(String) onChanged;
+
+  const SearchBar1({
+    super.key,
+    required this.controller,
+    required this.onChanged,
+  });
 
   @override
   State<SearchBar1> createState() => _SearchBar1State();
@@ -25,13 +32,15 @@ class _SearchBar1State extends State<SearchBar1> {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppDimensions.borderRadiusPill),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.search),
-            SizedBox(width: AppDimensions.spaceSmall),
+            const Icon(Icons.search),
+            const SizedBox(width: AppDimensions.spaceSmall),
             Expanded(
               child: TextField(
-                decoration: InputDecoration(
+                controller: widget.controller,
+                onChanged: widget.onChanged,
+                decoration: const InputDecoration(
                   hintText: 'Search',
                   hintStyle: TextStyle(
                     color: AppColors.textSecondary,
