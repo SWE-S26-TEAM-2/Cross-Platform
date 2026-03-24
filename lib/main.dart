@@ -6,6 +6,7 @@ import 'root.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/forget_password_screen.dart';
 import 'screens/profile/profile_screen.dart';
+import 'screens/upgrade/upgrade_screen.dart';
 
 void main() {
   runApp(const SoundCloudApp());
