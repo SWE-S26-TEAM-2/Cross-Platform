@@ -127,7 +127,6 @@ class MockTracks {
       duration: 177,
       audioPath:
           'assets/audio/tadashikeiji-gods-got-my-love-life-handled-319926.mp3',
-      isLiked: true,
     ),
     Track(
       id: '1',
@@ -138,7 +137,6 @@ class MockTracks {
       duration: 198,
       audioPath:
           'assets/audio/tadashikeiji-gods-got-my-love-life-handled-319926.mp3',
-      isLiked: true,
     ),
    ];
    static const List<Track> recentlyPlayedTracks = [

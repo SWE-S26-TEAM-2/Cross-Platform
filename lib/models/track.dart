@@ -6,7 +6,6 @@ class Track {
   final int likeCount;
   final int duration;
   final String audioPath;
-  final bool isLiked;
 
   const Track({
     required this.id,
@@ -16,6 +15,5 @@ class Track {
     required this.likeCount,
     required this.duration,
     required this.audioPath,
-    this.isLiked = false, // default
   });
 }
