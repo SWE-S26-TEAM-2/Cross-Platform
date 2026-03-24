@@ -3,6 +3,7 @@ import 'package:my_project/mock_data/mock_tracks.dart';
 import 'package:my_project/models/track.dart';
 import 'package:my_project/screens/feed/feed_screen.dart';
 import 'package:my_project/screens/search/search_screen.dart';
+import 'package:my_project/screens/upgrade/upgrade_screen.dart';
 import 'package:my_project/widgets/mini_player.dart';
 import 'package:my_project/navigation/bottom_nav_bar.dart';
 import 'package:my_project/screens/home/home_screen.dart';
@@ -90,8 +91,9 @@ class _RootScreenState extends State<RootScreen> {
     const TempLibraryScreen(),
 
     /// 4
-    const TempUpgradeScreen(),
+    const UpgradeScreen(),
   ];
+  
 
   @override
   Widget build(BuildContext context) {
