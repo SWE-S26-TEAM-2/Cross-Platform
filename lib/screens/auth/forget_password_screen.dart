@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:my_project/screens/auth/change_password_screen.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
 import '../../services/mock_auth_service.dart';
+import 'change_password_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -72,13 +74,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password reset link sent'),
-        ),
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChangePasswordScreen(email: email),),
       );
-
-      Navigator.pop(context);
     }
   }
 
@@ -133,7 +133,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: handleReset,
-                    child: const Text('Send reset link'),
+                    child: const Text('Change password'),
                   ),
                 ),
 

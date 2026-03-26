@@ -4,13 +4,13 @@ class User {
   final String? id;
   final String? userName;
   final String? avatarUrl;
-  final String? password;
+  String? password;  /// For 'Change-Password' purposes it is not final.
   final String? location;
   final int? followers;
   final int? following;
 
 
-  const User({
+  User({
     this.id,
     required this.email,
     this.userName,
