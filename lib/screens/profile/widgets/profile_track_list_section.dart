@@ -118,8 +118,7 @@ class ProfileTrackListSection extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize:
-                                  (screenWidth * 0.046).clamp(14.0, 17.0),
+                              fontSize: (screenWidth * 0.046).clamp(14.0, 17.0),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -130,8 +129,7 @@ class ProfileTrackListSection extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: Colors.grey[400],
-                              fontSize:
-                                  (screenWidth * 0.04).clamp(13.0, 15.0),
+                              fontSize: (screenWidth * 0.04).clamp(13.0, 15.0),
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -139,8 +137,7 @@ class ProfileTrackListSection extends StatelessWidget {
                             '▶ ${_formatCount(track.likeCount)} · ${_formatDuration(track.duration)}',
                             style: TextStyle(
                               color: Colors.grey[500],
-                              fontSize:
-                                  (screenWidth * 0.037).clamp(12.0, 14.0),
+                              fontSize: (screenWidth * 0.037).clamp(12.0, 14.0),
                             ),
                           ),
                         ],
@@ -152,10 +149,7 @@ class ProfileTrackListSection extends StatelessWidget {
                     onTap: () => onMoreTap?.call(track),
                     child: const Padding(
                       padding: EdgeInsets.only(top: 6),
-                      child: Icon(
-                        Icons.more_horiz,
-                        color: Colors.white70,
-                      ),
+                      child: Icon(Icons.more_horiz, color: Colors.white70),
                     ),
                   ),
                 ],

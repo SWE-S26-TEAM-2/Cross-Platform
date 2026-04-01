@@ -93,7 +93,6 @@ class _RootScreenState extends State<RootScreen> {
     /// 4
     const UpgradeScreen(),
   ];
-  
 
   @override
   Widget build(BuildContext context) {

@@ -4,11 +4,12 @@ class User {
   final String? id;
   final String? userName;
   final String? avatarUrl;
-  String? password;  /// For 'Change-Password' purposes it is not final.
+  String? password;
+
+  /// For 'Change-Password' purposes it is not final.
   final String? location;
   final int? followers;
   final int? following;
-
 
   User({
     this.id,
@@ -29,5 +30,5 @@ class User {
     location: json['location'],
     followers: json['followers'],
     following: json['following'],
-  );  
+  );
 }

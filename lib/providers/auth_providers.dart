@@ -143,7 +143,6 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(authService, userService);
 });
 
-
 /*
 How to use Provider in any screen : 
 
