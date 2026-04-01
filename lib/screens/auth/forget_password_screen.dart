@@ -10,8 +10,7 @@ class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  State<ForgotPasswordScreen> createState() =>
-      _ForgotPasswordScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
@@ -33,18 +32,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       filled: true,
       fillColor: AppColors.surfaceLight,
       border: OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(AppDimensions.borderRadiusMedium),
+        borderRadius: BorderRadius.circular(AppDimensions.borderRadiusMedium),
         borderSide: BorderSide.none,
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(AppDimensions.borderRadiusMedium),
+        borderRadius: BorderRadius.circular(AppDimensions.borderRadiusMedium),
         borderSide: const BorderSide(color: Colors.red),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(AppDimensions.borderRadiusMedium),
+        borderRadius: BorderRadius.circular(AppDimensions.borderRadiusMedium),
         borderSide: const BorderSide(color: Colors.red),
       ),
       contentPadding: const EdgeInsets.symmetric(
@@ -67,9 +63,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       if (!exists) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No account found with this email'),
-          ),
+          const SnackBar(content: Text('No account found with this email')),
         );
         return;
       }
@@ -77,7 +71,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ChangePasswordScreen(email: email),),
+          builder: (context) => ChangePasswordScreen(email: email),
+        ),
       );
     }
   }
@@ -86,9 +81,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Forgot password'),
-      ),
+      appBar: AppBar(title: const Text('Forgot password')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.spaceMedium),

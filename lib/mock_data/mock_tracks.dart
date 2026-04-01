@@ -97,7 +97,7 @@ class MockTracks {
           'assets/audio/tadashikeiji-gods-got-my-love-life-handled-319926.mp3',
     ),
   ];
-   static const List<Track> historyTracks = [
+  static const List<Track> historyTracks = [
     Track(
       id: '4',
       title: 'SICKO MODE',
@@ -138,8 +138,8 @@ class MockTracks {
       audioPath:
           'assets/audio/tadashikeiji-gods-got-my-love-life-handled-319926.mp3',
     ),
-   ];
-   static const List<Track> recentlyPlayedTracks = [
+  ];
+  static const List<Track> recentlyPlayedTracks = [
     Track(
       id: '8',
       title: 'Mask Off',
@@ -150,7 +150,7 @@ class MockTracks {
       audioPath:
           'assets/audio/tadashikeiji-gods-got-my-love-life-handled-319926.mp3',
     ),
-    
+
     Track(
       id: '3',
       title: 'Blinding Lights',
@@ -161,8 +161,8 @@ class MockTracks {
       audioPath:
           'assets/audio/tadashikeiji-gods-got-my-love-life-handled-319926.mp3',
     ),
-    
-   Track(
+
+    Track(
       id: '9',
       title: 'ROCKSTAR',
       artist: 'DaBaby ft. Roddy Ricch',
@@ -172,6 +172,5 @@ class MockTracks {
       audioPath:
           'assets/audio/tadashikeiji-gods-got-my-love-life-handled-319926.mp3',
     ),
-   ];
-  
+  ];
 }

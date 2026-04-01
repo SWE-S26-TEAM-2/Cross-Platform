@@ -4,15 +4,12 @@ import '../../constants/app_colors.dart';
 import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
 import 'package:my_project/screens/home/more_like_section.dart';
+
 class LibraryTile extends StatelessWidget {
   final String title;
   final VoidCallback onTap;
 
-  const LibraryTile({
-    super.key, 
-    required this.title,
-    required this.onTap,
-  });
+  const LibraryTile({super.key, required this.title, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -32,10 +29,7 @@ class LibraryTile extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // Tile title
-            Text(
-              title,
-              style: AppTextStyles.trackTitle,
-            ),
+            Text(title, style: AppTextStyles.trackTitle),
 
             // Arrow icon
             const Icon(
@@ -49,4 +43,3 @@ class LibraryTile extends StatelessWidget {
     );
   }
 }
- 

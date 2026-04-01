@@ -187,38 +187,39 @@ void main() {
       expect(textButton('Forgot password?'), findsOneWidget);
     });
 
-    testWidgets('supports retrying forgot password from invalid to valid email', (
-      tester,
-    ) async {
-      await launchApp(tester);
-      await tapAndSettle(tester, outlinedActionButton('Log in'));
-      await tapAndSettle(tester, textButton('Forgot password?'));
+    testWidgets(
+      'supports retrying forgot password from invalid to valid email',
+      (tester) async {
+        await launchApp(tester);
+        await tapAndSettle(tester, outlinedActionButton('Log in'));
+        await tapAndSettle(tester, textButton('Forgot password?'));
 
-      await pumpUntilVisible(tester, find.text('Reset your password'));
-      await tester.enterText(
-        textFormFieldByHint('Email address'),
-        TestAccounts.missingEmail,
-      );
-      await tester.pump();
-      await tapAndSettle(tester, actionButton('Send reset link'));
+        await pumpUntilVisible(tester, find.text('Reset your password'));
+        await tester.enterText(
+          textFormFieldByHint('Email address'),
+          TestAccounts.missingEmail,
+        );
+        await tester.pump();
+        await tapAndSettle(tester, actionButton('Send reset link'));
 
-      expect(find.text('No account found with this email'), findsOneWidget);
-      expect(find.text('Reset your password'), findsOneWidget);
+        expect(find.text('No account found with this email'), findsOneWidget);
+        expect(find.text('Reset your password'), findsOneWidget);
 
-      await tester.tap(textFormFieldByHint('Email address'));
-      await tester.pumpAndSettle();
-      await tester.enterText(
-        textFormFieldByHint('Email address'),
-        TestAccounts.existingEmail,
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(actionButton('Send reset link'));
-      await tester.pump();
+        await tester.tap(textFormFieldByHint('Email address'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          textFormFieldByHint('Email address'),
+          TestAccounts.existingEmail,
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(actionButton('Send reset link'));
+        await tester.pump();
 
-      await pumpUntilVisible(tester, find.text('Welcome back'));
-      await tester.pumpAndSettle();
-      expect(find.text('Welcome back'), findsOneWidget);
-      expect(textButton('Forgot password?'), findsOneWidget);
-    });
+        await pumpUntilVisible(tester, find.text('Welcome back'));
+        await tester.pumpAndSettle();
+        expect(find.text('Welcome back'), findsOneWidget);
+        expect(textButton('Forgot password?'), findsOneWidget);
+      },
+    );
   });
 }

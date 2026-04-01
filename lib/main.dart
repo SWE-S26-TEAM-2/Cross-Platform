@@ -28,8 +28,8 @@ class SoundCloudApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/root': (context) => const RootScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
+
         //'/change-password': (context) => const ChangePasswordScreen(),
-        
       },
     );
   }
