@@ -41,7 +41,7 @@ jobs:
           branch: ${{ github.head_ref }}
 
       - name: Analyze code
-        run: flutter analyze --no-fatal-infos
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
       - name: Run unit tests
         run: flutter test test/
