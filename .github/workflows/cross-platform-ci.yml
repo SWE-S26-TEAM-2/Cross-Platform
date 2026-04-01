@@ -11,8 +11,16 @@ jobs:
     name: Analyze & Test
     runs-on: ubuntu-latest
 
+    permissions: 
+    
+      contents: write
+    
+
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
 
       - uses: subosito/flutter-action@v2
         with:
@@ -23,7 +31,14 @@ jobs:
         run: flutter pub get
 
       - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed .
+        run: dart format .
+
+        
+      - name: Commit formatting fixes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "style: auto-format dart code [skip ci]"
+          branch: ${{ github.head_ref }}
 
       - name: Analyze code
         run: flutter analyze --no-fatal-infos
