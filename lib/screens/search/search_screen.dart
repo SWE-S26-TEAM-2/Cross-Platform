@@ -5,6 +5,7 @@ import 'package:my_project/constants/app_text_styles.dart';
 import 'package:my_project/models/track.dart';
 import 'package:my_project/screens/search/search_bar.dart';
 import 'package:my_project/mock_data/mock_tracks.dart';
+import 'package:my_project/screens/search/vibes_section.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -39,6 +40,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
   @override
   Widget build(BuildContext context) {
+    final isSearching = _controller.text.isNotEmpty;
     return Scaffold(
       appBar: AppBar(title: const Text('Search')),
       body: SafeArea(
@@ -50,7 +52,8 @@ class _SearchScreenState extends State<SearchScreen> {
                 onChanged: _filterTracks
               ),
               Expanded(
-              child: ListView(
+              child: isSearching
+              ? ListView(
                 children: filteredTracks.map(
                   (track) => Material(
                     color: AppColors.background,
@@ -101,6 +104,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                 ).toList(),
               )
+              : VibesSection()
               )
             ],
           ),
