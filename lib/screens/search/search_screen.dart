@@ -30,10 +30,8 @@ class _SearchScreenState extends State<SearchScreen> {
         filteredTracks = [];
       } else {
         filteredTracks = allTracks
-            .where(
-              (track) =>
-                  track.title.toLowerCase().contains(query.toLowerCase()),
-            )
+            .where((track) =>
+                track.title.toLowerCase().contains(query.toLowerCase()))
             .toList();
       }
     });
@@ -53,23 +51,24 @@ class _SearchScreenState extends State<SearchScreen> {
               controller: _controller,
               onChanged: (value) {
                 _filterTracks(value);
-                setState(() {}); // ensures UI updates
               },
             ),
+            const SizedBox(height: 10),
             Expanded(
               child: isSearching
-                  ? ListView(
-                      children: filteredTracks.map((track) {
+                  ? ListView.builder(
+                      itemCount: filteredTracks.length,
+                      itemBuilder: (context, index) {
+                        final track = filteredTracks[index];
+
                         return Material(
                           color: AppColors.background,
                           child: InkWell(
                             borderRadius: BorderRadius.circular(
                               AppDimensions.borderRadiusMedium,
                             ),
-                            onTap: () {
-                              print('Clicked ${track.title}');
-                            },
-                            child: Container(
+                            onTap: () {},
+                            child: Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: AppDimensions.spaceMedium,
                                 vertical: AppDimensions.spaceMedium,
@@ -99,8 +98,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                         style: AppTextStyles.trackTitle,
                                       ),
                                       const SizedBox(
-                                        height:
-                                            AppDimensions.spaceExtraSmall,
+                                        height: AppDimensions.spaceExtraSmall,
                                       ),
                                       Text(
                                         track.artist,
@@ -113,9 +111,14 @@ class _SearchScreenState extends State<SearchScreen> {
                             ),
                           ),
                         );
-                      }).toList(),
+                      },
                     )
-                  : const VibesSection(),
+                  : const SingleChildScrollView(
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: 20),
+                        child: VibesSection(),
+                      ),
+                    ),
             ),
           ],
         ),
