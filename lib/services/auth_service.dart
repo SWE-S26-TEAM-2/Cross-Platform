@@ -37,19 +37,29 @@ class AuthService {
       );
       return AuthTokens.fromJson(result.data);
     } on DioException catch (e) {
-      print('LOGIN STATUS: ${e.response?.statusCode}');
-      print('LOGIN DATA: ${e.response?.data}');
+     /* print('LOGIN STATUS: ${e.response?.statusCode}');
+      print('LOGIN DATA: ${e.response?.data}');*/
       rethrow;
     }
   }
 
-  Future<AuthTokens> googleLogin(String googleIdToken) async {
+ Future<AuthTokens> googleLogin(String googleIdToken) async {
+  try {
     final result = await _dio.post(
       '$baseUrl/auth/google',
       data: {'id_token': googleIdToken},
     );
+
+    print('GOOGLE LOGIN STATUS: ${result.statusCode}');
+    print('GOOGLE LOGIN DATA: ${result.data}');
+
     return AuthTokens.fromJson(result.data);
+  } on DioException catch (e) {
+    print('GOOGLE LOGIN ERROR STATUS: ${e.response?.statusCode}');
+    print('GOOGLE LOGIN ERROR DATA: ${e.response?.data}');
+    rethrow;
   }
+}
 
   Future<AuthTokens> refreshTokens(String refreshToken) async {
     final result = await _dio.post(

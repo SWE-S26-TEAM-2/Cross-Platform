@@ -4,6 +4,7 @@ import '../../constants/app_colors.dart';
 import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
 import '../../providers/auth_providers.dart';
+import '../../services/google_auth_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -17,6 +18,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  final GoogleAuthService googleAuthService = GoogleAuthService();
 
   @override
   void dispose() {
@@ -82,6 +85,45 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> handleGoogleLogin() async {
+    try {
+      final idToken = await googleAuthService.signInAndGetIdToken();
+
+      if (idToken == null || idToken.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to get Google ID token')),
+        );
+        return;
+      }
+
+      await ref.read(authProvider.notifier).googleLogin(idToken);
+
+      final authState = ref.read(authProvider);
+
+      if (!mounted) return;
+
+      if (authState.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(authState.error!)),
+        );
+        return;
+      }
+
+      if (authState.isLoggedIn) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google login successful')),
+        );
+        Navigator.pushNamed(context, '/root');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google login failed: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -109,6 +151,57 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   style: AppTextStyles.artistName,
                 ),
                 const SizedBox(height: AppDimensions.spaceLarge),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppDimensions.spaceMedium,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.borderRadiusMedium,
+                        ),
+                      ),
+                    ),
+                    onPressed: authState.isLoading ? null : handleGoogleLogin,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'assets/images/google_logo.png',
+                          height: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'Continue with Google',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: AppDimensions.spaceMedium),
+
+                Row(
+                  children: const [
+                    Expanded(child: Divider()),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Text('or'),
+                    ),
+                    Expanded(child: Divider()),
+                  ],
+                ),
+
+                const SizedBox(height: AppDimensions.spaceMedium),
 
                 TextFormField(
                   controller: emailController,
