@@ -1,27 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:my_project/screens/auth/change_password_screen.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
 import '../../services/mock_auth_service.dart';
-import 'change_password_screen.dart';
 
-class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({super.key});
+class ChangePasswordScreen extends StatefulWidget {
+  final String email;
+
+  const ChangePasswordScreen({super.key, required this.email});
 
   @override
-  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final MockAuthService authService = MockAuthService();
 
-  final TextEditingController emailController = TextEditingController();
+  final TextEditingController newPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
   @override
   void dispose() {
-    emailController.dispose();
+    newPasswordController.dispose();
+    confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -50,30 +53,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  bool isValidEmail(String email) {
-    final regex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-    return regex.hasMatch(email);
-  }
-
-  void handleReset() {
+  void handleChangePassword() {
     if (_formKey.currentState!.validate()) {
-      final email = emailController.text.trim();
+      final newPassword = newPasswordController.text;
 
-      final exists = authService.emailExists(email);
+      final success = authService.changePassword(widget.email, newPassword);
 
-      if (!exists) {
+      if (!success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No account found with this email')),
+          const SnackBar(content: Text('Failed to update password')),
         );
         return;
       }
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ChangePasswordScreen(email: email),
-        ),
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password changed successfully')),
       );
+
+      Navigator.pushNamed(context, '/login');
     }
   }
 
@@ -81,7 +78,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Forgot password')),
+      appBar: AppBar(title: const Text('Change password')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.spaceMedium),
@@ -91,30 +88,59 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Reset your password',
+                  'Create a new password',
                   style: AppTextStyles.heading1,
                 ),
                 const SizedBox(height: AppDimensions.spaceSmall),
-                const Text(
-                  'Enter your email address and we will send you instructions to reset your password.',
+                Text(
+                  'Change password for ${widget.email}',
                   style: AppTextStyles.artistName,
                 ),
                 const SizedBox(height: AppDimensions.spaceLarge),
 
-                /// EMAIL FIELD
                 TextFormField(
-                  controller: emailController,
-                  keyboardType: TextInputType.emailAddress,
+                  controller: newPasswordController,
+                  obscureText: true,
                   style: AppTextStyles.trackTitle,
-                  decoration: buildInputDecoration('Email address'),
+                  decoration: buildInputDecoration('New password'),
                   validator: (value) {
-                    final email = value?.trim() ?? '';
+                    final newPassword = value ?? '';
 
-                    if (email.isEmpty) {
-                      return 'Email is required';
+                    if (newPassword.isEmpty) {
+                      return 'New password is required';
                     }
-                    if (!isValidEmail(email)) {
-                      return 'Enter a valid email';
+
+                    if (newPassword.length < 8) {
+                      return 'Password must be at least 8 characters';
+                    }
+
+                    final oldPassword = authService.getUserPassword(
+                      widget.email,
+                    );
+
+                    if (oldPassword != null && newPassword == oldPassword) {
+                      return 'New password must be different from old password';
+                    }
+
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: AppDimensions.spaceMedium),
+
+                TextFormField(
+                  controller: confirmPasswordController,
+                  obscureText: true,
+                  style: AppTextStyles.trackTitle,
+                  decoration: buildInputDecoration('Confirm new password'),
+                  validator: (value) {
+                    final confirmPassword = value ?? '';
+
+                    if (confirmPassword.isEmpty) {
+                      return 'Please confirm your new password';
+                    }
+                    if (confirmPassword != newPasswordController.text) {
+                      return 'Passwords do not match';
                     }
                     return null;
                   },
@@ -125,25 +151,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: handleReset,
+                    onPressed: handleChangePassword,
                     child: const Text('Change password'),
-                  ),
-                ),
-
-                const SizedBox(height: AppDimensions.spaceMedium),
-
-                Center(
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text(
-                      'Back to log in',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                   ),
                 ),
               ],

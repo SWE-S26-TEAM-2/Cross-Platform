@@ -25,4 +25,29 @@ class MockAuthService {
           user.email.toLowerCase() == cleanEmail && user.password == password,
     );
   }
+
+  bool changePassword(String email, String newPassword) {
+    final cleanEmail = email.trim().toLowerCase();
+
+    for (final user in mockUsers) {
+      if (user.email.toLowerCase() == cleanEmail) {
+        user.password = newPassword;
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  String? getUserPassword(String email) {
+    final cleanEmail = email.trim().toLowerCase();
+
+    for (final user in mockUsers) {
+      if (user.email.toLowerCase() == cleanEmail) {
+        return user.password;
+      }
+    }
+
+    return null;
+  }
 }
