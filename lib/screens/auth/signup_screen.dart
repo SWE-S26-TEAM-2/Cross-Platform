@@ -1,31 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
-import '../../services/mock_auth_service.dart';
-import '../../widgets/social_buttons.dart';
+import '../../providers/auth_providers.dart';
 
-class SignupScreen extends StatefulWidget {
+class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
 
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends ConsumerState<SignupScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final MockAuthService authService = MockAuthService();
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
+  final TextEditingController displayNameController = TextEditingController();
 
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
+    displayNameController.dispose();
     super.dispose();
   }
 
@@ -59,32 +60,40 @@ class _SignupScreenState extends State<SignupScreen> {
     return regex.hasMatch(email);
   }
 
-  void handleSignup() {
-    if (_formKey.currentState!.validate()) {
-      final email = emailController.text.trim();
-      final password = passwordController.text;
+  Future<void> handleSignup() async {
+    if (!_formKey.currentState!.validate()) return;
 
-      final success = authService.signup(email, password);
-
-      if (!success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('This email is already registered, login instead'),
-          ),
+    await ref
+        .read(authProvider.notifier)
+        .register(
+          emailController.text.trim(),
+          passwordController.text,
+          displayNameController.text.trim(),
         );
-        return;
-      }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created successfully')),
-      );
+    final authState = ref.read(authProvider);
 
+    if (!mounted) return;
+
+    if (authState.error != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(authState.error!)));
+      return;
+    }
+
+    if (authState.successMessage != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(authState.successMessage!)));
       Navigator.pushNamed(context, '/login');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Create account')),
@@ -107,23 +116,21 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: AppDimensions.spaceLarge),
 
-                const SocialButtons(),
-
-                const SizedBox(height: AppDimensions.spaceMedium),
-
-                const Row(
-                  children: [
-                    Expanded(child: Divider()),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Text('or'),
-                    ),
-                    Expanded(child: Divider()),
-                  ],
+                /// DISPLAY NAME (NEW)
+                TextFormField(
+                  controller: displayNameController,
+                  style: AppTextStyles.trackTitle,
+                  decoration: buildInputDecoration('Username'),
+                  validator: (value) {
+                    if ((value ?? '').trim().isEmpty) {
+                      return 'Username is required';
+                    }
+                    return null;
+                  },
                 ),
-
                 const SizedBox(height: AppDimensions.spaceMedium),
 
+                /// EMAIL
                 TextFormField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -143,6 +150,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: AppDimensions.spaceMedium),
 
+                /// PASSWORD
                 TextFormField(
                   controller: passwordController,
                   obscureText: true,
@@ -162,6 +170,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: AppDimensions.spaceMedium),
 
+                /// CONFIRM PASSWORD
                 TextFormField(
                   controller: confirmPasswordController,
                   obscureText: true,
@@ -184,8 +193,14 @@ class _SignupScreenState extends State<SignupScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: handleSignup,
-                    child: const Text('Create account'),
+                    onPressed: authState.isLoading ? null : handleSignup,
+                    child: authState.isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Create account'),
                   ),
                 ),
 

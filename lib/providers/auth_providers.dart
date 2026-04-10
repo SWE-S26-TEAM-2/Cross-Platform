@@ -31,12 +31,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> register(
     String email,
     String password,
-    String username,
-    String captchaToken,
+    String displayName,
   ) async {
     state = const AuthState(isLoading: true);
     try {
-      await _authService.register(email, password, username, captchaToken);
+      await _authService.register(email, password, displayName);
       state = const AuthState(
         successMessage: 'Account created! Check your email to verify.',
       );
