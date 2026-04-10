@@ -10,6 +10,8 @@ import 'screens/auth/forget_password_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/upgrade/upgrade_screen.dart';
 import 'screens/auth/change_password_screen.dart';
+import 'screens/library/collections_screen.dart';
+
 
 void main() {
   runApp(
