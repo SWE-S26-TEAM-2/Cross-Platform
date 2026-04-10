@@ -30,11 +30,17 @@ class AuthService {
   }
 
   Future<AuthTokens> login(String email, String password) async {
-    final result = await _dio.post(
-      '$baseUrl/auth/login',
-      data: {'email': email, 'password': password},
-    );
-    return AuthTokens.fromJson(result.data);
+    try {
+      final result = await _dio.post(
+        '$baseUrl/auth/login',
+        data: {'email': email, 'password': password},
+      );
+      return AuthTokens.fromJson(result.data);
+    } on DioException catch (e) {
+      print('LOGIN STATUS: ${e.response?.statusCode}');
+      print('LOGIN DATA: ${e.response?.data}');
+      rethrow;
+    }
   }
 
   Future<AuthTokens> googleLogin(String googleIdToken) async {
