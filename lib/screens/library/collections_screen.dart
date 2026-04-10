@@ -3,11 +3,7 @@ import '../../constants/app_colors.dart';
 import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
 
-enum CollectionType {
-  playlist,
-  album,
-  station,
-}
+enum CollectionType { playlist, album, station }
 
 class CollectionTrack {
   final String title;
@@ -50,10 +46,7 @@ class CollectionDetailsData {
 class CollectionDetailsScreen extends StatelessWidget {
   final CollectionDetailsData data;
 
-  const CollectionDetailsScreen({
-    super.key,
-    required this.data,
-  });
+  const CollectionDetailsScreen({super.key, required this.data});
 
   String get _typeLabel {
     switch (data.type) {
@@ -93,9 +86,7 @@ class CollectionDetailsScreen extends StatelessWidget {
                             ? 0
                             : AppDimensions.spaceMedium,
                       ),
-                      child: _TrackTile(
-                        track: data.tracks[index],
-                      ),
+                      child: _TrackTile(track: data.tracks[index]),
                     ),
                   ),
 
@@ -115,10 +106,7 @@ class _TopSection extends StatelessWidget {
   final CollectionDetailsData data;
   final String metaText;
 
-  const _TopSection({
-    required this.data,
-    required this.metaText,
-  });
+  const _TopSection({required this.data, required this.metaText});
 
   @override
   Widget build(BuildContext context) {
@@ -211,19 +199,13 @@ class _TopSection extends StatelessWidget {
 class _ActionRow extends StatelessWidget {
   final String likesText;
 
-  const _ActionRow({
-    required this.likesText,
-  });
+  const _ActionRow({required this.likesText});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Icon(
-          Icons.favorite_border,
-          color: Colors.white70,
-          size: 30,
-        ),
+        const Icon(Icons.favorite_border, color: Colors.white70, size: 30),
         const SizedBox(width: 8),
         Text(
           likesText,
@@ -233,17 +215,9 @@ class _ActionRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 16),
-        const Icon(
-          Icons.more_horiz,
-          color: Colors.white70,
-          size: 28,
-        ),
+        const Icon(Icons.more_horiz, color: Colors.white70, size: 28),
         const Spacer(),
-        const Icon(
-          Icons.shuffle,
-          color: Colors.white70,
-          size: 30,
-        ),
+        const Icon(Icons.shuffle, color: Colors.white70, size: 30),
         const SizedBox(width: AppDimensions.spaceMedium),
         Container(
           width: 68,
@@ -266,12 +240,11 @@ class _ActionRow extends StatelessWidget {
 class _TrackTile extends StatelessWidget {
   final CollectionTrack track;
 
-  const _TrackTile({
-    required this.track,
-  });
+  const _TrackTile({required this.track});
 
   String get _artistLine {
-    if (track.secondaryArtist == null || track.secondaryArtist!.trim().isEmpty) {
+    if (track.secondaryArtist == null ||
+        track.secondaryArtist!.trim().isEmpty) {
       return track.artist;
     }
     return '${track.artist}, ${track.secondaryArtist}';
@@ -282,9 +255,7 @@ class _TrackTile extends StatelessWidget {
     return Row(
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(
-            AppDimensions.borderRadiusMedium,
-          ),
+          borderRadius: BorderRadius.circular(AppDimensions.borderRadiusMedium),
           child: Image.asset(
             track.artworkPath,
             width: 74,
@@ -342,11 +313,7 @@ class _TrackTile extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        const Icon(
-          Icons.more_horiz,
-          color: Colors.white70,
-          size: 26,
-        ),
+        const Icon(Icons.more_horiz, color: Colors.white70, size: 26),
       ],
     );
   }

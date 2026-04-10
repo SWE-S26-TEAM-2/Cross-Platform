@@ -4,10 +4,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 class CaptchaWebViewScreen extends StatefulWidget {
   final String captchaUrl;
 
-  const CaptchaWebViewScreen({
-    super.key,
-    required this.captchaUrl,
-  });
+  const CaptchaWebViewScreen({super.key, required this.captchaUrl});
 
   @override
   State<CaptchaWebViewScreen> createState() => _CaptchaWebViewScreenState();
@@ -22,47 +19,46 @@ class _CaptchaWebViewScreenState extends State<CaptchaWebViewScreen> {
   void initState() {
     super.initState();
 
-    _controller =
-        WebViewController()
-          ..setJavaScriptMode(JavaScriptMode.unrestricted)
-          ..addJavaScriptChannel(
-            'CaptchaChannel',
-            onMessageReceived: (JavaScriptMessage message) {
-              final token = message.message.trim();
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..addJavaScriptChannel(
+        'CaptchaChannel',
+        onMessageReceived: (JavaScriptMessage message) {
+          final token = message.message.trim();
 
-              if (token.isNotEmpty) {
-                Navigator.pop(context, token);
-              }
-            },
-          )
-          ..setNavigationDelegate(
-            NavigationDelegate(
-              onPageStarted: (String url) {
-                if (mounted) {
-                  setState(() {
-                    _isLoading = true;
-                    _errorMessage = null;
-                  });
-                }
-              },
-              onPageFinished: (String url) {
-                if (mounted) {
-                  setState(() {
-                    _isLoading = false;
-                  });
-                }
-              },
-              onWebResourceError: (WebResourceError error) {
-                if (mounted) {
-                  setState(() {
-                    _isLoading = false;
-                    _errorMessage = error.description;
-                  });
-                }
-              },
-            ),
-          )
-          ..loadRequest(Uri.parse(widget.captchaUrl));
+          if (token.isNotEmpty) {
+            Navigator.pop(context, token);
+          }
+        },
+      )
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (String url) {
+            if (mounted) {
+              setState(() {
+                _isLoading = true;
+                _errorMessage = null;
+              });
+            }
+          },
+          onPageFinished: (String url) {
+            if (mounted) {
+              setState(() {
+                _isLoading = false;
+              });
+            }
+          },
+          onWebResourceError: (WebResourceError error) {
+            if (mounted) {
+              setState(() {
+                _isLoading = false;
+                _errorMessage = error.description;
+              });
+            }
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(widget.captchaUrl));
   }
 
   void _reloadPage() {
@@ -76,17 +72,12 @@ class _CaptchaWebViewScreenState extends State<CaptchaWebViewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Verify you are human'),
-      ),
+      appBar: AppBar(title: const Text('Verify you are human')),
       body: Stack(
         children: [
           if (_errorMessage == null) WebViewWidget(controller: _controller),
 
-          if (_isLoading)
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
+          if (_isLoading) const Center(child: CircularProgressIndicator()),
 
           if (_errorMessage != null)
             Center(
@@ -95,10 +86,7 @@ class _CaptchaWebViewScreenState extends State<CaptchaWebViewScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 48,
-                    ),
+                    const Icon(Icons.error_outline, size: 48),
                     const SizedBox(height: 16),
                     const Text(
                       'Failed to load CAPTCHA',
@@ -109,10 +97,7 @@ class _CaptchaWebViewScreenState extends State<CaptchaWebViewScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      _errorMessage!,
-                      textAlign: TextAlign.center,
-                    ),
+                    Text(_errorMessage!, textAlign: TextAlign.center),
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _reloadPage,

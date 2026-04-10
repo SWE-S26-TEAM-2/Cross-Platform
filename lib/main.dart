@@ -12,13 +12,8 @@ import 'screens/upgrade/upgrade_screen.dart';
 import 'screens/auth/change_password_screen.dart';
 import 'screens/library/collections_screen.dart';
 
-
 void main() {
-  runApp(
-    const ProviderScope(
-      child: SoundCloudApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: SoundCloudApp()));
 }
 
 class SoundCloudApp extends StatelessWidget {

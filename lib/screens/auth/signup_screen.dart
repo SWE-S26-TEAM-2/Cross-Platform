@@ -66,7 +66,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Future<void> handleSignup() async {
     if (!_formKey.currentState!.validate()) return;
 
-    await ref.read(authProvider.notifier).register(
+    await ref
+        .read(authProvider.notifier)
+        .register(
           emailController.text.trim(),
           passwordController.text,
           displayNameController.text.trim(),
@@ -77,16 +79,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     if (!mounted) return;
 
     if (authState.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authState.error!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(authState.error!)));
       return;
     }
 
     if (authState.successMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authState.successMessage!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(authState.successMessage!)));
       Navigator.pushNamed(context, '/login');
     }
   }
@@ -110,9 +112,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       if (!mounted) return;
 
       if (authState.error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authState.error!)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(authState.error!)));
         return;
       }
 
@@ -124,9 +126,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Google login failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Google login failed: $e')));
     }
   }
 

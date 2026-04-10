@@ -61,26 +61,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    await ref.read(authProvider.notifier).login(
-          emailController.text.trim(),
-          passwordController.text,
-        );
+    await ref
+        .read(authProvider.notifier)
+        .login(emailController.text.trim(), passwordController.text);
 
     final authState = ref.read(authProvider);
 
     if (!mounted) return;
 
     if (authState.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authState.error!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(authState.error!)));
       return;
     }
 
     if (authState.isLoggedIn) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login successful')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Login successful')));
       Navigator.pushNamed(context, '/root');
     }
   }
@@ -104,9 +103,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!mounted) return;
 
       if (authState.error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authState.error!)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(authState.error!)));
         return;
       }
 
@@ -118,9 +117,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Google login failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Google login failed: $e')));
     }
   }
 
@@ -130,9 +129,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Log in'),
-      ),
+      appBar: AppBar(title: const Text('Log in')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.spaceMedium),
@@ -141,10 +138,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Welcome back',
-                  style: AppTextStyles.heading1,
-                ),
+                const Text('Welcome back', style: AppTextStyles.heading1),
                 const SizedBox(height: AppDimensions.spaceSmall),
                 const Text(
                   'Log in to continue listening and connecting.',
