@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
-import '../../services/mock_auth_service.dart';
-import '../../widgets/social_buttons.dart';
+import '../../providers/auth_providers.dart';
+import '../../services/google_auth_service.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final MockAuthService authService = MockAuthService();
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  final GoogleAuthService googleAuthService = GoogleAuthService();
 
   @override
   void dispose() {
@@ -56,30 +58,85 @@ class _LoginScreenState extends State<LoginScreen> {
     return regex.hasMatch(email);
   }
 
-  void handleLogin() {
-    if (_formKey.currentState!.validate()) {
-      final email = emailController.text.trim();
-      final password = passwordController.text;
+  Future<void> handleLogin() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
-      final success = authService.login(email, password);
+    await ref
+        .read(authProvider.notifier)
+        .login(emailController.text.trim(), passwordController.text);
 
-      if (!success) {
+    final authState = ref.read(authProvider);
+
+    if (!mounted) {
+      return;
+    }
+
+    if (authState.error != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(authState.error!)));
+      return;
+    }
+
+    if (authState.isLoggedIn) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Login successful')));
+      Navigator.pushNamed(context, '/root');
+    }
+  }
+
+  Future<void> handleGoogleLogin() async {
+    try {
+      final idToken = await googleAuthService.signInAndGetIdToken();
+
+      if (idToken == null || idToken.isEmpty) {
+        if (!mounted) {
+          return;
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid email or password')),
+          const SnackBar(content: Text('Failed to get Google ID token')),
         );
         return;
       }
 
+      await ref.read(authProvider.notifier).googleLogin(idToken);
+
+      final authState = ref.read(authProvider);
+
+      if (!mounted) {
+        return;
+      }
+
+      if (authState.error != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(authState.error!)));
+        return;
+      }
+
+      if (authState.isLoggedIn) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google login successful')),
+        );
+        Navigator.pushNamed(context, '/root');
+      }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Login successful')));
-
-      Navigator.pushNamed(context, '/root');
+      ).showSnackBar(SnackBar(content: Text('Google login failed: $e')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Log in')),
@@ -98,7 +155,42 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: AppTextStyles.artistName,
                 ),
                 const SizedBox(height: AppDimensions.spaceLarge),
-                const SocialButtons(),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppDimensions.spaceMedium,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.borderRadiusMedium,
+                        ),
+                      ),
+                    ),
+                    onPressed: authState.isLoading ? null : handleGoogleLogin,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'assets/images/google_logo.png',
+                          height: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'Continue with Google',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
                 const SizedBox(height: AppDimensions.spaceMedium),
 
@@ -114,6 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 const SizedBox(height: AppDimensions.spaceMedium),
+
                 TextFormField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -173,8 +266,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: handleLogin,
-                    child: const Text('Log in'),
+                    onPressed: authState.isLoading ? null : handleLogin,
+                    child: authState.isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Log in'),
                   ),
                 ),
 
