@@ -9,7 +9,7 @@ import '../profile/widgets/profile_track_list_section.dart';
 enum LikedTracksSortOption { recentlyAdded, firstAdded, trackName, artist }
 
 class LikedTracksScreen extends StatefulWidget {
-   final VoidCallback? onBack;
+  final VoidCallback? onBack;
   const LikedTracksScreen({super.key, this.onBack});
 
   @override
