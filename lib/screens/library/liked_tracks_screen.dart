@@ -9,7 +9,8 @@ import '../profile/widgets/profile_track_list_section.dart';
 enum LikedTracksSortOption { recentlyAdded, firstAdded, trackName, artist }
 
 class LikedTracksScreen extends StatefulWidget {
-  const LikedTracksScreen({super.key});
+   final VoidCallback? onBack;
+  const LikedTracksScreen({super.key, this.onBack});
 
   @override
   State<LikedTracksScreen> createState() => _LikedTracksScreenState();
@@ -26,7 +27,7 @@ class _LikedTracksScreenState extends State<LikedTracksScreen> {
     super.initState();
     _allTracks = List.from(
       MockTracks.recentlyPlayedTracks,
-    ); // swap for liked tracks when ready
+    ); // will swap for liked tracks when ready
     _filteredTracks = List.from(_allTracks);
     _searchController.addListener(_onSearchChanged);
   }
@@ -165,7 +166,7 @@ class _LikedTracksScreenState extends State<LikedTracksScreen> {
                                 color: Colors.white,
                                 size: 28,
                               ),
-                              onPressed: () => Navigator.pop(context),
+                              onPressed: () => widget.onBack?.call(),
                             ),
                             Expanded(
                               child: Container(
