@@ -34,8 +34,7 @@ class _FakeRootState extends State<_FakeRoot> {
   void _pushSubScreen(Widget screen) =>
       setState(() => _subScreens[_selectedIndex] = screen);
 
-  void _popSubScreen() =>
-      setState(() => _subScreens.remove(_selectedIndex));
+  void _popSubScreen() => setState(() => _subScreens.remove(_selectedIndex));
 
   static const _tabs = [
     Text('HomeTab'),
@@ -50,10 +49,7 @@ class _FakeRootState extends State<_FakeRoot> {
       return _subScreens[_selectedIndex]!;
     }
     if (_selectedIndex == 3) {
-      return LibraryScreen(
-        onNavigate: _pushSubScreen,
-        onBack: _popSubScreen,
-      );
+      return LibraryScreen(onNavigate: _pushSubScreen, onBack: _popSubScreen);
     }
     return _tabs[_selectedIndex < 3 ? _selectedIndex : _selectedIndex - 1];
   }
@@ -66,11 +62,7 @@ class _FakeRootState extends State<_FakeRoot> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Mini player — always visible
-          MiniPlayer(
-            track: _fakeTrack,
-            isPlaying: false,
-            onPlay: () {},
-          ),
+          MiniPlayer(track: _fakeTrack, isPlaying: false, onPlay: () {}),
           // Simplified tab bar with just Home (0) and Library (3)
           Row(
             children: [
@@ -97,8 +89,9 @@ class _FakeRootState extends State<_FakeRoot> {
 void main() {
   // ── Group 1: Navigation ───────────────────────────────────────────────────
   group('Liked Tracks navigation', () {
-    testWidgets('tapping Liked Tracks tile shows LikedTracksScreen',
-        (tester) async {
+    testWidgets('tapping Liked Tracks tile shows LikedTracksScreen', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const _FakeRoot()));
 
       // Switch to Library tab
@@ -116,8 +109,9 @@ void main() {
       expect(find.text('Library'), findsNothing);
     });
 
-    testWidgets('back button on LikedTracksScreen returns to LibraryScreen',
-        (tester) async {
+    testWidgets('back button on LikedTracksScreen returns to LibraryScreen', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const _FakeRoot()));
 
       // Go to Library → Liked Tracks
@@ -135,9 +129,9 @@ void main() {
       expect(find.text('Your likes'), findsNothing);
     });
 
-    testWidgets(
-        'switching tabs and returning restores LikedTracksScreen',
-        (tester) async {
+    testWidgets('switching tabs and returning restores LikedTracksScreen', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const _FakeRoot()));
 
       // Go to Library → Liked Tracks
@@ -172,8 +166,9 @@ void main() {
       expect(find.byType(MiniPlayer), findsOneWidget);
     });
 
-    testWidgets('MiniPlayer stays visible after opening LikedTracksScreen',
-        (tester) async {
+    testWidgets('MiniPlayer stays visible after opening LikedTracksScreen', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const _FakeRoot()));
 
       await tester.tap(find.byKey(const Key('tab_library')));
@@ -185,8 +180,7 @@ void main() {
       expect(find.byType(MiniPlayer), findsOneWidget);
     });
 
-    testWidgets('MiniPlayer stays visible after pressing back',
-        (tester) async {
+    testWidgets('MiniPlayer stays visible after pressing back', (tester) async {
       await tester.pumpWidget(_wrap(const _FakeRoot()));
 
       await tester.tap(find.byKey(const Key('tab_library')));
@@ -203,9 +197,7 @@ void main() {
   // ── Group 3: Search filtering ─────────────────────────────────────────────
   group('LikedTracksScreen search', () {
     /// Builds a standalone LikedTracksScreen with a fake onBack
-    Widget _likedScreen() => _wrap(
-          LikedTracksScreen(onBack: () {}),
-        );
+    Widget _likedScreen() => _wrap(LikedTracksScreen(onBack: () {}));
 
     testWidgets('search bar filters tracks by title', (tester) async {
       await tester.pumpWidget(_likedScreen());
@@ -215,10 +207,7 @@ void main() {
       final firstTitle = MockTracks.recentlyPlayedTracks.first.title;
 
       // Type the first track's title into the search field
-      await tester.enterText(
-        find.byType(TextField),
-        firstTitle,
-      );
+      await tester.enterText(find.byType(TextField), firstTitle);
       await tester.pumpAndSettle();
 
       // That track should still appear
@@ -242,10 +231,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Type something that won't match any track
-      await tester.enterText(
-        find.byType(TextField),
-        'zzzzzz_no_match_zzzzzz',
-      );
+      await tester.enterText(find.byType(TextField), 'zzzzzz_no_match_zzzzzz');
       await tester.pumpAndSettle();
 
       // None of the real track titles should be visible
@@ -261,8 +247,7 @@ void main() {
       final firstTitle = MockTracks.recentlyPlayedTracks.first.title;
 
       // Filter down
-      await tester.enterText(
-          find.byType(TextField), 'zzzzzz_no_match_zzzzzz');
+      await tester.enterText(find.byType(TextField), 'zzzzzz_no_match_zzzzzz');
       await tester.pumpAndSettle();
 
       // Clear the search
@@ -283,8 +268,9 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('sort bottom sheet opens when sort icon is tapped',
-        (tester) async {
+    testWidgets('sort bottom sheet opens when sort icon is tapped', (
+      tester,
+    ) async {
       await tester.pumpWidget(_likedScreen());
       await tester.pumpAndSettle();
 
@@ -297,8 +283,9 @@ void main() {
       expect(find.text('Artist'), findsOneWidget);
     });
 
-    testWidgets('selecting Track Name sorts list alphabetically by title',
-        (tester) async {
+    testWidgets('selecting Track Name sorts list alphabetically by title', (
+      tester,
+    ) async {
       await tester.pumpWidget(_likedScreen());
       await tester.pumpAndSettle();
 
@@ -323,8 +310,9 @@ void main() {
       expect(firstY, lessThan(secondY));
     });
 
-    testWidgets('selecting Artist sorts list alphabetically by artist',
-        (tester) async {
+    testWidgets('selecting Artist sorts list alphabetically by artist', (
+      tester,
+    ) async {
       await tester.pumpWidget(_likedScreen());
       await tester.pumpAndSettle();
 
