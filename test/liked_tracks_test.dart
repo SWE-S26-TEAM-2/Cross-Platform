@@ -13,10 +13,8 @@ Widget wrap(Widget child) => MaterialApp(home: child);
 Track get fakeTrack => MockTracks.recentlyPlayedTracks.first;
 
 /// Scoped AppBar title finder (avoids matching tab labels)
-Finder appBarTitle(String text) => find.descendant(
-      of: find.byType(AppBar),
-      matching: find.text(text),
-    );
+Finder appBarTitle(String text) =>
+    find.descendant(of: find.byType(AppBar), matching: find.text(text));
 
 Future<void> goToLibrary(WidgetTester tester) async {
   await tester.tap(find.byKey(const Key('tab_library')));
@@ -229,10 +227,8 @@ void main() {
       final sorted = [...MockTracks.recentlyPlayedTracks]
         ..sort((a, b) => a.title.compareTo(b.title));
 
-      final firstY =
-          tester.getTopLeft(find.text(sorted[0].title).first).dy;
-      final secondY =
-          tester.getTopLeft(find.text(sorted[1].title).first).dy;
+      final firstY = tester.getTopLeft(find.text(sorted[0].title).first).dy;
+      final secondY = tester.getTopLeft(find.text(sorted[1].title).first).dy;
 
       expect(firstY, lessThan(secondY));
     });
@@ -247,10 +243,8 @@ void main() {
       final sorted = [...MockTracks.recentlyPlayedTracks]
         ..sort((a, b) => a.artist.compareTo(b.artist));
 
-      final firstY =
-          tester.getTopLeft(find.text(sorted[0].artist).first).dy;
-      final secondY =
-          tester.getTopLeft(find.text(sorted[1].artist).first).dy;
+      final firstY = tester.getTopLeft(find.text(sorted[0].artist).first).dy;
+      final secondY = tester.getTopLeft(find.text(sorted[1].artist).first).dy;
 
       expect(firstY, lessThan(secondY));
     });
