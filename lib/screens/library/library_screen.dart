@@ -8,7 +8,9 @@ import 'package:my_project/screens/library/library_tile.dart';
 import 'package:my_project/screens/library/liked_tracks_screen.dart';
 
 class LibraryScreen extends StatelessWidget {
-  const LibraryScreen({super.key});
+   final void Function(Widget) onNavigate;
+  final VoidCallback? onBack;
+  const LibraryScreen({super.key, required this.onNavigate, this.onBack});
 
   @override
   Widget build(BuildContext context) {
