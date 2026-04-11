@@ -1,12 +1,9 @@
 class User {
-  /// Password to be reomved & Values to be not nullable (Not needed to be stored here in the UI)
   final String email;
   final String? id;
   final String? userName;
   final String? avatarUrl;
   String? password;
-
-  /// For 'Change-Password' purposes it is not final.
   final String? location;
   final int? followers;
   final int? following;
@@ -23,12 +20,16 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
-    id: json['id'],
-    email: json['email'],
-    userName: json['username'],
-    avatarUrl: json['avatar_url'],
-    location: json['location'],
-    followers: json['followers'],
-    following: json['following'],
+    id: json['id']?.toString() ?? json['user_id']?.toString(),
+    email: json['email']?.toString() ?? '',
+    userName: json['username']?.toString() ?? json['display_name']?.toString(),
+    avatarUrl: json['avatar_url']?.toString(),
+    location: json['location']?.toString(),
+    followers: json['followers'] is int
+        ? json['followers']
+        : int.tryParse(json['followers']?.toString() ?? ''),
+    following: json['following'] is int
+        ? json['following']
+        : int.tryParse(json['following']?.toString() ?? ''),
   );
 }
