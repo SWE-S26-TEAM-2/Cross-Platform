@@ -16,4 +16,28 @@ class Track {
     required this.duration,
     required this.audioPath,
   });
+
+  factory Track.fromJson(Map<String, dynamic> json) {
+    return Track(
+      id: json['id'].toString(),
+      title: json['title'] ?? '',
+      artist: json['artist'] ?? '',
+      artworkUrl: json['artworkUrl'] ?? '',
+      likeCount: json['likeCount'] ?? 0,
+      duration: json['duration'] ?? 0,
+      audioPath: json['audioPath'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'artist': artist,
+      'artworkUrl': artworkUrl,
+      'likeCount': likeCount,
+      'duration': duration,
+      'audioPath': audioPath,
+    };
+  }
 }
