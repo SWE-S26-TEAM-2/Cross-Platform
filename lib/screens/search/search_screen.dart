@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:my_project/constants/app_colors.dart';
 import 'package:my_project/constants/app_dimensions.dart';
@@ -16,7 +17,9 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _controller = TextEditingController();
+
   List<Track> filteredTracks = [];
+  Timer? _debounce;
 
   final List<Track> allTracks = [
     ...MockTracks.likedTracks,
@@ -24,17 +27,33 @@ class _SearchScreenState extends State<SearchScreen> {
     ...MockTracks.recommendedTracks,
   ];
 
-  void _filterTracks(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        filteredTracks = [];
-      } else {
-        filteredTracks = allTracks
-            .where((track) =>
-                track.title.toLowerCase().contains(query.toLowerCase()))
-            .toList();
-      }
+  void _onSearchChanged(String query) {
+    // cancel previous timer
+    if (_debounce?.isActive ?? false) {
+      _debounce!.cancel();
+    }
+
+    // start new timer (0.5s)
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        if (query.isEmpty) {
+          filteredTracks = [];
+        } else {
+          filteredTracks = allTracks
+              .where((track) => track.title
+                  .toLowerCase()
+                  .contains(query.toLowerCase()))
+              .toList();
+        }
+      });
     });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -49,9 +68,7 @@ class _SearchScreenState extends State<SearchScreen> {
           children: [
             SearchBar1(
               controller: _controller,
-              onChanged: (value) {
-                _filterTracks(value);
-              },
+              onChanged: _onSearchChanged, // 👈 use debounce here
             ),
             const SizedBox(height: 10),
             Expanded(
@@ -87,8 +104,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                     ),
                                   ),
                                   const SizedBox(
-                                    width: AppDimensions.spaceMedium,
-                                  ),
+                                      width: AppDimensions.spaceMedium),
                                   Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -98,7 +114,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                         style: AppTextStyles.trackTitle,
                                       ),
                                       const SizedBox(
-                                        height: AppDimensions.spaceExtraSmall,
+                                        height:
+                                            AppDimensions.spaceExtraSmall,
                                       ),
                                       Text(
                                         track.artist,

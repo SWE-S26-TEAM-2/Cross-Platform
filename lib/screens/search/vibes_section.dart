@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:my_project/constants/app_colors.dart';
 import 'package:my_project/constants/app_dimensions.dart';
 import 'package:my_project/constants/app_text_styles.dart';
@@ -31,20 +32,21 @@ class VibesSection extends StatelessWidget {
   double _tileHeight(int index) {
     switch (index % 3) {
       case 0:
-        return 160;
+        return 80;
       case 1:
-        return 160;
-      case 2:
-        return 160;
+        return 176;
       default:
-        return 160;
+        return 272;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spaceMedium, vertical: AppDimensions.spaceMedium),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.spaceMedium,
+        vertical: AppDimensions.spaceMedium,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -52,32 +54,35 @@ class VibesSection extends StatelessWidget {
             padding: EdgeInsets.only(bottom: AppDimensions.spaceMedium),
             child: Text(
               "Vibes",
-              style: AppTextStyles.heading1
+              style: AppTextStyles.heading1,
             ),
           ),
-          Wrap(
-            spacing: 12,
-            runSpacing: AppDimensions.spaceMedium,
-            children: List.generate(vibes.length, (index) {
+          MasonryGridView.builder(
+            gridDelegate:
+                const SliverSimpleGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+            ),
+            mainAxisSpacing: AppDimensions.spaceMedium,
+            crossAxisSpacing: 12,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: vibes.length,
+            itemBuilder: (context, index) {
               final vibe = vibes[index];
 
               return GestureDetector(
                 onTap: () {},
                 child: Container(
-                  width: (MediaQuery.of(context).size.width / 2) - 22,
                   height: _tileHeight(index),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(
-                        AppDimensions.borderRadiusMedium),
-                    /*boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 6,
-                        offset: const Offset(2, 3),
-                      ),
-                    ],*/
+                      AppDimensions.borderRadiusMedium,
+                    ),
                     color: AppColors.surface,
-                    border: Border.all(color: vibe["color"], width: 1.2),
+                    border: Border.all(
+                      color: vibe["color"],
+                      width: 1.2,
+                    ),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(14),
@@ -91,7 +96,7 @@ class VibesSection extends StatelessWidget {
                   ),
                 ),
               );
-            }),
+            },
           ),
         ],
       ),
