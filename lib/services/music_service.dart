@@ -21,10 +21,7 @@ class MusicService {
   }
 
   Future<List<dynamic>> searchTracks(String query) async {
-    final res = await _dio.get(
-      "/search",
-      queryParameters: {"q": query},
-    );
+    final res = await _dio.get("/search", queryParameters: {"q": query});
     return res.data;
   }
 }

@@ -40,9 +40,10 @@ class _SearchScreenState extends State<SearchScreen> {
           filteredTracks = [];
         } else {
           filteredTracks = allTracks
-              .where((track) => track.title
-                  .toLowerCase()
-                  .contains(query.toLowerCase()))
+              .where(
+                (track) =>
+                    track.title.toLowerCase().contains(query.toLowerCase()),
+              )
               .toList();
         }
       });
@@ -104,7 +105,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                     ),
                                   ),
                                   const SizedBox(
-                                      width: AppDimensions.spaceMedium),
+                                    width: AppDimensions.spaceMedium,
+                                  ),
                                   Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -114,8 +116,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                         style: AppTextStyles.trackTitle,
                                       ),
                                       const SizedBox(
-                                        height:
-                                            AppDimensions.spaceExtraSmall,
+                                        height: AppDimensions.spaceExtraSmall,
                                       ),
                                       Text(
                                         track.artist,

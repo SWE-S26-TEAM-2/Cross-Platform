@@ -52,14 +52,10 @@ class VibesSection extends StatelessWidget {
         children: [
           const Padding(
             padding: EdgeInsets.only(bottom: AppDimensions.spaceMedium),
-            child: Text(
-              "Vibes",
-              style: AppTextStyles.heading1,
-            ),
+            child: Text("Vibes", style: AppTextStyles.heading1),
           ),
           MasonryGridView.builder(
-            gridDelegate:
-                const SliverSimpleGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: const SliverSimpleGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
             ),
             mainAxisSpacing: AppDimensions.spaceMedium,
@@ -79,19 +75,13 @@ class VibesSection extends StatelessWidget {
                       AppDimensions.borderRadiusMedium,
                     ),
                     color: AppColors.surface,
-                    border: Border.all(
-                      color: vibe["color"],
-                      width: 1.2,
-                    ),
+                    border: Border.all(color: vibe["color"], width: 1.2),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(14),
                     child: Align(
                       alignment: Alignment.topLeft,
-                      child: Text(
-                        vibe["title"],
-                        style: AppTextStyles.heading2,
-                      ),
+                      child: Text(vibe["title"], style: AppTextStyles.heading2),
                     ),
                   ),
                 ),
