@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_project/constants/app_colors.dart';
 import 'package:my_project/constants/app_dimensions.dart';
 import 'package:my_project/constants/app_text_styles.dart';
+import 'package:my_project/models/notification.dart';
 import 'package:my_project/models/user.dart';
 import '../../providers/notifications_provider.dart';
+import '../../models/notification.dart' as model;
 
 class Activity extends ConsumerStatefulWidget {
   final List<User> messages;
@@ -86,8 +88,8 @@ class _ActivityState extends ConsumerState<Activity> {
       separatorBuilder: (_, __) =>
           const Divider(height: 1, thickness: 1, color: AppColors.divider),
       itemBuilder: (context, index) {
-        final user = notifications[index];
-        return _buildTile(user, Icons.notifications, showFollow: true);
+        final notif = notifications[index];
+        return _buildNotificationTile(notif);
       },
     );
   }
@@ -103,21 +105,55 @@ class _ActivityState extends ConsumerState<Activity> {
           const Divider(height: 1, thickness: 1, color: AppColors.divider),
       itemBuilder: (context, index) {
         final user = widget.messages[index];
-        return _buildTile(user, Icons.message, showFollow: false);
+        return _buildMessageTile(user);
       },
     );
   }
 
-  Widget _buildTile(User user, IconData icon, {required bool showFollow}) {
+  Widget _buildNotificationTile(model.Notification notif) {
     return InkWell(
       onTap: () {
-        if (showFollow) {
-          final id = int.tryParse(user.id ?? '');
-          if (id != null) {
-            ref.read(markNotificationAsReadProvider(id).future);
-          }
+        final id = int.tryParse(notif.id);
+        if (id != null) {
+          ref.read(markNotificationAsReadProvider(id).future);
         }
       },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        child: Row(
+          children: [
+            CircleAvatar(radius: 22, child: Icon(_iconForType(notif.type))),
+
+            const SizedBox(width: 12),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    notif.message,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    notif.createdAt,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+
+            if (!notif.isRead)
+              const CircleAvatar(radius: 5, backgroundColor: Colors.blue),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMessageTile(User user) {
+    return InkWell(
+      onTap: () {},
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         child: Row(
@@ -138,7 +174,11 @@ class _ActivityState extends ConsumerState<Activity> {
                 children: [
                   Row(
                     children: [
-                      Icon(icon, size: 18, color: AppColors.textMuted),
+                      const Icon(
+                        Icons.message,
+                        size: 18,
+                        color: AppColors.textMuted,
+                      ),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
@@ -149,9 +189,7 @@ class _ActivityState extends ConsumerState<Activity> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 4),
-
                   const Text(
                     "Tap to view details",
                     style: TextStyle(fontSize: 12, color: Colors.grey),
@@ -159,25 +197,26 @@ class _ActivityState extends ConsumerState<Activity> {
                 ],
               ),
             ),
-
-            if (showFollow)
-              ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade300,
-                  foregroundColor: Colors.black,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: const Text("Follow"),
-              ),
           ],
         ),
       ),
     );
+  }
+
+  IconData _iconForType(String type) {
+    switch (type) {
+      case 'like':
+        return Icons.favorite;
+      case 'follow':
+        return Icons.person_add;
+      case 'comment':
+        return Icons.comment;
+      case 'repost':
+        return Icons.repeat;
+      case 'message':
+        return Icons.message;
+      default:
+        return Icons.notifications;
+    }
   }
 }
