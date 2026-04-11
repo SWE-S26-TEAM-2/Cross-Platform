@@ -15,7 +15,7 @@ final messagingServiceProvider = Provider<MessagesService>((ref) {
 class ConversationsNotifier extends AsyncNotifier<List<Conversation>> {
   @override
   Future<List<Conversation>> build() async {
-    return await ref.watch(messagingServiceProvider).getConversations();
+    return await ref.read(messagingServiceProvider).getConversations();
   }
 
   Future<void> refresh() async {

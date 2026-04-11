@@ -33,7 +33,7 @@ class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
   @override
   Future<List<Notification>> build() async {
     try {
-      return await ref.watch(notificationsServiceProvider).getNotifications();
+      return await ref.read(notificationsServiceProvider).getNotifications();
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
         return _mockNotifications;

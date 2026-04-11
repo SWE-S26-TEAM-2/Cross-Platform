@@ -3,14 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_project/constants/app_colors.dart';
 import 'package:my_project/constants/app_dimensions.dart';
 import 'package:my_project/constants/app_text_styles.dart';
-import 'package:my_project/models/user.dart';
+import 'package:my_project/models/conversation.dart';
 import '../../providers/notifications_provider.dart';
+import '../../providers/messages_provider.dart';
 import '../../models/notification.dart' as model;
 
 class Activity extends ConsumerStatefulWidget {
-  final List<User> messages;
-
-  const Activity({super.key, required this.messages});
+  const Activity({super.key});
 
   @override
   ConsumerState<Activity> createState() => _ActivityState();
@@ -21,7 +20,8 @@ class _ActivityState extends ConsumerState<Activity> {
 
   @override
   Widget build(BuildContext context) {
-    final notificationsAsync = ref.watch(notificationsProvider); // changed
+    final notificationsAsync = ref.watch(notificationsProvider);
+    final conversationsAsync = ref.watch(conversationsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -41,17 +41,26 @@ class _ActivityState extends ConsumerState<Activity> {
           const Divider(height: 1, thickness: 1, color: AppColors.divider),
 
           Expanded(
-            child: notificationsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
-              data: (_) =>
-                  selectedTab == 0 ? _buildNotifications() : _buildMessages(),
-            ),
+            child: selectedTab == 0
+                ? notificationsAsync.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (e, _) => _buildError(e.toString()),
+                    data: (_) => _buildNotifications(),
+                  )
+                : conversationsAsync.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (e, _) => _buildError(e.toString()),
+                    data: (_) => _buildMessages(),
+                  ),
           ),
         ],
       ),
     );
   }
+
+  // ─── Tab ──────────────────────────────────────────────────────────────────
 
   Widget _buildTab({required String label, required int index}) {
     final bool isActive = selectedTab == index;
@@ -75,12 +84,41 @@ class _ActivityState extends ConsumerState<Activity> {
     );
   }
 
+  // ─── Error ────────────────────────────────────────────────────────────────
+
+  Widget _buildError(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, color: Colors.red, size: 40),
+          const SizedBox(height: 12),
+          Text(
+            message.replaceAll('Exception: ', ''),
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.red),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Notifications ────────────────────────────────────────────────────────
+
   Widget _buildNotifications() {
-    final notifications =
-        ref.watch(notificationsProvider).value ?? []; // changed
+    final notifications = ref.watch(notificationsProvider).value ?? [];
 
     if (notifications.isEmpty) {
-      return const Center(child: Text('No notifications'));
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.notifications_none, size: 40, color: Colors.grey),
+            SizedBox(height: 12),
+            Text('No notifications yet', style: TextStyle(color: Colors.grey)),
+          ],
+        ),
+      );
     }
 
     return ListView.separated(
@@ -94,28 +132,10 @@ class _ActivityState extends ConsumerState<Activity> {
     );
   }
 
-  Widget _buildMessages() {
-    if (widget.messages.isEmpty) {
-      return const Center(child: Text('No messages'));
-    }
-
-    return ListView.separated(
-      itemCount: widget.messages.length,
-      separatorBuilder: (_, __) =>
-          const Divider(height: 1, thickness: 1, color: AppColors.divider),
-      itemBuilder: (context, index) {
-        final user = widget.messages[index];
-        return _buildMessageTile(user);
-      },
-    );
-  }
-
   Widget _buildNotificationTile(model.Notification notif) {
     return InkWell(
       onTap: () {
-        ref
-            .read(notificationsProvider.notifier)
-            .markAsRead(notif.id); // changed
+        ref.read(notificationsProvider.notifier).markAsRead(notif.id);
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -150,19 +170,76 @@ class _ActivityState extends ConsumerState<Activity> {
     );
   }
 
-  Widget _buildMessageTile(User user) {
+  IconData _iconForType(String type) {
+    switch (type) {
+      case 'like':
+        return Icons.favorite;
+      case 'follow':
+        return Icons.person_add;
+      case 'comment':
+        return Icons.comment;
+      case 'repost':
+        return Icons.repeat;
+      case 'message':
+        return Icons.message;
+      default:
+        return Icons.notifications;
+    }
+  }
+
+  // ─── Messages ─────────────────────────────────────────────────────────────
+
+  Widget _buildMessages() {
+    final conversations = ref.watch(conversationsProvider).value ?? [];
+
+    if (conversations.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.message_outlined, size: 40, color: Colors.grey),
+            SizedBox(height: 12),
+            Text('No messages yet', style: TextStyle(color: Colors.grey)),
+          ],
+        ),
+      );
+    }
+
+    return ListView.separated(
+      itemCount: conversations.length,
+      separatorBuilder: (_, __) =>
+          const Divider(height: 1, thickness: 1, color: AppColors.divider),
+      itemBuilder: (context, index) {
+        final conversation = conversations[index];
+        // get the other participant (not current user)
+        final other = conversation.participants.isNotEmpty
+            ? conversation.participants.first
+            : null;
+        return _buildMessageTile(conversation, other);
+      },
+    );
+  }
+
+  Widget _buildMessageTile(Conversation conversation, Participant? other) {
     return InkWell(
-      onTap: () {},
+      onTap: () {
+        // navigate to chat screen — pass conversationId
+        // Navigator.push(context, MaterialPageRoute(
+        //   builder: (_) => ChatScreen(conversationId: conversation.conversationId),
+        // ));
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         child: Row(
           children: [
             CircleAvatar(
               radius: 22,
-              backgroundImage: user.avatarUrl != null
-                  ? NetworkImage(user.avatarUrl!)
+              backgroundImage: other?.profilePicture != null
+                  ? NetworkImage(other!.profilePicture!)
                   : null,
-              child: user.avatarUrl == null ? const Icon(Icons.person) : null,
+              child: other?.profilePicture == null
+                  ? const Icon(Icons.person)
+                  : null,
             ),
 
             const SizedBox(width: 12),
@@ -181,7 +258,7 @@ class _ActivityState extends ConsumerState<Activity> {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          user.userName ?? 'Unknown',
+                          other?.displayName ?? 'Unknown',
                           style: const TextStyle(fontWeight: FontWeight.w600),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -190,7 +267,7 @@ class _ActivityState extends ConsumerState<Activity> {
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    "Tap to view details",
+                    'Tap to open conversation',
                     style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
@@ -200,22 +277,5 @@ class _ActivityState extends ConsumerState<Activity> {
         ),
       ),
     );
-  }
-
-  IconData _iconForType(String type) {
-    switch (type) {
-      case 'like':
-        return Icons.favorite;
-      case 'follow':
-        return Icons.person_add;
-      case 'comment':
-        return Icons.comment;
-      case 'repost':
-        return Icons.repeat;
-      case 'message':
-        return Icons.message;
-      default:
-        return Icons.notifications;
-    }
   }
 }

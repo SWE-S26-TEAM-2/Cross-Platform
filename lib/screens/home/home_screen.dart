@@ -27,9 +27,7 @@ class HomeScreen extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => Activity(messages: mockUsers ?? []),
-                ),
+                MaterialPageRoute(builder: (context) => Activity()),
               );
             },
           ),
@@ -38,9 +36,7 @@ class HomeScreen extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => Activity(messages: mockUsers ?? []),
-                ),
+                MaterialPageRoute(builder: (context) => Activity()),
               );
             },
           ),
