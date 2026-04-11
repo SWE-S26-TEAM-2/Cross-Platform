@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/notifications_service.dart';
 import '../models/notification.dart';
+import 'auth_providers.dart';
 
 // Mock data to use as fallback
 final _mockNotifications = [
@@ -24,7 +25,19 @@ final _mockNotifications = [
 // ─── Service Provider ─────────────────────────────────────────────────────────
 
 final notificationsServiceProvider = Provider<NotificationsService>((ref) {
-  return NotificationsService(dio: Dio());
+  final token = ref.watch(authProvider).tokens?.accessToken ?? '';
+  final dio = Dio();
+
+  dio.interceptors.add(
+    InterceptorsWrapper(
+      onRequest: (options, handler) {
+        options.headers['Authorization'] = 'Bearer $token';
+        handler.next(options);
+      },
+    ),
+  );
+
+  return NotificationsService(dio: dio);
 });
 
 // ─── Notifications Notifier ───────────────────────────────────────────────────
@@ -35,10 +48,15 @@ class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
     try {
       return await ref.read(notificationsServiceProvider).getNotifications();
     } on DioException catch (e) {
-      if (e.response?.statusCode == 404) {
-        return _mockNotifications;
+      if (e.response?.statusCode == 401) {
+        throw Exception('You are not logged in.');
       }
-      rethrow;
+      if (e.response?.statusCode == 404) {
+        return _mockNotifications; // API not ready yet
+      }
+      throw Exception('Could not load notifications. Please try again.');
+    } catch (e) {
+      throw Exception('Something went wrong. Please check your connection.');
     }
   }
 
@@ -58,7 +76,7 @@ class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
                     id: n.id,
                     type: n.type,
                     message: n.message,
-                    isRead: true, // flip to true
+                    isRead: true,
                     createdAt: n.createdAt,
                   )
                 : n;
