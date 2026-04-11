@@ -29,13 +29,13 @@ class _RootScreenState extends State<RootScreen> {
   //Sub-screens
   final Map<int, Widget> _subScreens = {};
 
- void _pushSubScreen(Widget screen) {
-  setState(() => _subScreens[_selectedIndex] = screen);
- }
+  void _pushSubScreen(Widget screen) {
+    setState(() => _subScreens[_selectedIndex] = screen);
+  }
 
- void _popSubScreen() {
-  setState(() => _subScreens.remove(_selectedIndex));
- }
+  void _popSubScreen() {
+    setState(() => _subScreens.remove(_selectedIndex));
+  }
 
   @override
   void dispose() {
@@ -121,7 +121,6 @@ class _RootScreenState extends State<RootScreen> {
           BottomNavBar(
             onTabSelected: (index) => setState(() {
               _selectedIndex = index;
-              
             }),
           ),
         ],
