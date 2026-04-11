@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:my_project/models/user.dart';
 
 class NotificationsService {
   final Dio _dio;
@@ -7,8 +8,9 @@ class NotificationsService {
     : _dio = dio; //must set private like this
 
   // Endpoint #1 (Module 10) — GET /notifications
-  Future<void> getNotifications() async {
-    await _dio.get('$baseUrl/notifications');
+  Future<List<User>> getNotifications() async {
+    final response = await _dio.get('$baseUrl/notifications');
+    return response.data as List<User>;
   }
 
   // Endpoint #2 (Module 10) — PUT /notifications/{id}/read

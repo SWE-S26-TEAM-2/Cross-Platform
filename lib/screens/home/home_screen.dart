@@ -28,10 +28,7 @@ class HomeScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => Activity(
-                    messages: mockUsers ?? [],
-                    notifications: mockUsers ?? [],
-                  ),
+                  builder: (context) => Activity(messages: mockUsers ?? []),
                 ),
               );
             },
@@ -42,10 +39,7 @@ class HomeScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => Activity(
-                    messages: mockUsers ?? [],
-                    notifications: mockUsers ?? [],
-                  ),
+                  builder: (context) => Activity(messages: mockUsers ?? []),
                 ),
               );
             },

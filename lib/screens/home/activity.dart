@@ -1,28 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_project/constants/app_colors.dart';
 import 'package:my_project/constants/app_dimensions.dart';
 import 'package:my_project/constants/app_text_styles.dart';
 import 'package:my_project/models/user.dart';
+import '../../providers/notifications_provider.dart';
 
-class Activity extends StatefulWidget {
-  final List<User> notifications;
+class Activity extends ConsumerStatefulWidget {
   final List<User> messages;
 
-  const Activity({
-    super.key,
-    required this.notifications,
-    required this.messages,
-  });
+  const Activity({super.key, required this.messages});
 
   @override
-  State<Activity> createState() => _ActivityState();
+  ConsumerState<Activity> createState() => _ActivityState();
 }
 
-class _ActivityState extends State<Activity> {
+class _ActivityState extends ConsumerState<Activity> {
   int selectedTab = 0;
 
   @override
   Widget build(BuildContext context) {
+    final notificationsAsync = ref.watch(getNotificationsProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Activity')),
@@ -41,7 +40,12 @@ class _ActivityState extends State<Activity> {
           const Divider(height: 1, thickness: 1, color: AppColors.divider),
 
           Expanded(
-            child: selectedTab == 0 ? _buildNotifications() : _buildMessages(),
+            child: notificationsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text('Error: $e')),
+              data: (_) =>
+                  selectedTab == 0 ? _buildNotifications() : _buildMessages(),
+            ),
           ),
         ],
       ),
@@ -71,16 +75,18 @@ class _ActivityState extends State<Activity> {
   }
 
   Widget _buildNotifications() {
-    if (widget.notifications.isEmpty) {
+    final notifications = ref.watch(getNotificationsProvider).value ?? [];
+
+    if (notifications.isEmpty) {
       return const Center(child: Text('No notifications'));
     }
 
     return ListView.separated(
-      itemCount: widget.notifications.length,
+      itemCount: notifications.length,
       separatorBuilder: (_, __) =>
           const Divider(height: 1, thickness: 1, color: AppColors.divider),
       itemBuilder: (context, index) {
-        final user = widget.notifications[index];
+        final user = notifications[index];
         return _buildTile(user, Icons.notifications, showFollow: true);
       },
     );
@@ -104,8 +110,14 @@ class _ActivityState extends State<Activity> {
 
   Widget _buildTile(User user, IconData icon, {required bool showFollow}) {
     return InkWell(
-      // InkWell is a touch detector widget (add effect of pressing (ripple))
-      onTap: () {},
+      onTap: () {
+        if (showFollow) {
+          final id = int.tryParse(user.id ?? '');
+          if (id != null) {
+            ref.read(markNotificationAsReadProvider(id).future);
+          }
+        }
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         child: Row(
