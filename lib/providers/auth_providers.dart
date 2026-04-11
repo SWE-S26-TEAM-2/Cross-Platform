@@ -27,8 +27,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final AuthService _authService;
   final UserService _userService;
 
-  AuthNotifier(this._authService, this._userService)
-      : super(const AuthState());
+  AuthNotifier(this._authService, this._userService) : super(const AuthState());
 
   Future<void> register(
     String email,
@@ -62,9 +61,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthState(isLoading: true);
     try {
       await _authService.resendVerification(email);
-      state = const AuthState(
-        successMessage: 'Verification email resent.',
-      );
+      state = const AuthState(successMessage: 'Verification email resent.');
     } catch (e) {
       state = AuthState(error: e.toString());
     }

@@ -8,10 +8,7 @@ import '../../providers/auth_providers.dart';
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   final String? email;
 
-  const ResetPasswordScreen({
-    super.key,
-    this.email,
-  });
+  const ResetPasswordScreen({super.key, this.email});
 
   @override
   ConsumerState<ResetPasswordScreen> createState() =>
@@ -83,7 +80,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   Future<void> handleResetPassword() async {
     if (!_formKey.currentState!.validate()) return;
 
-    await ref.read(authProvider.notifier).resetPassword(
+    await ref
+        .read(authProvider.notifier)
+        .resetPassword(
           tokenController.text.trim(),
           newPasswordController.text.trim(),
         );
@@ -100,15 +99,11 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     }
 
     if (authState.successMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authState.successMessage!)),
-      );
-
-      Navigator.pushNamedAndRemoveUntil(
+      ScaffoldMessenger.of(
         context,
-        '/login',
-        (route) => false,
-      );
+      ).showSnackBar(SnackBar(content: Text(authState.successMessage!)));
+
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
     }
   }
 
@@ -118,9 +113,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Reset password'),
-      ),
+      appBar: AppBar(title: const Text('Reset password')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.spaceMedium),
@@ -129,10 +122,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Set a new password',
-                  style: AppTextStyles.heading1,
-                ),
+                const Text('Set a new password', style: AppTextStyles.heading1),
                 const SizedBox(height: AppDimensions.spaceSmall),
                 Text(
                   widget.email == null

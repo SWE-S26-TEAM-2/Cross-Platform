@@ -83,15 +83,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     }
 
     if (authState.successMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authState.successMessage!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(authState.successMessage!)));
 
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (_) => ResetPasswordScreen(email: email),
-        ),
+        MaterialPageRoute(builder: (_) => ResetPasswordScreen(email: email)),
       );
     }
   }
@@ -102,9 +100,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Forgot password'),
-      ),
+      appBar: AppBar(title: const Text('Forgot password')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.spaceMedium),
@@ -147,7 +143,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: authState.isLoading ? null : handleForgotPassword,
+                    onPressed: authState.isLoading
+                        ? null
+                        : handleForgotPassword,
                     child: authState.isLoading
                         ? const SizedBox(
                             height: 20,
