@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'constants/app_theme.dart';
 import 'screens/auth/welcome_screen.dart';
 import 'screens/auth/signup_screen.dart';
@@ -32,8 +31,7 @@ class SoundCloudApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/root': (context) => const RootScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
-
-        // '/change-password': (context) => const ChangePasswordScreen(),
+        //'/change-password': (context) => const ChangePasswordScreen(),
       },
     );
   }
