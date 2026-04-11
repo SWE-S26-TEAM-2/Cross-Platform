@@ -57,11 +57,8 @@ class LibraryScreen extends StatelessWidget {
               delegate: SliverChildListDelegate([
                 LibraryTile(
                   title: 'Liked Tracks',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const LikedTracksScreen(),
-                    ),
+                  onTap: () => onNavigate(
+                  LikedTracksScreen(onBack: onBack),
                   ),
                 ),
                 const SizedBox(height: AppDimensions.spaceSmall),
