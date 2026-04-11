@@ -20,16 +20,29 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
-    id: json['id']?.toString() ?? json['user_id']?.toString(),
-    email: json['email']?.toString() ?? '',
-    userName: json['username']?.toString() ?? json['display_name']?.toString(),
-    avatarUrl: json['avatar_url']?.toString(),
-    location: json['location']?.toString(),
-    followers: json['followers'] is int
-        ? json['followers']
-        : int.tryParse(json['followers']?.toString() ?? ''),
-    following: json['following'] is int
-        ? json['following']
-        : int.tryParse(json['following']?.toString() ?? ''),
-  );
+  id: json['id']?.toString() ?? json['user_id']?.toString(),
+  email: json['email']?.toString() ?? '',
+  userName: json['username']?.toString() ?? json['display_name']?.toString(),
+  avatarUrl: json['avatar_url']?.toString() ??
+      json['profile_picture']?.toString(),
+  location: json['location']?.toString(),
+  followers: json['followers'] is int
+      ? json['followers']
+      : json['follower_count'] is int
+          ? json['follower_count']
+          : int.tryParse(
+              json['followers']?.toString() ??
+              json['follower_count']?.toString() ??
+              '',
+            ),
+  following: json['following'] is int
+      ? json['following']
+      : json['following_count'] is int
+          ? json['following_count']
+          : int.tryParse(
+              json['following']?.toString() ??
+              json['following_count']?.toString() ??
+              '',
+            ),
+);
 }

@@ -5,6 +5,7 @@ import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
 import 'package:my_project/screens/home/more_like_section.dart';
 import 'package:my_project/screens/library/library_tile.dart';
+import 'package:my_project/screens/profile/profile_screen.dart';
 
 class LibraryScreen extends StatelessWidget {
   const LibraryScreen({super.key});
@@ -30,7 +31,13 @@ class LibraryScreen extends StatelessWidget {
 
                 const SizedBox(width: AppDimensions.spaceSmall),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileScreen(),
+                      ),
+                    );
+                  },
                   child: Container(
                     width: AppDimensions.avatarSizeSmall,
                     height: AppDimensions.avatarSizeSmall,

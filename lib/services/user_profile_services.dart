@@ -12,6 +12,7 @@ class UserService {
       '$baseUrl/users/me',
       options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
     );
-    return User.fromJson(res.data);
+
+    return User.fromJson(res.data['data']);
   }
 }
