@@ -5,6 +5,7 @@ import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
 import '../../providers/auth_providers.dart';
 import '../../services/google_auth_service.dart';
+import 'verify_email_screen.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -64,7 +65,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   }
 
   Future<void> handleSignup() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
     await ref
         .read(authProvider.notifier)
@@ -76,7 +79,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
     final authState = ref.read(authProvider);
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     if (authState.error != null) {
       ScaffoldMessenger.of(
@@ -89,7 +94,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(authState.successMessage!)));
-      Navigator.pushNamed(context, '/login');
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VerifyEmailScreen(email: emailController.text.trim()),
+        ),
+      );
     }
   }
 
@@ -98,7 +109,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       final idToken = await googleAuthService.signInAndGetIdToken();
 
       if (idToken == null || idToken.isEmpty) {
-        if (!mounted) return;
+        if (!mounted) {
+          return;
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to get Google ID token')),
         );
@@ -109,7 +122,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
       final authState = ref.read(authProvider);
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       if (authState.error != null) {
         ScaffoldMessenger.of(
@@ -125,7 +140,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         Navigator.pushNamed(context, '/root');
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Google login failed: $e')));
@@ -196,8 +213,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
                 const SizedBox(height: AppDimensions.spaceMedium),
 
-                Row(
-                  children: const [
+                const Row(
+                  children: [
                     Expanded(child: Divider()),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),

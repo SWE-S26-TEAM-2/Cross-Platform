@@ -59,7 +59,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
     await ref
         .read(authProvider.notifier)
@@ -67,7 +69,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     final authState = ref.read(authProvider);
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     if (authState.error != null) {
       ScaffoldMessenger.of(
@@ -89,7 +93,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final idToken = await googleAuthService.signInAndGetIdToken();
 
       if (idToken == null || idToken.isEmpty) {
-        if (!mounted) return;
+        if (!mounted) {
+          return;
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to get Google ID token')),
         );
@@ -100,7 +106,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       final authState = ref.read(authProvider);
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       if (authState.error != null) {
         ScaffoldMessenger.of(
@@ -116,7 +124,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         Navigator.pushNamed(context, '/root');
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Google login failed: $e')));
@@ -184,8 +194,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 const SizedBox(height: AppDimensions.spaceMedium),
 
-                Row(
-                  children: const [
+                const Row(
+                  children: [
                     Expanded(child: Divider()),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
