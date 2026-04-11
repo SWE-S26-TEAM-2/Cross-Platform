@@ -26,16 +26,16 @@ class _RootScreenState extends State<RootScreen> {
   bool _hasLoaded = false;
   Track _currentTrack = MockTracks.hotTrack;
 
-  //Sub-screen
-  Widget? _subScreen;
+  //Sub-screens
+  final Map<int, Widget> _subScreens = {};
 
-  void _pushSubScreen(Widget screen) {
-    setState(() => _subScreen = screen);
-  }
+ void _pushSubScreen(Widget screen) {
+  setState(() => _subScreens[_selectedIndex] = screen);
+ }
 
-  void _popSubScreen() {
-    setState(() => _subScreen = null);
-  }
+ void _popSubScreen() {
+  setState(() => _subScreens.remove(_selectedIndex));
+ }
 
   @override
   void dispose() {
@@ -109,7 +109,7 @@ class _RootScreenState extends State<RootScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _subScreen ?? _buildScreens()[_selectedIndex],
+      body: _subScreens[_selectedIndex] ?? _buildScreens()[_selectedIndex],
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -121,7 +121,7 @@ class _RootScreenState extends State<RootScreen> {
           BottomNavBar(
             onTabSelected: (index) => setState(() {
               _selectedIndex = index;
-              _subScreen = null; // clear sub-screen when switching tabs
+              
             }),
           ),
         ],
