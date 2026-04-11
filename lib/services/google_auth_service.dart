@@ -6,7 +6,7 @@ class GoogleAuthService {
   Future<String?> signInAndGetIdToken() async {
     await _googleSignIn.initialize(
       serverClientId:
-          '131502557560-n154lh2ivl345pb3936apmum8kcn5e9p.apps.googleusercontent.com',
+          '131502557560-6ecjh472hsfqsllqiv1htc0e47elio5i.apps.googleusercontent.com',
     );
 
     final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();

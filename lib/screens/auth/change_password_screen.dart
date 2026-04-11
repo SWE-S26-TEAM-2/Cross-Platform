@@ -1,28 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
-import '../../services/mock_auth_service.dart';
+import '../../providers/auth_providers.dart';
 
-class ChangePasswordScreen extends StatefulWidget {
-  final String email;
+class ResetPasswordScreen extends ConsumerStatefulWidget {
+  final String? email;
 
-  const ChangePasswordScreen({super.key, required this.email});
+  const ResetPasswordScreen({
+    super.key,
+    this.email,
+  });
 
   @override
-  State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
+  ConsumerState<ResetPasswordScreen> createState() =>
+      _ResetPasswordScreenState();
 }
 
-class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
+class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final MockAuthService authService = MockAuthService();
 
+  final TextEditingController tokenController = TextEditingController();
   final TextEditingController newPasswordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
 
   @override
   void dispose() {
+    tokenController.dispose();
     newPasswordController.dispose();
     confirmPasswordController.dispose();
     super.dispose();
@@ -31,7 +37,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   InputDecoration buildInputDecoration(String hintText) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: AppTextStyles.artistName,
+      hintStyle: AppTextStyles.caption,
       filled: true,
       fillColor: AppColors.surfaceLight,
       border: OutlineInputBorder(
@@ -53,32 +59,68 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     );
   }
 
-  void handleChangePassword() {
-    if (_formKey.currentState!.validate()) {
-      final newPassword = newPasswordController.text;
+  bool hasUppercase(String value) {
+    return RegExp(r'[A-Z]').hasMatch(value);
+  }
 
-      final success = authService.changePassword(widget.email, newPassword);
+  bool hasNumber(String value) {
+    return RegExp(r'\d').hasMatch(value);
+  }
 
-      if (!success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update password')),
+  String extractBackendMessage(String error) {
+    final lower = error.toLowerCase();
+
+    if (lower.contains('410')) {
+      return 'Reset token expired. Please request a new reset email.';
+    }
+    if (lower.contains('400')) {
+      return 'Invalid token or password does not meet requirements.';
+    }
+
+    return error;
+  }
+
+  Future<void> handleResetPassword() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    await ref.read(authProvider.notifier).resetPassword(
+          tokenController.text.trim(),
+          newPasswordController.text.trim(),
         );
-        return;
-      }
 
+    final authState = ref.read(authProvider);
+
+    if (!mounted) return;
+
+    if (authState.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password changed successfully')),
+        SnackBar(content: Text(extractBackendMessage(authState.error!))),
+      );
+      return;
+    }
+
+    if (authState.successMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(authState.successMessage!)),
       );
 
-      Navigator.pushNamed(context, '/login');
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login',
+        (route) => false,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Change password')),
+      appBar: AppBar(
+        title: const Text('Reset password'),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.spaceMedium),
@@ -88,15 +130,31 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Create a new password',
+                  'Set a new password',
                   style: AppTextStyles.heading1,
                 ),
                 const SizedBox(height: AppDimensions.spaceSmall),
                 Text(
-                  'Change password for ${widget.email}',
-                  style: AppTextStyles.artistName,
+                  widget.email == null
+                      ? 'Enter the reset token from your email and choose a new password.'
+                      : 'Enter the reset token sent to ${widget.email} and choose a new password.',
+                  style: AppTextStyles.caption,
                 ),
                 const SizedBox(height: AppDimensions.spaceLarge),
+
+                TextFormField(
+                  controller: tokenController,
+                  style: AppTextStyles.trackTitle,
+                  decoration: buildInputDecoration('Reset token'),
+                  validator: (value) {
+                    final token = value?.trim() ?? '';
+                    if (token.isEmpty) {
+                      return 'Reset token is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: AppDimensions.spaceMedium),
 
                 TextFormField(
                   controller: newPasswordController,
@@ -104,28 +162,23 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   style: AppTextStyles.trackTitle,
                   decoration: buildInputDecoration('New password'),
                   validator: (value) {
-                    final newPassword = value ?? '';
+                    final password = value?.trim() ?? '';
 
-                    if (newPassword.isEmpty) {
+                    if (password.isEmpty) {
                       return 'New password is required';
                     }
-
-                    if (newPassword.length < 8) {
+                    if (password.length < 8) {
                       return 'Password must be at least 8 characters';
                     }
-
-                    final oldPassword = authService.getUserPassword(
-                      widget.email,
-                    );
-
-                    if (oldPassword != null && newPassword == oldPassword) {
-                      return 'New password must be different from old password';
+                    if (!hasUppercase(password)) {
+                      return 'Password must contain at least 1 uppercase letter';
                     }
-
+                    if (!hasNumber(password)) {
+                      return 'Password must contain at least 1 number';
+                    }
                     return null;
                   },
                 ),
-
                 const SizedBox(height: AppDimensions.spaceMedium),
 
                 TextFormField(
@@ -134,12 +187,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   style: AppTextStyles.trackTitle,
                   decoration: buildInputDecoration('Confirm new password'),
                   validator: (value) {
-                    final confirmPassword = value ?? '';
+                    final confirm = value?.trim() ?? '';
 
-                    if (confirmPassword.isEmpty) {
+                    if (confirm.isEmpty) {
                       return 'Please confirm your new password';
                     }
-                    if (confirmPassword != newPasswordController.text) {
+                    if (confirm != newPasswordController.text.trim()) {
                       return 'Passwords do not match';
                     }
                     return null;
@@ -151,8 +204,35 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: handleChangePassword,
-                    child: const Text('Change password'),
+                    onPressed: authState.isLoading ? null : handleResetPassword,
+                    child: authState.isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Reset password'),
+                  ),
+                ),
+
+                const SizedBox(height: AppDimensions.spaceMedium),
+
+                Center(
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/login',
+                        (route) => false,
+                      );
+                    },
+                    child: const Text(
+                      'Back to login',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ],

@@ -19,6 +19,7 @@ class AuthState {
     this.error,
     this.successMessage,
   });
+
   bool get isLoggedIn => tokens != null;
 }
 
@@ -26,7 +27,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final AuthService _authService;
   final UserService _userService;
 
-  AuthNotifier(this._authService, this._userService) : super(const AuthState());
+  AuthNotifier(this._authService, this._userService)
+      : super(const AuthState());
 
   Future<void> register(
     String email,
@@ -60,7 +62,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthState(isLoading: true);
     try {
       await _authService.resendVerification(email);
-      state = const AuthState(successMessage: 'Verification email resent.');
+      state = const AuthState(
+        successMessage: 'Verification email resent.',
+      );
     } catch (e) {
       state = AuthState(error: e.toString());
     }
@@ -91,6 +95,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> refreshTokens() async {
     final current = state.tokens;
     if (current == null) return;
+
     try {
       final newTokens = await _authService.refreshTokens(current.refreshToken);
       state = AuthState(tokens: newTokens, user: state.user);
@@ -101,13 +106,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     final token = state.tokens?.accessToken;
+
     if (token != null) {
       try {
         await _authService.logout(token);
       } catch (_) {
-        // clear state
+        // ignore backend logout failure and clear local state
       }
     }
+
     state = const AuthState();
   }
 
@@ -116,7 +123,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await _authService.forgotPassword(email);
       state = const AuthState(
-        successMessage: 'If that email exists, a reset link has been sent.',
+        successMessage:
+            'If an account with that email exists, a reset link has been sent.',
       );
     } catch (e) {
       state = AuthState(error: e.toString());
@@ -128,7 +136,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await _authService.resetPassword(token, newPassword);
       state = const AuthState(
-        successMessage: 'Password reset successfully. Please log in.',
+        successMessage: 'Password updated successfully. You can now log in.',
       );
     } catch (e) {
       state = AuthState(error: e.toString());
@@ -141,54 +149,3 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final userService = UserService(dio: Dio());
   return AuthNotifier(authService, userService);
 });
-
-/*
-How to use Provider in any screen : 
-
-1-add thse imports:
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/auth_provider.dart';
-
-
-If you are in a stateless Widget
-        2-Change StatelessWidget to ConsumerWidget
-        class MyScreen extends ConsumerWidget {.... }
-
-        3-Change the build function and make it as follows
-        Widget build(BuildContxt context , WidgetRef ref)
-
-        4- use ref inside the build function
-
-
-          final authState = ref.watch(authProvider); ----> // read state
-              
-          final user = ref.watch(authProvider).user; ----> // read user directly
-          
-          // call actions inside handlers:
-          onPressed: () => ref.read(authProvider.notifier).logout();  
-          
-If you are in a Stateful Widget
-        2-Change StatefulWidget  to ConsumerStatefulWidget
-        
-        3- add this line at the end of the ConsumerStatefulWidget after the consturctor
-            
-            @override
-            ConsumerState<MyScreen> createState() => _MyScreenState();
-        
-        3-Change the state class to extend ConsumerState
-        
-        ***No need to add ref here it is automatically implemented
-        therefore you can always write this line:
-        
-        final authState = ref.watch(authProvider); ----> // read state
-              
-        final user = ref.watch(authProvider).user; ----> // read user directly
-
-After changng the class itslef as mentioned use the 
-      You have 2 options
-        
-      ref.watch(authProvider)           // gives you AuthState  — the DATA
-      ref.watch(authProvider.notifier)  // gives you AuthNotifier — the ACTIONS
-
-
-*/
