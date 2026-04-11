@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_project/constants/app_colors.dart';
 import 'package:my_project/constants/app_dimensions.dart';
 import 'package:my_project/constants/app_text_styles.dart';
-import 'package:my_project/models/notification.dart';
 import 'package:my_project/models/user.dart';
 import '../../providers/notifications_provider.dart';
 import '../../models/notification.dart' as model;
@@ -22,7 +21,7 @@ class _ActivityState extends ConsumerState<Activity> {
 
   @override
   Widget build(BuildContext context) {
-    final notificationsAsync = ref.watch(getNotificationsProvider);
+    final notificationsAsync = ref.watch(notificationsProvider); // changed
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -77,7 +76,8 @@ class _ActivityState extends ConsumerState<Activity> {
   }
 
   Widget _buildNotifications() {
-    final notifications = ref.watch(getNotificationsProvider).value ?? [];
+    final notifications =
+        ref.watch(notificationsProvider).value ?? []; // changed
 
     if (notifications.isEmpty) {
       return const Center(child: Text('No notifications'));
@@ -113,10 +113,9 @@ class _ActivityState extends ConsumerState<Activity> {
   Widget _buildNotificationTile(model.Notification notif) {
     return InkWell(
       onTap: () {
-        final id = int.tryParse(notif.id);
-        if (id != null) {
-          ref.read(markNotificationAsReadProvider(id).future);
-        }
+        ref
+            .read(notificationsProvider.notifier)
+            .markAsRead(notif.id); // changed
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),

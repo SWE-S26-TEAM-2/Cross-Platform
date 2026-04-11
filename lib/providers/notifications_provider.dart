@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:my_project/mock_data/mock_users.dart';
 import '../services/notifications_service.dart';
 import '../models/notification.dart';
 
@@ -22,31 +21,61 @@ final _mockNotifications = [
   ),
 ];
 
-// Service provider
+// ─── Service Provider ─────────────────────────────────────────────────────────
+
 final notificationsServiceProvider = Provider<NotificationsService>((ref) {
   return NotificationsService(dio: Dio());
 });
 
-// Get all notifications provider
-final getNotificationsProvider = FutureProvider<List<Notification>>((
-  ref,
-) async {
-  final notificationsService = ref.watch(notificationsServiceProvider);
-  try {
-    return await notificationsService.getNotifications();
-  } on DioException catch (e) {
-    if (e.response?.statusCode == 404) {
-      return _mockNotifications;
-    }
-    rethrow;
-  }
-});
+// ─── Notifications Notifier ───────────────────────────────────────────────────
 
-// Mark notification as read provider
-final markNotificationAsReadProvider = FutureProvider.family<void, int>((
-  ref,
-  id,
-) async {
-  final notificationsService = ref.watch(notificationsServiceProvider);
-  return await notificationsService.markNotificationAsRead(id: id);
-});
+class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
+  @override
+  Future<List<Notification>> build() async {
+    try {
+      return await ref.watch(notificationsServiceProvider).getNotifications();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return _mockNotifications;
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> markAsRead(String id) async {
+    final intId = int.tryParse(id);
+    if (intId == null) return;
+
+    await ref
+        .read(notificationsServiceProvider)
+        .markNotificationAsRead(id: intId);
+
+    // update locally so the blue dot disappears instantly
+    state = AsyncData(
+      state.value?.map((n) {
+            return n.id == id
+                ? Notification(
+                    id: n.id,
+                    type: n.type,
+                    message: n.message,
+                    isRead: true, // flip to true
+                    createdAt: n.createdAt,
+                  )
+                : n;
+          }).toList() ??
+          [],
+    );
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(
+      () => ref.read(notificationsServiceProvider).getNotifications(),
+    );
+  }
+}
+
+final notificationsProvider =
+    AsyncNotifierProvider<NotificationsNotifier, List<Notification>>(
+      NotificationsNotifier.new,
+    );
