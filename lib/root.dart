@@ -26,13 +26,13 @@ class _RootScreenState extends State<RootScreen> {
   bool _hasLoaded = false;
   Track _currentTrack = MockTracks.hotTrack;
 
- //Sub-screen 
+  //Sub-screen
   Widget? _subScreen;
- 
+
   void _pushSubScreen(Widget screen) {
     setState(() => _subScreen = screen);
   }
- 
+
   void _popSubScreen() {
     setState(() => _subScreen = null);
   }
@@ -109,7 +109,7 @@ class _RootScreenState extends State<RootScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body:_subScreen ?? _buildScreens()[_selectedIndex],
+      body: _subScreen ?? _buildScreens()[_selectedIndex],
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
