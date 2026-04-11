@@ -35,10 +35,14 @@ class AuthService {
         '$baseUrl/auth/login',
         data: {'email': email, 'password': password},
       );
+
+      print('LOGIN STATUS: ${result.statusCode}');
+      print('LOGIN DATA: ${result.data}');
+
       return AuthTokens.fromJson(result.data);
     } on DioException catch (e) {
-      /* print('LOGIN STATUS: ${e.response?.statusCode}');
-      print('LOGIN DATA: ${e.response?.data}');*/
+      print('LOGIN ERROR STATUS: ${e.response?.statusCode}');
+      print('LOGIN ERROR DATA: ${e.response?.data}');
       rethrow;
     }
   }
