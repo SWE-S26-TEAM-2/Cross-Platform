@@ -53,9 +53,7 @@ class LibraryScreen extends StatelessWidget {
 
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                LibraryTile(
-                  title: 'Liked Tracks', 
-                  onTap: () {}),
+                LibraryTile(title: 'Liked Tracks', onTap: () {}),
                 const SizedBox(height: AppDimensions.spaceSmall),
                 LibraryTile(title: 'Playlists', onTap: () {}),
                 const SizedBox(height: AppDimensions.spaceSmall),

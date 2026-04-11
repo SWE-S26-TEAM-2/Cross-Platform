@@ -6,10 +6,10 @@ import '../../models/track.dart';
 import '../../mock_data/mock_tracks.dart';
 
 enum LikedTracksSortOption { recentlyAdded, firstAdded, trackName, artist }
- 
+
 class LikedTracksScreen extends StatefulWidget {
   const LikedTracksScreen({super.key});
- 
+
   @override
   State<LikedTracksScreen> createState() => _LikedTracksScreenState();
 }
