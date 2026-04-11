@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_project/models/track.dart';
+import 'package:my_project/screens/home/activity.dart';
 import '../../constants/app_dimensions.dart';
 import '../../mock_data/mock_tracks.dart';
 import 'your_likes_card.dart';
@@ -9,6 +10,7 @@ import 'albums_for_you_section.dart';
 import 'discover_with_stations.dart';
 import '../../mock_data/mock_albums.dart';
 import '../../mock_data/mock_stations.dart';
+import '../../mock_data/mock_users.dart';
 
 class HomeScreen extends StatelessWidget {
   final void Function(Track)? onTrackTap;
@@ -22,11 +24,31 @@ class HomeScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.cloud_upload_outlined),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Activity(
+                    messages: mockUsers ?? [],
+                    notifications: mockUsers ?? [],
+                  ),
+                ),
+              );
+            },
           ),
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Activity(
+                    messages: mockUsers ?? [],
+                    notifications: mockUsers ?? [],
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
