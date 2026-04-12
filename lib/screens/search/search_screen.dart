@@ -50,19 +50,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SearchBar1(
-              controller: _controller,
-              onChanged: _onSearchChanged,
-            ),
+            SearchBar1(controller: _controller, onChanged: _onSearchChanged),
             const SizedBox(height: 10),
             Expanded(
               child: isSearching
                   ? resultsAsync.when(
                       data: (List<Track> tracks) {
                         if (tracks.isEmpty) {
-                          return const Center(
-                            child: Text("No results found"),
-                          );
+                          return const Center(child: Text("No results found"));
                         }
 
                         return ListView.builder(
@@ -97,13 +92,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                           fit: BoxFit.cover,
                                           errorBuilder:
                                               (context, error, stackTrace) {
-                                            return Container(
-                                              width: 50,
-                                              height: 50,
-                                              color: Colors.grey,
-                                              child: const Icon(Icons.music_note),
-                                            );
-                                          },
+                                                return Container(
+                                                  width: 50,
+                                                  height: 50,
+                                                  color: Colors.grey,
+                                                  child: const Icon(
+                                                    Icons.music_note,
+                                                  ),
+                                                );
+                                              },
                                         ),
                                       ),
                                       const SizedBox(
@@ -121,7 +118,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                             const SizedBox(
-                                              height: AppDimensions.spaceExtraSmall,
+                                              height:
+                                                  AppDimensions.spaceExtraSmall,
                                             ),
                                             Text(
                                               track.artist,
@@ -142,8 +140,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       },
                       loading: () =>
                           const Center(child: CircularProgressIndicator()),
-                      error: (e, _) =>
-                          Center(child: Text('Error: $e')),
+                      error: (e, _) => Center(child: Text('Error: $e')),
                     )
                   : const SingleChildScrollView(
                       child: Padding(
