@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:my_project/mock_data/mock_tracks.dart';
-import '../../constants/app_colors.dart';
-import '../../constants/app_dimensions.dart';
-import '../../constants/app_text_styles.dart';
+import '../../../constants/app_colors.dart';
+import '../../../constants/app_dimensions.dart';
+import '../../../constants/app_text_styles.dart';
 import 'package:my_project/screens/home/more_like_section.dart';
 
 class LibraryTile extends StatelessWidget {

@@ -4,11 +4,16 @@ import '../../constants/app_colors.dart';
 import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
 import 'package:my_project/screens/home/more_like_section.dart';
-import 'package:my_project/screens/library/library_tile.dart';
+import 'package:my_project/screens/library/widgets/library_tile.dart';
+import 'package:my_project/screens/library/liked_tracks_screen.dart';
+import 'package:my_project/screens/library/playlists_screen.dart';
 import 'package:my_project/screens/profile/profile_screen.dart';
 
+
 class LibraryScreen extends StatelessWidget {
-  const LibraryScreen({super.key});
+  final void Function(Widget) onNavigate;
+  final VoidCallback? onBack;
+  const LibraryScreen({super.key, required this.onNavigate, this.onBack});
 
   @override
   Widget build(BuildContext context) {
@@ -59,9 +64,15 @@ class LibraryScreen extends StatelessWidget {
 
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                LibraryTile(title: 'Liked Tracks', onTap: () {}),
+                LibraryTile(
+                  title: 'Liked Tracks',
+                  onTap: () => onNavigate(LikedTracksScreen(onBack: onBack)),
+                ),
                 const SizedBox(height: AppDimensions.spaceSmall),
-                LibraryTile(title: 'Playlists', onTap: () {}),
+                LibraryTile(
+                  title: 'Playlists',
+                  onTap: () => onNavigate(PlaylistsScreen(onBack: onBack)),
+                ),
                 const SizedBox(height: AppDimensions.spaceSmall),
                 LibraryTile(title: 'Albums', onTap: () {}),
                 const SizedBox(height: AppDimensions.spaceSmall),

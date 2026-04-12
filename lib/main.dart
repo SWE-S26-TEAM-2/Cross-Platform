@@ -13,7 +13,8 @@ import 'screens/library/collections_screen.dart';
 import 'screens/auth/verify_email_screen.dart';
 
 void main() {
-  runApp(const ProviderScope(child: SoundCloudApp()));
+  runApp(ProviderScope
+  (child: const SoundCloudApp()));
 }
 
 class SoundCloudApp extends StatelessWidget {
