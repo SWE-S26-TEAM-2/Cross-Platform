@@ -7,6 +7,8 @@ import 'package:my_project/screens/home/more_like_section.dart';
 import 'package:my_project/screens/library/widgets/library_tile.dart';
 import 'package:my_project/screens/library/liked_tracks_screen.dart';
 import 'package:my_project/screens/library/playlists_screen.dart';
+import 'package:my_project/screens/profile/profile_screen.dart';
+
 
 class LibraryScreen extends StatelessWidget {
   final void Function(Widget) onNavigate;
@@ -34,7 +36,13 @@ class LibraryScreen extends StatelessWidget {
 
                 const SizedBox(width: AppDimensions.spaceSmall),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileScreen(),
+                      ),
+                    );
+                  },
                   child: Container(
                     width: AppDimensions.avatarSizeSmall,
                     height: AppDimensions.avatarSizeSmall,
