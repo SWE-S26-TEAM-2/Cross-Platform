@@ -97,7 +97,7 @@ class _RootScreenState extends State<RootScreen> {
     const FeedScreen(),
 
     /// 2
-    const SearchScreen(),
+    SearchScreen(),
 
     /// 3
     LibraryScreen(onNavigate: _pushSubScreen, onBack: _popSubScreen),
