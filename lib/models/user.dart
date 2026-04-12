@@ -25,8 +25,15 @@ class User {
     id: json['id']?.toString() ?? json['user_id']?.toString(),
     email: json['email']?.toString() ?? '',
     userName: json['username']?.toString() ?? json['display_name']?.toString(),
-    avatarUrl:
-        json['avatar_url']?.toString() ?? json['profile_picture']?.toString(),
+    avatarUrl: (() {
+      final raw =
+          json['avatar_url']?.toString() ?? json['profile_picture']?.toString();
+
+      if (raw == null || raw.isEmpty) return null;
+      if (raw.startsWith('http')) return raw;
+
+      return 'http://68.210.102.76/api/$raw';
+    })(),
     location: json['location']?.toString(),
     bio: json['bio']?.toString(),
     followers: json['followers'] is int

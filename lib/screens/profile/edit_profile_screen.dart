@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_providers.dart';
 import '../../services/user_profile_services.dart';
+import 'package:my_project/models/user.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -50,6 +51,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Future<void> _saveProfile() async {
     final authState = ref.read(authProvider);
     final token = authState.tokens?.accessToken;
+    final currentUser = authState.user;
 
     if (token == null || token.isEmpty) {
       ScaffoldMessenger.of(
@@ -74,14 +76,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         bio: _bioController.text.trim(),
       );
 
-      final currentState = ref.read(authProvider);
-      ref.read(authProvider.notifier).state = AuthState(
-        tokens: currentState.tokens,
-        user: updatedUser,
-        isLoading: false,
-        error: null,
-        successMessage: currentState.successMessage,
+      final mergedUser = User(
+        id: updatedUser.id ?? currentUser?.id,
+        email: updatedUser.email.isNotEmpty
+            ? updatedUser.email
+            : (currentUser?.email ?? ''),
+        userName: updatedUser.userName ?? currentUser?.userName,
+        avatarUrl: currentUser?.avatarUrl,
+        password: currentUser?.password,
+        location: updatedUser.location ?? currentUser?.location,
+        followers: updatedUser.followers ?? currentUser?.followers,
+        following: updatedUser.following ?? currentUser?.following,
+        bio: updatedUser.bio ?? currentUser?.bio,
       );
+
+      _updateAuthUser(mergedUser);
 
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -102,6 +111,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Future<void> _pickAndUploadAvatar() async {
     final authState = ref.read(authProvider);
     final token = authState.tokens?.accessToken;
+    final currentUser = authState.user;
 
     if (token == null || token.isEmpty) {
       ScaffoldMessenger.of(
@@ -126,10 +136,30 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
       final userService = UserService(dio: Dio());
 
-      await userService.uploadAvatar(
+      final newAvatarUrl = await userService.uploadAvatar(
         accessToken: token,
         filePath: compressedFile.path,
       );
+
+      if (newAvatarUrl != null && currentUser != null) {
+        final fullAvatarUrl = newAvatarUrl.startsWith('http')
+            ? newAvatarUrl
+            : 'http://68.210.102.76/api/$newAvatarUrl';
+
+        final updatedUser = User(
+          id: currentUser.id,
+          email: currentUser.email,
+          userName: currentUser.userName,
+          avatarUrl: fullAvatarUrl,
+          password: currentUser.password,
+          location: currentUser.location,
+          followers: currentUser.followers,
+          following: currentUser.following,
+          bio: currentUser.bio,
+        );
+
+        _updateAuthUser(updatedUser);
+      }
 
       if (!mounted) return;
 
@@ -168,6 +198,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     await compressedFile.writeAsBytes(compressedBytes);
 
     return compressedFile;
+  }
+
+  void _updateAuthUser(User user) {
+    final currentState = ref.read(authProvider);
+    ref.read(authProvider.notifier).state = AuthState(
+      tokens: currentState.tokens,
+      user: user,
+      isLoading: false,
+      error: null,
+      successMessage: currentState.successMessage,
+    );
   }
 
   Widget _buildEditableRow({
