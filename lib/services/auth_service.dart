@@ -51,7 +51,7 @@ class AuthService {
     try {
       final result = await _dio.post(
         '$baseUrl/auth/google',
-        data: {'id_token': googleIdToken},
+        data: {'google_token': googleIdToken},
       );
 
       print('GOOGLE LOGIN STATUS: ${result.statusCode}');
