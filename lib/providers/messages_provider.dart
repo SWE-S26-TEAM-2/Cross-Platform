@@ -39,7 +39,7 @@ class ConversationsNotifier extends AsyncNotifier<List<Conversation>> {
       }
       throw Exception('Could not load messages. Please try again.');
     } catch (e) {
-      throw Exception('Something went wrong. Please check your connection.');
+      throw Exception(e.toString());
     }
   }
 
@@ -84,7 +84,7 @@ class MessagesNotifier extends FamilyAsyncNotifier<List<Message>, String> {
       }
       throw Exception('Could not load messages. Please try again.');
     } catch (e) {
-      throw Exception('Something went wrong. Please check your connection.');
+      throw Exception(e.toString());
     }
   }
 
@@ -126,7 +126,7 @@ class CreateConversationNotifier extends FamilyAsyncNotifier<String, String> {
       }
       throw Exception('Could not start conversation. Please try again.');
     } catch (e) {
-      throw Exception('Something went wrong. Please check your connection.');
+      throw Exception(e.toString());
     }
   }
 }

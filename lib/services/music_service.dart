@@ -20,9 +20,7 @@ class MusicService {
 
     final List tracks = data['data']['tracks'];
 
-    return tracks
-        .map<Track>((json) => Track.fromJson(json))
-        .toList();
+    return tracks.map<Track>((json) => Track.fromJson(json)).toList();
   }
 
   Future<List<Track>> getTracks() async {
