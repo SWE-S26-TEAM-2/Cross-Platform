@@ -62,12 +62,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         displayName: _displayNameController.text.trim().isEmpty
             ? null
             : _displayNameController.text.trim(),
-        location: _cityController.text.trim().isEmpty
-            ? null
-            : _cityController.text.trim(),
-        bio: _bioController.text.trim().isEmpty
-            ? null
-            : _bioController.text.trim(),
+        location: _cityController.text.trim(),
+        bio: _bioController.text.trim(),
       );
 
       final currentState = ref.read(authProvider);
