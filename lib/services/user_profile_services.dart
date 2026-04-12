@@ -15,4 +15,35 @@ class UserService {
 
     return User.fromJson(res.data['data']);
   }
+
+  Future<User> getUserById(String userId) async {
+    final res = await _dio.get('$baseUrl/users/$userId');
+
+    print('GET USER BY ID STATUS: ${res.statusCode}');
+    print('GET USER BY ID DATA: ${res.data}');
+
+    return User.fromJson(res.data['data']);
+  }
+
+  Future<User> updateMe({
+    required String accessToken,
+    String? displayName,
+    String? bio,
+    String? location,
+  }) async {
+    final res = await _dio.patch(
+      '$baseUrl/users/me',
+      data: {
+        if (displayName != null) 'display_name': displayName,
+        if (bio != null) 'bio': bio,
+        if (location != null) 'location': location,
+      },
+      options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+    );
+
+    print('PATCH /users/me STATUS: ${res.statusCode}');
+    print('PATCH /users/me DATA: ${res.data}');
+
+    return User.fromJson(res.data['data']);
+  }
 }
