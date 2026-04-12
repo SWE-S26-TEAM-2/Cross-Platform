@@ -67,62 +67,56 @@ class UserService {
   }
 
   Future<String?> uploadAvatar({
-  required String accessToken,
-  required String filePath,
-}) async {
-  final fileName = filePath.split('/').last;
+    required String accessToken,
+    required String filePath,
+  }) async {
+    final fileName = filePath.split('/').last;
 
-  final formData = FormData.fromMap({
-    'file': await MultipartFile.fromFile(
-      filePath,
-      filename: fileName,
-    ),
-  });
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(filePath, filename: fileName),
+    });
 
-  final res = await _dio.put(
-    '$baseUrl/users/me/avatar',
-    data: formData,
-    options: Options(
-      headers: {
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'multipart/form-data',
-      },
-    ),
-  );
+    final res = await _dio.put(
+      '$baseUrl/users/me/avatar',
+      data: formData,
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'multipart/form-data',
+        },
+      ),
+    );
 
-  print('PUT /users/me/avatar STATUS: ${res.statusCode}');
-  print('PUT /users/me/avatar DATA: ${res.data}');
+    print('PUT /users/me/avatar STATUS: ${res.statusCode}');
+    print('PUT /users/me/avatar DATA: ${res.data}');
 
-  return res.data['data']?['profile_picture']?.toString();
-}
+    return res.data['data']?['profile_picture']?.toString();
+  }
 
-Future<String?> uploadCover({
-  required String accessToken,
-  required String filePath,
-}) async {
-  final fileName = filePath.split('/').last;
+  Future<String?> uploadCover({
+    required String accessToken,
+    required String filePath,
+  }) async {
+    final fileName = filePath.split('/').last;
 
-  final formData = FormData.fromMap({
-    'file': await MultipartFile.fromFile(
-      filePath,
-      filename: fileName,
-    ),
-  });
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(filePath, filename: fileName),
+    });
 
-  final res = await _dio.put(
-    '$baseUrl/users/me/cover',
-    data: formData,
-    options: Options(
-      headers: {
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'multipart/form-data',
-      },
-    ),
-  );
+    final res = await _dio.put(
+      '$baseUrl/users/me/cover',
+      data: formData,
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'multipart/form-data',
+        },
+      ),
+    );
 
-  print('PUT /users/me/cover STATUS: ${res.statusCode}');
-  print('PUT /users/me/cover DATA: ${res.data}');
+    print('PUT /users/me/cover STATUS: ${res.statusCode}');
+    print('PUT /users/me/cover DATA: ${res.data}');
 
-  return res.data['data']?['cover_photo']?.toString();
-}
+    return res.data['data']?['cover_photo']?.toString();
+  }
 }
