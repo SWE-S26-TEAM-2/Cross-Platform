@@ -4,7 +4,7 @@ import '../models/user.dart';
 
 class UserService {
   final Dio _dio;
-  String baseUrl = 'https://api.soundcloud-clone.com/v1';
+  String baseUrl = 'http://68.210.102.76/api';
   UserService({required Dio dio}) : _dio = dio;
 
   Future<User> getMe(String accessToken) async {

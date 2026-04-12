@@ -1,31 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
-import '../../services/mock_auth_service.dart';
-import '../../widgets/social_buttons.dart';
+import '../../providers/auth_providers.dart';
+import '../../services/google_auth_service.dart';
+import 'verify_email_screen.dart';
 
-class SignupScreen extends StatefulWidget {
+class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
 
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends ConsumerState<SignupScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final MockAuthService authService = MockAuthService();
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
+  final TextEditingController displayNameController = TextEditingController();
+
+  final GoogleAuthService googleAuthService = GoogleAuthService();
 
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
+    displayNameController.dispose();
     super.dispose();
   }
 
@@ -59,32 +64,95 @@ class _SignupScreenState extends State<SignupScreen> {
     return regex.hasMatch(email);
   }
 
-  void handleSignup() {
-    if (_formKey.currentState!.validate()) {
-      final email = emailController.text.trim();
-      final password = passwordController.text;
+  Future<void> handleSignup() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
-      final success = authService.signup(email, password);
+    await ref
+        .read(authProvider.notifier)
+        .register(
+          emailController.text.trim(),
+          passwordController.text,
+          displayNameController.text.trim(),
+        );
 
-      if (!success) {
+    final authState = ref.read(authProvider);
+
+    if (!mounted) {
+      return;
+    }
+
+    if (authState.error != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(authState.error!)));
+      return;
+    }
+
+    if (authState.successMessage != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(authState.successMessage!)));
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VerifyEmailScreen(email: emailController.text.trim()),
+        ),
+      );
+    }
+  }
+
+  Future<void> handleGoogleLogin() async {
+    try {
+      final idToken = await googleAuthService.signInAndGetIdToken();
+
+      if (idToken == null || idToken.isEmpty) {
+        if (!mounted) {
+          return;
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('This email is already registered, login instead'),
-          ),
+          const SnackBar(content: Text('Failed to get Google ID token')),
         );
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created successfully')),
-      );
+      await ref.read(authProvider.notifier).googleLogin(idToken);
 
-      Navigator.pushNamed(context, '/login');
+      final authState = ref.read(authProvider);
+
+      if (!mounted) {
+        return;
+      }
+
+      if (authState.error != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(authState.error!)));
+        return;
+      }
+
+      if (authState.isLoggedIn) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google login successful')),
+        );
+        Navigator.pushNamed(context, '/root');
+      }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Google login failed: $e')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Create account')),
@@ -107,7 +175,41 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: AppDimensions.spaceLarge),
 
-                const SocialButtons(),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppDimensions.spaceMedium,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.borderRadiusMedium,
+                        ),
+                      ),
+                    ),
+                    onPressed: authState.isLoading ? null : handleGoogleLogin,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'assets/images/google_logo.png',
+                          height: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'Continue with Google',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
                 const SizedBox(height: AppDimensions.spaceMedium),
 
@@ -122,6 +224,19 @@ class _SignupScreenState extends State<SignupScreen> {
                   ],
                 ),
 
+                const SizedBox(height: AppDimensions.spaceMedium),
+
+                TextFormField(
+                  controller: displayNameController,
+                  style: AppTextStyles.trackTitle,
+                  decoration: buildInputDecoration('Username'),
+                  validator: (value) {
+                    if ((value ?? '').trim().isEmpty) {
+                      return 'Username is required';
+                    }
+                    return null;
+                  },
+                ),
                 const SizedBox(height: AppDimensions.spaceMedium),
 
                 TextFormField(
@@ -184,8 +299,14 @@ class _SignupScreenState extends State<SignupScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: handleSignup,
-                    child: const Text('Create account'),
+                    onPressed: authState.isLoading ? null : handleSignup,
+                    child: authState.isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Create account'),
                   ),
                 ),
 
