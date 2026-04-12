@@ -46,4 +46,20 @@ class UserService {
 
     return User.fromJson(res.data['data']);
   }
+
+  Future<bool> updatePrivacy({
+    required String accessToken,
+    required bool isPrivate,
+  }) async {
+    final res = await _dio.patch(
+      '$baseUrl/users/me/privacy',
+      data: {'is_private': isPrivate},
+      options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+    );
+
+    print('PATCH /users/me/privacy STATUS: ${res.statusCode}');
+    print('PATCH /users/me/privacy DATA: ${res.data}');
+
+    return res.data['data']['is_private'] as bool;
+  }
 }
