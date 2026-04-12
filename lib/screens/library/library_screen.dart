@@ -9,7 +9,6 @@ import 'package:my_project/screens/library/liked_tracks_screen.dart';
 import 'package:my_project/screens/library/playlists_screen.dart';
 import 'package:my_project/screens/profile/profile_screen.dart';
 
-
 class LibraryScreen extends StatelessWidget {
   final void Function(Widget) onNavigate;
   final VoidCallback? onBack;
