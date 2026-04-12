@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_providers.dart';
@@ -98,8 +100,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Future<void> _pickAndUploadAvatar() async {
-    print('AVATAR CAMERA TAPPED');
-
     final authState = ref.read(authProvider);
     final token = authState.tokens?.accessToken;
 
@@ -117,15 +117,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
       if (pickedFile == null) return;
 
-      final file = File(pickedFile.path);
+      final originalFile = File(pickedFile.path);
+      final compressedFile = await _compressImage(originalFile);
 
       setState(() {
-        _selectedAvatarFile = file;
+        _selectedAvatarFile = compressedFile;
       });
 
       final userService = UserService(dio: Dio());
 
-      await userService.uploadAvatar(accessToken: token, filePath: file.path);
+      await userService.uploadAvatar(
+        accessToken: token,
+        filePath: compressedFile.path,
+      );
 
       if (!mounted) return;
 
@@ -141,6 +145,29 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text('Failed to upload avatar: $e')));
     }
+  }
+
+  Future<File> _compressImage(File file) async {
+    final bytes = await file.readAsBytes();
+
+    final Uint8List? compressedBytes =
+        await FlutterImageCompress.compressWithList(
+          bytes,
+          minWidth: 1080,
+          minHeight: 1080,
+          quality: 70,
+          format: CompressFormat.jpeg,
+        );
+
+    if (compressedBytes == null) {
+      return file;
+    }
+
+    final tempPath = '${file.path}_compressed.jpg';
+    final compressedFile = File(tempPath);
+    await compressedFile.writeAsBytes(compressedBytes);
+
+    return compressedFile;
   }
 
   Widget _buildEditableRow({
