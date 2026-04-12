@@ -33,9 +33,11 @@ dependencies:
   just_audio: ^0.9.40
   audio_session: ^0.1.21
   dio: ^5.4.0
-  flutter_riverpod: ^2.0.0  
-  webview_flutter: ^4.8.0 
+  flutter_riverpod: ^2.0.0
+  webview_flutter: ^4.8.0
   google_sign_in: ^7.2.0
+  image_picker: ^1.1.2
+  cupertino_icons: ^1.0.8
 
 
   # The following adds the Cupertino Icons font to your application.
