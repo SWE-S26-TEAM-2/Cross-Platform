@@ -8,7 +8,6 @@ import 'package:my_project/screens/library/widgets/library_tile.dart';
 import 'package:my_project/screens/library/liked_tracks_screen.dart';
 import 'package:my_project/screens/library/playlists_screen.dart';
 
-
 class LibraryScreen extends StatelessWidget {
   final void Function(Widget) onNavigate;
   final VoidCallback? onBack;
@@ -63,10 +62,10 @@ class LibraryScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppDimensions.spaceSmall),
                 LibraryTile(
-                  title: 'Playlists', 
+                  title: 'Playlists',
                   onTap: () => onNavigate(PlaylistsScreen(onBack: onBack)),
                 ),
-                const SizedBox(height: AppDimensions.spaceSmall), 
+                const SizedBox(height: AppDimensions.spaceSmall),
                 LibraryTile(title: 'Albums', onTap: () {}),
                 const SizedBox(height: AppDimensions.spaceSmall),
                 LibraryTile(title: 'Following', onTap: () {}),

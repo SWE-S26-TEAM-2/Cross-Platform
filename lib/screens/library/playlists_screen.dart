@@ -395,7 +395,9 @@ class _CreatePlaylistSheetState extends State<_CreatePlaylistSheet> {
                           borderSide: BorderSide(color: AppColors.textMuted),
                         ),
                         focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: AppColors.textSecondary),
+                          borderSide: BorderSide(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                         contentPadding: EdgeInsets.only(
                           bottom: AppDimensions.spaceSmall,
