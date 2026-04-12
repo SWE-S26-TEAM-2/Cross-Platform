@@ -6,6 +6,7 @@ import 'widgets/profile_header_section.dart';
 import 'widgets/profile_completion_section.dart';
 import '../home/more_like_section.dart';
 import 'widgets/profile_track_list_section.dart';
+import 'edit_profile_screen.dart';
 
 const Color kBackgroundColor = Color(0xFF0F0F0F);
 
@@ -104,7 +105,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   debugPrint('More clicked');
                 },
                 onEditPressed: () {
-                  debugPrint('Edit clicked');
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const EditProfileScreen(),
+                    ),
+                  );
                 },
                 onShufflePressed: () {
                   debugPrint('Shuffle clicked');
