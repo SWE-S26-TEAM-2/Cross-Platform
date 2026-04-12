@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_providers.dart';
@@ -16,6 +18,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late final TextEditingController _cityController;
   late final TextEditingController _countryController;
   late final TextEditingController _bioController;
+
+  final ImagePicker _imagePicker = ImagePicker();
+  File? _selectedAvatarFile;
+  File? _selectedCoverFile;
 
   bool _isSaving = false;
 
@@ -88,6 +94,52 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           _isSaving = false;
         });
       }
+    }
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    print('AVATAR CAMERA TAPPED');
+
+    final authState = ref.read(authProvider);
+    final token = authState.tokens?.accessToken;
+
+    if (token == null || token.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No access token found')));
+      return;
+    }
+
+    try {
+      final pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+      );
+
+      if (pickedFile == null) return;
+
+      final file = File(pickedFile.path);
+
+      setState(() {
+        _selectedAvatarFile = file;
+      });
+
+      final userService = UserService(dio: Dio());
+
+      await userService.uploadAvatar(accessToken: token, filePath: file.path);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Profile picture updated')));
+    } catch (e) {
+      print('AVATAR UPLOAD ERROR: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to upload avatar: $e')));
     }
   }
 
@@ -252,42 +304,59 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 Positioned(
                   left: 28,
                   bottom: -36,
-                  child: Stack(
-                    children: [
-                      CircleAvatar(
-                        radius: 42,
-                        backgroundColor: const Color(0xFF1E1E1E),
-                        backgroundImage:
-                            (avatarUrl != null && avatarUrl.isNotEmpty)
-                            ? NetworkImage(avatarUrl)
-                            : null,
-                        child: (avatarUrl == null || avatarUrl.isEmpty)
-                            ? const Icon(
-                                Icons.person,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      print('AVATAR AREA TAPPED');
+                      _pickAndUploadAvatar();
+                    },
+                    child: SizedBox(
+                      width: 96,
+                      height: 96,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Center(
+                            child: CircleAvatar(
+                              radius: 42,
+                              backgroundColor: const Color(0xFF1E1E1E),
+                              backgroundImage: _selectedAvatarFile != null
+                                  ? FileImage(_selectedAvatarFile!)
+                                  : (avatarUrl != null && avatarUrl.isNotEmpty)
+                                  ? NetworkImage(avatarUrl) as ImageProvider
+                                  : null,
+                              child:
+                                  (_selectedAvatarFile == null &&
+                                      (avatarUrl == null || avatarUrl.isEmpty))
+                                  ? const Icon(
+                                      Icons.person,
+                                      color: Colors.white,
+                                      size: 42,
+                                    )
+                                  : null,
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 6,
+                            right: 6,
+                            child: Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.8),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white24),
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt_outlined,
                                 color: Colors.white,
-                                size: 42,
-                              )
-                            : null,
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.75),
-                            borderRadius: BorderRadius.circular(17),
-                            border: Border.all(color: Colors.white24),
+                                size: 18,
+                              ),
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.camera_alt_outlined,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ],
