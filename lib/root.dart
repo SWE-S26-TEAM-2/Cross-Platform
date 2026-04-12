@@ -25,6 +25,18 @@ class _RootScreenState extends State<RootScreen> {
   bool _isPlaying = false;
   bool _hasLoaded = false;
   Track _currentTrack = MockTracks.hotTrack;
+
+  //Sub-screens
+  final Map<int, Widget> _subScreens = {};
+
+  void _pushSubScreen(Widget screen) {
+    setState(() => _subScreens[_selectedIndex] = screen);
+  }
+
+  void _popSubScreen() {
+    setState(() => _subScreens.remove(_selectedIndex));
+  }
+
   @override
   void dispose() {
     _player.dispose();
@@ -88,7 +100,7 @@ class _RootScreenState extends State<RootScreen> {
     const SearchScreen(),
 
     /// 3
-    LibraryScreen(),
+    LibraryScreen(onNavigate: _pushSubScreen, onBack: _popSubScreen),
 
     /// 4
     const UpgradeScreen(),
@@ -97,7 +109,7 @@ class _RootScreenState extends State<RootScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _buildScreens()[_selectedIndex],
+      body: _subScreens[_selectedIndex] ?? _buildScreens()[_selectedIndex],
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -107,7 +119,9 @@ class _RootScreenState extends State<RootScreen> {
             onPlay: () => _handlePlay(_currentTrack!),
           ),
           BottomNavBar(
-            onTabSelected: (index) => setState(() => _selectedIndex = index),
+            onTabSelected: (index) => setState(() {
+              _selectedIndex = index;
+            }),
           ),
         ],
       ),
