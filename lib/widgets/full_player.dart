@@ -64,14 +64,14 @@ class _FullPlayerState extends State<FullPlayer> {
           stream: widget.player.durationStream,
           builder: (context, durationSnapshot) {
             final totalDuration =
-                durationSnapshot.data ?? Duration(seconds: widget.track.duration);
+                durationSnapshot.data ??
+                Duration(seconds: widget.track.duration);
 
             return StreamBuilder<Duration>(
               stream: widget.player.positionStream,
               initialData: widget.player.position,
               builder: (context, positionSnapshot) {
-                final currentPosition =
-                    positionSnapshot.data ?? Duration.zero;
+                final currentPosition = positionSnapshot.data ?? Duration.zero;
 
                 final totalMs = totalDuration.inMilliseconds;
                 final currentMs = currentPosition.inMilliseconds.clamp(
@@ -251,11 +251,8 @@ class _FullPlayerState extends State<FullPlayer> {
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final knobLeft =
-                        (progress * (constraints.maxWidth - 12)).clamp(
-                      0.0,
-                      constraints.maxWidth - 12,
-                    );
+                    final knobLeft = (progress * (constraints.maxWidth - 12))
+                        .clamp(0.0, constraints.maxWidth - 12);
 
                     return GestureDetector(
                       onTapDown: (details) {
@@ -313,10 +310,7 @@ class _FullPlayerState extends State<FullPlayer> {
                 ),
               ),
               const SizedBox(width: AppDimensions.spaceSmall),
-              Text(
-                formatTime(totalSeconds),
-                style: AppTextStyles.caption,
-              ),
+              Text(formatTime(totalSeconds), style: AppTextStyles.caption),
             ],
           ),
         ),
@@ -378,9 +372,7 @@ class _FullPlayerState extends State<FullPlayer> {
               const SizedBox(width: 4),
               Text(
                 '${widget.track.likeCount}',
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.primary,
-                ),
+                style: AppTextStyles.caption.copyWith(color: AppColors.primary),
               ),
             ],
           ),
@@ -390,21 +382,9 @@ class _FullPlayerState extends State<FullPlayer> {
           color: AppColors.textSecondary,
           size: 22,
         ),
-        const Icon(
-          Icons.ios_share,
-          color: AppColors.textSecondary,
-          size: 22,
-        ),
-        const Icon(
-          Icons.queue_music,
-          color: AppColors.textSecondary,
-          size: 22,
-        ),
-        const Icon(
-          Icons.more_horiz,
-          color: AppColors.textSecondary,
-          size: 22,
-        ),
+        const Icon(Icons.ios_share, color: AppColors.textSecondary, size: 22),
+        const Icon(Icons.queue_music, color: AppColors.textSecondary, size: 22),
+        const Icon(Icons.more_horiz, color: AppColors.textSecondary, size: 22),
       ],
     );
   }
@@ -431,9 +411,7 @@ class _FullPlayerState extends State<FullPlayer> {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    isPlaying
-                        ? Icons.pause_rounded
-                        : Icons.play_arrow_rounded,
+                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                     color: AppColors.background,
                     size: 30,
                   ),
@@ -469,10 +447,7 @@ class WaveformPainter extends CustomPainter {
   final List<double> waveform;
   final double progress;
 
-  WaveformPainter({
-    required this.waveform,
-    required this.progress,
-  });
+  WaveformPainter({required this.waveform, required this.progress});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -496,9 +471,7 @@ class WaveformPainter extends CustomPainter {
           const Radius.circular(2),
         ),
         Paint()
-          ..color = played
-              ? AppColors.textPrimary
-              : AppColors.waveformInactive,
+          ..color = played ? AppColors.textPrimary : AppColors.waveformInactive,
       );
     }
 
@@ -513,7 +486,6 @@ class WaveformPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(WaveformPainter oldDelegate) {
-    return oldDelegate.progress != progress ||
-        oldDelegate.waveform != waveform;
+    return oldDelegate.progress != progress || oldDelegate.waveform != waveform;
   }
 }

@@ -134,27 +134,27 @@ class _RootScreenState extends State<RootScreen> {
     });
   }
 
-void _openFullPlayer() {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => FullPlayer(
-        track: _currentTrack,
-        player: _player,
-        onPlayPause: _toggleCurrentTrack,
-        onSeek: _seekTo,
+  void _openFullPlayer() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FullPlayer(
+          track: _currentTrack,
+          player: _player,
+          onPlayPause: _toggleCurrentTrack,
+          onSeek: _seekTo,
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   List<Widget> _buildScreens() => [
-        HomeScreen(onTrackTap: _handlePlay),
-        const FeedScreen(),
-        SearchScreen(),
-        LibraryScreen(onNavigate: _pushSubScreen, onBack: _popSubScreen),
-        const UpgradeScreen(),
-      ];
+    HomeScreen(onTrackTap: _handlePlay),
+    const FeedScreen(),
+    SearchScreen(),
+    LibraryScreen(onNavigate: _pushSubScreen, onBack: _popSubScreen),
+    const UpgradeScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
