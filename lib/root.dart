@@ -134,23 +134,19 @@ class _RootScreenState extends State<RootScreen> {
     });
   }
 
-  void _openFullPlayer() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => FullPlayer(
-          track: _currentTrack,
-          isPlaying: _isPlaying,
-          currentPosition: _currentPosition,
-          totalDuration: _totalDuration.inMilliseconds > 0
-              ? _totalDuration
-              : Duration(seconds: _currentTrack.duration),
-          onPlayPause: _toggleCurrentTrack,
-          onSeek: _seekTo,
-        ),
+void _openFullPlayer() {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => FullPlayer(
+        track: _currentTrack,
+        player: _player,
+        onPlayPause: _toggleCurrentTrack,
+        onSeek: _seekTo,
       ),
-    );
-  }
+    ),
+  );
+}
 
   List<Widget> _buildScreens() => [
         HomeScreen(onTrackTap: _handlePlay),

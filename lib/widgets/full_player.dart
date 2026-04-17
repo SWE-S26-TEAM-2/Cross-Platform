@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:my_project/constants/app_colors.dart';
 import 'package:my_project/constants/app_dimensions.dart';
 import 'package:my_project/constants/app_text_styles.dart';
@@ -8,17 +9,13 @@ class FullPlayer extends StatefulWidget {
   const FullPlayer({
     super.key,
     required this.track,
-    required this.isPlaying,
-    required this.currentPosition,
-    required this.totalDuration,
+    required this.player,
     required this.onPlayPause,
     required this.onSeek,
   });
 
   final Track track;
-  final bool isPlaying;
-  final Duration currentPosition;
-  final Duration totalDuration;
+  final AudioPlayer player;
   final VoidCallback onPlayPause;
   final ValueChanged<Duration> onSeek;
 
@@ -42,79 +39,104 @@ class _FullPlayerState extends State<FullPlayer> {
     return '$minutes:$seconds';
   }
 
-  double get progress {
-    final totalMs = widget.totalDuration.inMilliseconds;
-    if (totalMs <= 0) return 0.0;
-
-    final currentMs = widget.currentPosition.inMilliseconds.clamp(0, totalMs);
-    return currentMs / totalMs;
-  }
-
-  void _seekFromDx(double dx, double width) {
-    if (width <= 0) return;
+  void _seekFromDx(double dx, double width, Duration totalDuration) {
+    if (width <= 0 || totalDuration.inMilliseconds <= 0) return;
 
     final newProgress = (dx / width).clamp(0.0, 1.0);
-    final totalMs = widget.totalDuration.inMilliseconds;
+    final targetMs = (newProgress * totalDuration.inMilliseconds).round();
 
-    if (totalMs <= 0) return;
-
-    final targetMs = (newProgress * totalMs).round();
     widget.onSeek(Duration(milliseconds: targetMs));
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_initializedControls) {
-      showControls = !widget.isPlaying;
-      _initializedControls = true;
-    }
+    return StreamBuilder<PlayerState>(
+      stream: widget.player.playerStateStream,
+      builder: (context, playerStateSnapshot) {
+        final isPlaying = playerStateSnapshot.data?.playing ?? false;
 
-    final elapsed = widget.currentPosition.inSeconds;
-    final totalSeconds = widget.totalDuration.inSeconds > 0
-        ? widget.totalDuration.inSeconds
-        : widget.track.duration;
+        if (!_initializedControls) {
+          showControls = !isPlaying;
+          _initializedControls = true;
+        }
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: GestureDetector(
-        onTap: showControls
-            ? null
-            : () {
-                setState(() => showControls = true);
+        return StreamBuilder<Duration?>(
+          stream: widget.player.durationStream,
+          builder: (context, durationSnapshot) {
+            final totalDuration =
+                durationSnapshot.data ?? Duration(seconds: widget.track.duration);
+
+            return StreamBuilder<Duration>(
+              stream: widget.player.positionStream,
+              initialData: widget.player.position,
+              builder: (context, positionSnapshot) {
+                final currentPosition =
+                    positionSnapshot.data ?? Duration.zero;
+
+                final totalMs = totalDuration.inMilliseconds;
+                final currentMs = currentPosition.inMilliseconds.clamp(
+                  0,
+                  totalMs > 0 ? totalMs : 1,
+                );
+
+                final progress = totalMs > 0 ? currentMs / totalMs : 0.0;
+                final elapsed = currentPosition.inSeconds;
+                final totalSeconds = totalDuration.inSeconds > 0
+                    ? totalDuration.inSeconds
+                    : widget.track.duration;
+
+                return Scaffold(
+                  backgroundColor: Colors.black,
+                  body: GestureDetector(
+                    onTap: showControls
+                        ? null
+                        : () {
+                            setState(() => showControls = true);
+                          },
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Container(
+                          decoration: const BoxDecoration(
+                            gradient: RadialGradient(
+                              center: Alignment(-0.3, -0.3),
+                              radius: 1.3,
+                              colors: [
+                                Color(0xFF8B1A1A),
+                                Color(0xFF3A0808),
+                                Color(0xFF0D0303),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SafeArea(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildTopSection(context),
+                              const Spacer(),
+                              _buildWaveform(
+                                elapsed: elapsed,
+                                totalSeconds: totalSeconds,
+                                progress: progress,
+                                totalDuration: totalDuration,
+                              ),
+                              _buildCommentBar(),
+                              _buildBottomBar(),
+                              const SizedBox(height: AppDimensions.spaceSmall),
+                            ],
+                          ),
+                        ),
+                        if (showControls) _buildPlayOverlay(isPlaying),
+                      ],
+                    ),
+                  ),
+                );
               },
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Container(
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment(-0.3, -0.3),
-                  radius: 1.3,
-                  colors: [
-                    Color(0xFF8B1A1A),
-                    Color(0xFF3A0808),
-                    Color(0xFF0D0303),
-                  ],
-                ),
-              ),
-            ),
-            SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildTopSection(context),
-                  const Spacer(),
-                  _buildWaveform(elapsed, totalSeconds),
-                  _buildCommentBar(),
-                  _buildBottomBar(),
-                  const SizedBox(height: AppDimensions.spaceSmall),
-                ],
-              ),
-            ),
-            if (showControls) _buildPlayOverlay(),
-          ],
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -172,7 +194,12 @@ class _FullPlayerState extends State<FullPlayer> {
     );
   }
 
-  Widget _buildWaveform(int elapsed, int totalSeconds) {
+  Widget _buildWaveform({
+    required int elapsed,
+    required int totalSeconds,
+    required double progress,
+    required Duration totalDuration,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -180,10 +207,18 @@ class _FullPlayerState extends State<FullPlayer> {
           builder: (context, constraints) {
             return GestureDetector(
               onHorizontalDragUpdate: (details) {
-                _seekFromDx(details.localPosition.dx, constraints.maxWidth);
+                _seekFromDx(
+                  details.localPosition.dx,
+                  constraints.maxWidth,
+                  totalDuration,
+                );
               },
               onTapDown: (details) {
-                _seekFromDx(details.localPosition.dx, constraints.maxWidth);
+                _seekFromDx(
+                  details.localPosition.dx,
+                  constraints.maxWidth,
+                  totalDuration,
+                );
               },
               child: SizedBox(
                 height: 80,
@@ -224,10 +259,18 @@ class _FullPlayerState extends State<FullPlayer> {
 
                     return GestureDetector(
                       onTapDown: (details) {
-                        _seekFromDx(details.localPosition.dx, constraints.maxWidth);
+                        _seekFromDx(
+                          details.localPosition.dx,
+                          constraints.maxWidth,
+                          totalDuration,
+                        );
                       },
                       onHorizontalDragUpdate: (details) {
-                        _seekFromDx(details.localPosition.dx, constraints.maxWidth);
+                        _seekFromDx(
+                          details.localPosition.dx,
+                          constraints.maxWidth,
+                          totalDuration,
+                        );
                       },
                       child: SizedBox(
                         height: 20,
@@ -366,7 +409,7 @@ class _FullPlayerState extends State<FullPlayer> {
     );
   }
 
-  Widget _buildPlayOverlay() {
+  Widget _buildPlayOverlay(bool isPlaying) {
     return Positioned.fill(
       child: Container(
         color: Colors.black45,
@@ -388,7 +431,7 @@ class _FullPlayerState extends State<FullPlayer> {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    widget.isPlaying
+                    isPlaying
                         ? Icons.pause_rounded
                         : Icons.play_arrow_rounded,
                     color: AppColors.background,
