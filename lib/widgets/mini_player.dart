@@ -3,7 +3,6 @@ import 'package:my_project/constants/app_colors.dart';
 import 'package:my_project/constants/app_dimensions.dart';
 import 'package:my_project/constants/app_text_styles.dart';
 import 'package:my_project/models/track.dart';
-import 'package:my_project/widgets/full_player.dart';
 
 class MiniPlayer extends StatelessWidget {
   const MiniPlayer({
@@ -11,29 +10,18 @@ class MiniPlayer extends StatelessWidget {
     required this.onPlay,
     required this.track,
     required this.isPlaying,
+    required this.onOpenFullPlayer,
   });
 
   final VoidCallback? onPlay;
+  final VoidCallback onOpenFullPlayer;
   final Track track;
   final bool isPlaying;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      // Tapping anywhere on the mini player opens the full player
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => FullPlayer(
-              track: track,
-              isPlaying: isPlaying,
-              onPlayPause: onPlay ?? () {},
-            ),
-          ),
-        );
-      },
-
+      onTap: onOpenFullPlayer,
       child: Padding(
         padding: const EdgeInsets.only(
           left: AppDimensions.spaceSmall,
@@ -51,10 +39,8 @@ class MiniPlayer extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Play / Pause button — stops the tap from also triggering onTap above
               GestureDetector(
                 onTap: onPlay,
-                // This stops the play button tap from bubbling up to the GestureDetector above
                 behavior: HitTestBehavior.opaque,
                 child: Container(
                   margin: const EdgeInsets.all(AppDimensions.spaceExtraSmall),
@@ -71,10 +57,7 @@ class MiniPlayer extends StatelessWidget {
                   ),
                 ),
               ),
-
               const SizedBox(width: AppDimensions.spaceSmall),
-
-              // Track title and artist
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -85,7 +68,6 @@ class MiniPlayer extends StatelessWidget {
                   ],
                 ),
               ),
-
               const Icon(Icons.phone_android),
               const SizedBox(width: AppDimensions.spaceSmall),
               const Icon(
