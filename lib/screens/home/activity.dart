@@ -301,7 +301,7 @@ class _ActivityState extends ConsumerState<Activity> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    notif.createdAt,
+                    notif.createdAt ?? '',
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
