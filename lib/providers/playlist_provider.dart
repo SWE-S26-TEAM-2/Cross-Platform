@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/playlist.dart';
 import '../services/playlist_service.dart';
 
-const String testPlaylistId = '5d97a53d-d8d3-4a21-9489-decae4ae7bdd';
+const String testPlaylistId = '0d6346de-a2b6-4b27-a667-bc243c787eb0';
 
 class PlaylistState {
   final Playlist? playlist;
