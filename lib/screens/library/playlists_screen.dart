@@ -5,6 +5,7 @@ import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
 import '../../models/playlist.dart';
 import '../../providers/playlist_provider.dart';
+import '../../providers/create_playlist_provider.dart';
 import '../library/widgets/playlist_tiles.dart';
 import 'collections_screen.dart';
 
@@ -64,8 +65,9 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            CollectionDetailsScreen(data: _mapPlaylistToCollection(playlist)),
+        builder: (_) => CollectionDetailsScreen(
+          data: _mapPlaylistToCollection(playlist),
+        ),
       ),
     );
   }
@@ -136,7 +138,36 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
           top: Radius.circular(AppDimensions.borderRadiusMedium),
         ),
       ),
-      builder: (_) => const _CreatePlaylistSheet(),
+      builder: (_) => _CreatePlaylistSheet(
+        onCreate: (name, description) async {
+          await ref.read(createPlaylistProvider.notifier).createPlaylist(
+                name: name,
+                description: description,
+              );
+
+          final createState = ref.read(createPlaylistProvider);
+
+          if (!mounted) return;
+
+          if (createState.error != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(createState.error!)),
+            );
+            return;
+          }
+
+          if (createState.successMessage != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(createState.successMessage!)),
+            );
+
+            Navigator.pop(context);
+
+            ref.read(createPlaylistProvider.notifier).clearState();
+            ref.read(playlistProvider.notifier).fetchTestPlaylist();
+          }
+        },
+      ),
     );
   }
 
@@ -333,7 +364,11 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
 }
 
 class _CreatePlaylistSheet extends StatefulWidget {
-  const _CreatePlaylistSheet();
+  final Future<void> Function(String name, String description) onCreate;
+
+  const _CreatePlaylistSheet({
+    required this.onCreate,
+  });
 
   @override
   State<_CreatePlaylistSheet> createState() => _CreatePlaylistSheetState();
@@ -341,15 +376,20 @@ class _CreatePlaylistSheet extends StatefulWidget {
 
 class _CreatePlaylistSheetState extends State<_CreatePlaylistSheet> {
   static const int _maxLength = 100;
+
   final TextEditingController _nameController = TextEditingController(
     text: 'Untitled playlist',
   );
+  final TextEditingController _descriptionController = TextEditingController();
+
   bool _isPublic = true;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
     _nameController.addListener(() => setState(() {}));
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _nameController.selection = TextSelection(
         baseOffset: 0,
@@ -361,7 +401,34 @@ class _CreatePlaylistSheetState extends State<_CreatePlaylistSheet> {
   @override
   void dispose() {
     _nameController.dispose();
+    _descriptionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleCreate() async {
+    final name = _nameController.text.trim();
+    final description = _descriptionController.text.trim();
+
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Playlist name is required')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await widget.onCreate(name, description);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -409,6 +476,7 @@ class _CreatePlaylistSheetState extends State<_CreatePlaylistSheet> {
                 ],
               ),
               const SizedBox(height: AppDimensions.spaceExtraLarge),
+
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -454,7 +522,33 @@ class _CreatePlaylistSheetState extends State<_CreatePlaylistSheet> {
                   ),
                 ],
               ),
+
+              const SizedBox(height: AppDimensions.spaceMedium),
+
+              TextField(
+                controller: _descriptionController,
+                maxLines: 2,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 15,
+                ),
+                decoration: const InputDecoration(
+                  hintText: 'Add description',
+                  hintStyle: TextStyle(color: AppColors.textMuted),
+                  border: UnderlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.textMuted),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.textMuted),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.textSecondary),
+                  ),
+                ),
+              ),
+
               const SizedBox(height: AppDimensions.spaceExtraLarge),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -475,14 +569,14 @@ class _CreatePlaylistSheetState extends State<_CreatePlaylistSheet> {
                   ),
                 ],
               ),
+
               const SizedBox(height: AppDimensions.spaceExtraLarge),
+
               SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  onPressed: _isSubmitting ? null : _handleCreate,
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.textSecondary),
                     shape: RoundedRectangleBorder(
@@ -491,17 +585,25 @@ class _CreatePlaylistSheetState extends State<_CreatePlaylistSheet> {
                       ),
                     ),
                   ),
-                  child: const Text(
-                    'Create playlist',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text(
+                          'Create playlist',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
+
               const SizedBox(height: AppDimensions.spaceMedium),
+
               Center(
                 child: GestureDetector(
                   onTap: () => Navigator.pop(context),
@@ -514,6 +616,7 @@ class _CreatePlaylistSheetState extends State<_CreatePlaylistSheet> {
                   ),
                 ),
               ),
+
               const SizedBox(height: AppDimensions.spaceSmall),
             ],
           ),
