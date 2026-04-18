@@ -4,7 +4,9 @@ import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
 import '../../models/playlist.dart';
 import '../../mock_data/mock_playlists.dart';
+import '../../mock_data/mock_tracks.dart';
 import '../library/widgets/playlist_tiles.dart';
+import 'collections_screen.dart';
 
 enum PlaylistsSortOption { recentlyAdded, firstAdded, playlistName }
 
@@ -64,6 +66,44 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
           break;
       }
     });
+  }
+
+  CollectionDetailsData _mapPlaylistToCollection(Playlist playlist) {
+    final tracks = MockTracks.recommendedTracks
+        .take(playlist.trackCount > MockTracks.recommendedTracks.length
+            ? MockTracks.recommendedTracks.length
+            : playlist.trackCount)
+        .map(
+          (track) => CollectionTrack(
+            title: track.title,
+            artist: track.artist,
+            artworkPath: track.artworkUrl,
+            isAvailable: true,
+          ),
+        )
+        .toList();
+
+    return CollectionDetailsData(
+      type: CollectionType.playlist,
+      title: playlist.name,
+      artworkPath: playlist.coverUrl,
+      ownerName: playlist.owner,
+      ownerAvatarPath: '',
+      yearText: '2026',
+      likesText: '0',
+      tracks: tracks,
+    );
+  }
+
+  void _openPlaylistDetails(Playlist playlist) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CollectionDetailsScreen(
+          data: _mapPlaylistToCollection(playlist),
+        ),
+      ),
+    );
   }
 
   void _showSortBottomSheet() {
@@ -138,11 +178,9 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-          // ── Header ──────────────────────────────────────────────────
           SliverToBoxAdapter(
             child: Stack(
               children: [
-                // Stacked squares background decoration
                 Positioned(
                   right: -30,
                   top: -10,
@@ -154,7 +192,6 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // ── Search bar row ───────────────────────────
                         Row(
                           children: [
                             IconButton(
@@ -218,10 +255,7 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
                             ),
                           ],
                         ),
-
                         const SizedBox(height: 20),
-
-                        // ── Title ────────────────────────────────────
                         const Padding(
                           padding: EdgeInsets.only(
                             left: AppDimensions.spaceSmall,
@@ -235,10 +269,7 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 20),
-
-                        // ── Import + Create buttons ──────────────────
                         Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppDimensions.spaceSmall,
@@ -249,7 +280,7 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
                                 child: _ActionButton(
                                   icon: Icons.download_outlined,
                                   label: 'Import',
-                                  onTap: () {}, // hook up later
+                                  onTap: () {},
                                 ),
                               ),
                               const SizedBox(width: AppDimensions.spaceSmall),
@@ -263,7 +294,6 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
                             ],
                           ),
                         ),
-
                         const SizedBox(height: 8),
                       ],
                     ),
@@ -272,17 +302,14 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
               ],
             ),
           ),
-
-          // ── Playlist list ────────────────────────────────────────────
           SliverToBoxAdapter(
             child: PlaylistTiles(
               title: '',
               playlists: _filteredPlaylists,
-              onPlaylistTap: (_) {}, // hook up later
-              onMoreTap: (_) {}, // hook up context menu later
+              onPlaylistTap: _openPlaylistDetails,
+              onMoreTap: (_) {},
             ),
           ),
-
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
@@ -290,7 +317,6 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
   }
 }
 
-// ── Create playlist bottom sheet ────────────────────────────────────────────
 class _CreatePlaylistSheet extends StatefulWidget {
   const _CreatePlaylistSheet();
 
@@ -309,7 +335,6 @@ class _CreatePlaylistSheetState extends State<_CreatePlaylistSheet> {
   void initState() {
     super.initState();
     _nameController.addListener(() => setState(() {}));
-    // Select all text on open so user can type straight away
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _nameController.selection = TextSelection(
         baseOffset: 0,
@@ -346,7 +371,6 @@ class _CreatePlaylistSheetState extends State<_CreatePlaylistSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Drag handle + close ──────────────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -369,10 +393,7 @@ class _CreatePlaylistSheetState extends State<_CreatePlaylistSheet> {
                   ),
                 ],
               ),
-
               const SizedBox(height: AppDimensions.spaceExtraLarge),
-
-              // ── Playlist name field + character count ────────────
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -418,10 +439,7 @@ class _CreatePlaylistSheetState extends State<_CreatePlaylistSheet> {
                   ),
                 ],
               ),
-
               const SizedBox(height: AppDimensions.spaceExtraLarge),
-
-              // ── Make public toggle ───────────────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -442,16 +460,12 @@ class _CreatePlaylistSheetState extends State<_CreatePlaylistSheet> {
                   ),
                 ],
               ),
-
               const SizedBox(height: AppDimensions.spaceExtraLarge),
-
-              // ── Create playlist button ───────────────────────────
               SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: OutlinedButton(
                   onPressed: () {
-                    // hook up playlist creation logic here
                     Navigator.pop(context);
                   },
                   style: OutlinedButton.styleFrom(
@@ -472,10 +486,7 @@ class _CreatePlaylistSheetState extends State<_CreatePlaylistSheet> {
                   ),
                 ),
               ),
-
               const SizedBox(height: AppDimensions.spaceMedium),
-
-              // ── Cancel ───────────────────────────────────────────
               Center(
                 child: GestureDetector(
                   onTap: () => Navigator.pop(context),
@@ -488,7 +499,6 @@ class _CreatePlaylistSheetState extends State<_CreatePlaylistSheet> {
                   ),
                 ),
               ),
-
               const SizedBox(height: AppDimensions.spaceSmall),
             ],
           ),
@@ -498,7 +508,6 @@ class _CreatePlaylistSheetState extends State<_CreatePlaylistSheet> {
   }
 }
 
-// ── Stacked squares background decoration ──────────────────────────────────
 class _StackedSquaresDecoration extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -531,7 +540,6 @@ class _StackedSquaresDecoration extends StatelessWidget {
   }
 }
 
-// ── Import / Create action button ──────────────────────────────────────────
 class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -566,7 +574,6 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-// ── Sort option tile ────────────────────────────────────────────────────────
 class _SortOption extends StatelessWidget {
   final String label;
   final bool selected;
