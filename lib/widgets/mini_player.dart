@@ -11,16 +11,17 @@ class MiniPlayer extends StatelessWidget {
     required this.onPlay,
     required this.track,
     required this.isPlaying,
+    this.isLoading = false,
   });
 
   final VoidCallback? onPlay;
   final Track track;
   final bool isPlaying;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      // Tapping anywhere on the mini player opens the full player
       onTap: () {
         Navigator.push(
           context,
@@ -33,7 +34,6 @@ class MiniPlayer extends StatelessWidget {
           ),
         );
       },
-
       child: Padding(
         padding: const EdgeInsets.only(
           left: AppDimensions.spaceSmall,
@@ -51,10 +51,9 @@ class MiniPlayer extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Play / Pause button — stops the tap from also triggering onTap above
+              // ── Play / Pause / Loading button ─────────────────────────────
               GestureDetector(
-                onTap: onPlay,
-                // This stops the play button tap from bubbling up to the GestureDetector above
+                onTap: isLoading ? null : onPlay,
                 behavior: HitTestBehavior.opaque,
                 child: Container(
                   margin: const EdgeInsets.all(AppDimensions.spaceExtraSmall),
@@ -64,17 +63,27 @@ class MiniPlayer extends StatelessWidget {
                     shape: BoxShape.circle,
                     color: AppColors.textPrimary,
                   ),
-                  child: Icon(
-                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                    color: AppColors.background,
-                    size: 30,
-                  ),
+                  child: isLoading
+                      ? const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.background,
+                          ),
+                        )
+                      : Icon(
+                          isPlaying
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          color: AppColors.background,
+                          size: 30,
+                        ),
                 ),
               ),
 
               const SizedBox(width: AppDimensions.spaceSmall),
 
-              // Track title and artist
+              // ── Track title and artist ────────────────────────────────────
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
