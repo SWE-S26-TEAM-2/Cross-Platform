@@ -89,8 +89,6 @@ class CollectionDetailsScreen extends StatelessWidget {
                       child: _TrackTile(track: data.tracks[index]),
                     ),
                   ),
-
-                  /// Extra space for mini-player + bottom nav
                   const SizedBox(height: 130),
                 ],
               ),
@@ -121,7 +119,7 @@ class _TopSection extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
+                color: Colors.white.withOpacity(0.08),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -136,16 +134,11 @@ class _TopSection extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(
-                AppDimensions.borderRadiusMedium,
-              ),
-              child: Image.asset(
-                data.artworkPath,
-                width: 140,
-                height: 140,
-                fit: BoxFit.cover,
-              ),
+            _CollectionImage(
+              path: data.artworkPath,
+              width: 140,
+              height: 140,
+              borderRadius: AppDimensions.borderRadiusMedium,
             ),
             const SizedBox(width: AppDimensions.spaceMedium),
             Expanded(
@@ -170,10 +163,7 @@ class _TopSection extends StatelessWidget {
                   const SizedBox(height: AppDimensions.spaceMedium),
                   Row(
                     children: [
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundImage: AssetImage(data.ownerAvatarPath),
-                      ),
+                      _CollectionAvatar(path: data.ownerAvatarPath),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -254,14 +244,11 @@ class _TrackTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(AppDimensions.borderRadiusMedium),
-          child: Image.asset(
-            track.artworkPath,
-            width: 74,
-            height: 74,
-            fit: BoxFit.cover,
-          ),
+        _CollectionImage(
+          path: track.artworkPath,
+          width: 74,
+          height: 74,
+          borderRadius: AppDimensions.borderRadiusMedium,
         ),
         const SizedBox(width: AppDimensions.spaceMedium),
         Expanded(
@@ -315,6 +302,96 @@ class _TrackTile extends StatelessWidget {
         const SizedBox(width: 10),
         const Icon(Icons.more_horiz, color: Colors.white70, size: 26),
       ],
+    );
+  }
+}
+
+class _CollectionImage extends StatelessWidget {
+  final String path;
+  final double width;
+  final double height;
+  final double borderRadius;
+
+  const _CollectionImage({
+    required this.path,
+    required this.width,
+    required this.height,
+    required this.borderRadius,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (path.isEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: Container(
+          width: width,
+          height: height,
+          color: AppColors.surfaceLight,
+          child: const Icon(
+            Icons.queue_music,
+            color: Colors.white70,
+            size: 32,
+          ),
+        ),
+      );
+    }
+
+    if (path.startsWith('http')) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: Image.network(
+          path,
+          width: width,
+          height: height,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(
+            width: width,
+            height: height,
+            color: AppColors.surfaceLight,
+            child: const Icon(Icons.broken_image, color: Colors.white70),
+          ),
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: Image.asset(
+        path,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+}
+
+class _CollectionAvatar extends StatelessWidget {
+  final String path;
+
+  const _CollectionAvatar({required this.path});
+
+  @override
+  Widget build(BuildContext context) {
+    if (path.isEmpty) {
+      return const CircleAvatar(
+        radius: 18,
+        backgroundColor: AppColors.surfaceLight,
+        child: Icon(Icons.person, color: Colors.white70, size: 18),
+      );
+    }
+
+    if (path.startsWith('http')) {
+      return CircleAvatar(
+        radius: 18,
+        backgroundImage: NetworkImage(path),
+      );
+    }
+
+    return CircleAvatar(
+      radius: 18,
+      backgroundImage: AssetImage(path),
     );
   }
 }
