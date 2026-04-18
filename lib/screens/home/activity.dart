@@ -59,7 +59,6 @@ class _ActivityState extends ConsumerState<Activity> {
         ],
       ),
 
-      // ── NEW: FAB to start a new conversation ───────────────────────────────
       floatingActionButton: selectedTab == 1
           ? FloatingActionButton(
               onPressed: _showNewMessageSheet,
@@ -94,7 +93,6 @@ class _ActivityState extends ConsumerState<Activity> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // drag handle
               Center(
                 child: Container(
                   width: 40,
@@ -161,10 +159,9 @@ class _ActivityState extends ConsumerState<Activity> {
                     final participantId = controller.text.trim();
                     if (participantId.isEmpty) return;
 
-                    Navigator.pop(ctx); // close sheet
+                    Navigator.pop(ctx);
 
                     try {
-                      // POST /conversations — create or get
                       final conversationId = await ref
                           .read(messagingServiceProvider)
                           .createOrGetConversation(
@@ -173,10 +170,8 @@ class _ActivityState extends ConsumerState<Activity> {
 
                       if (!mounted) return;
 
-                      // Refresh conversation list
                       ref.read(conversationsProvider.notifier).refresh();
 
-                      // Navigate to chat
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -378,64 +373,117 @@ class _ActivityState extends ConsumerState<Activity> {
   }
 
   Widget _buildMessageTile(Conversation conversation, Participant? other) {
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ChatScreen(
-              conversationId: conversation.conversationId,
-              participantName: other?.displayName ?? 'Unknown',
-              participantAvatar: other?.profilePicture,
+    return Dismissible(
+      key: Key(conversation.conversationId),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        color: Colors.red,
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      confirmDismiss: (_) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: const Text(
+              'Delete Conversation',
+              style: TextStyle(color: AppColors.textPrimary),
             ),
+            content: const Text(
+              'Are you sure you want to delete this conversation? This cannot be undone.',
+              style: TextStyle(color: AppColors.textMuted),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
         );
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 22,
-              backgroundImage: other?.profilePicture != null
-                  ? NetworkImage(other!.profilePicture!)
-                  : null,
-              child: other?.profilePicture == null
-                  ? const Icon(Icons.person)
-                  : null,
+      onDismissed: (_) async {
+        try {
+          await ref
+              .read(conversationsProvider.notifier)
+              .deleteConversation(conversation.conversationId);
+        } catch (e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString().replaceAll('Exception: ', '')),
+              backgroundColor: Colors.red,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.message,
-                        size: 18,
-                        color: AppColors.textMuted,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          other?.displayName ?? 'Unknown',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Tap to open conversation',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
+          );
+        }
+      },
+      child: InkWell(
+        onTap: () {
+          final convId = conversation.conversationId;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChatScreen(
+                conversationId: convId,
+                participantName: other?.displayName ?? 'Unknown',
+                participantAvatar: other?.profilePicture,
               ),
             ),
-            const Icon(Icons.chevron_right, color: AppColors.textMuted),
-          ],
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 22,
+                backgroundImage: other?.profilePicture != null
+                    ? NetworkImage(other!.profilePicture!)
+                    : null,
+                child: other?.profilePicture == null
+                    ? const Icon(Icons.person)
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.message,
+                          size: 18,
+                          color: AppColors.textMuted,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            other?.displayName ?? 'Unknown',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Tap to open conversation',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ],
+          ),
         ),
       ),
     );

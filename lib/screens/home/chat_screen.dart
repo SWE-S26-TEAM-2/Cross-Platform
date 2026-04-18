@@ -26,6 +26,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isSending = false;
+  final Set<String> _markedAsRead = {}; // ← track already-marked messages
 
   @override
   void dispose() {
@@ -44,6 +45,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         );
       }
     });
+  }
+
+  // ── Mark incoming unread messages as read ──────────────────────────────────
+  void _markUnreadMessages(List<Message> messages) {
+    final currentUserId = _currentUserId(ref);
+
+    for (final message in messages) {
+      // Only mark messages sent by the OTHER person that are unread
+      // and haven't been marked already in this session
+      if (!message.isRead &&
+          message.senderId != currentUserId &&
+          message.id != null &&
+          !_markedAsRead.contains(message.id)) {
+        _markedAsRead.add(message.id!);
+        print('Marking message as read: ${message.id}');
+
+        ref
+            .read(messagesProvider(widget.conversationId).notifier)
+            .markAsRead(message.id!);
+      }
+    }
   }
 
   Future<void> _sendMessage() async {
@@ -66,7 +88,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             backgroundColor: Colors.red,
           ),
         );
-        // Restore the text so user doesn't lose their message
         _controller.text = content;
       }
     } finally {
@@ -78,8 +99,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     final messagesAsync = ref.watch(messagesProvider(widget.conversationId));
 
-    // Scroll to bottom when new messages load
-    messagesAsync.whenData((_) => _scrollToBottom());
+    // Scroll to bottom and mark messages as read when messages load
+    messagesAsync.whenData((messages) {
+      _scrollToBottom();
+      _markUnreadMessages(messages); // ← called here
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -174,14 +198,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              _formatTime(message.createdAt),
-              style: TextStyle(
-                fontSize: 10,
-                color: isMe
-                    ? Colors.white.withOpacity(0.65)
-                    : AppColors.textMuted,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _formatTime(message.createdAt),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: isMe
+                        ? Colors.white.withOpacity(0.65)
+                        : AppColors.textMuted,
+                  ),
+                ),
+                // ── Read receipt tick (only for messages I sent) ────────────
+                if (isMe) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    message.isRead ? Icons.done_all : Icons.done,
+                    size: 12,
+                    color: message.isRead
+                        ? Colors.lightBlueAccent
+                        : Colors.white.withOpacity(0.65),
+                  ),
+                ],
+              ],
             ),
           ],
         ),
@@ -346,9 +386,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
-  // Pull the current user id from your auth provider
   String? _currentUserId(WidgetRef ref) {
-    // TODO: swap with your actual auth provider, e.g.:
     return ref.read(authProvider).user?.id;
   }
 }
