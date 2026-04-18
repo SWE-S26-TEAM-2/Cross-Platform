@@ -100,10 +100,9 @@ class CollectionDetailsScreen extends StatelessWidget {
                       data.tracks.length,
                       (index) => Padding(
                         padding: EdgeInsets.only(
-                          bottom:
-                              index == data.tracks.length - 1
-                                  ? 0
-                                  : AppDimensions.spaceMedium,
+                          bottom: index == data.tracks.length - 1
+                              ? 0
+                              : AppDimensions.spaceMedium,
                         ),
                         child: _TrackTile(track: data.tracks[index]),
                       ),
@@ -347,11 +346,7 @@ class _CollectionImage extends StatelessWidget {
           width: width,
           height: height,
           color: AppColors.surfaceLight,
-          child: const Icon(
-            Icons.queue_music,
-            color: Colors.white70,
-            size: 32,
-          ),
+          child: const Icon(Icons.queue_music, color: Colors.white70, size: 32),
         ),
       );
     }
@@ -364,25 +359,19 @@ class _CollectionImage extends StatelessWidget {
           width: width,
           height: height,
           fit: BoxFit.cover,
-          errorBuilder:
-              (_, __, ___) => Container(
-                width: width,
-                height: height,
-                color: AppColors.surfaceLight,
-                child: const Icon(Icons.broken_image, color: Colors.white70),
-              ),
+          errorBuilder: (_, __, ___) => Container(
+            width: width,
+            height: height,
+            color: AppColors.surfaceLight,
+            child: const Icon(Icons.broken_image, color: Colors.white70),
+          ),
         ),
       );
     }
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
-      child: Image.asset(
-        path,
-        width: width,
-        height: height,
-        fit: BoxFit.cover,
-      ),
+      child: Image.asset(path, width: width, height: height, fit: BoxFit.cover),
     );
   }
 }

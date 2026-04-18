@@ -10,11 +10,7 @@ class PlaylistState {
   final bool isLoading;
   final String? error;
 
-  const PlaylistState({
-    this.playlist,
-    this.isLoading = false,
-    this.error,
-  });
+  const PlaylistState({this.playlist, this.isLoading = false, this.error});
 }
 
 class PlaylistNotifier extends StateNotifier<PlaylistState> {
@@ -34,8 +30,9 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
   }
 }
 
-final playlistProvider =
-    StateNotifierProvider<PlaylistNotifier, PlaylistState>((ref) {
-      final service = PlaylistService(dio: Dio());
-      return PlaylistNotifier(service);
-    });
+final playlistProvider = StateNotifierProvider<PlaylistNotifier, PlaylistState>(
+  (ref) {
+    final service = PlaylistService(dio: Dio());
+    return PlaylistNotifier(service);
+  },
+);

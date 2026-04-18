@@ -47,17 +47,16 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
       ownerAvatarPath: '',
       yearText: '2026',
       likesText: '0',
-      tracks:
-          playlist.tracks
-              .map(
-                (track) => CollectionTrack(
-                  title: track.title,
-                  artist: track.artist,
-                  artworkPath: track.artworkUrl,
-                  isAvailable: true,
-                ),
-              )
-              .toList(),
+      tracks: playlist.tracks
+          .map(
+            (track) => CollectionTrack(
+              title: track.title,
+              artist: track.artist,
+              artworkPath: track.artworkUrl,
+              isAvailable: true,
+            ),
+          )
+          .toList(),
     );
   }
 
@@ -65,10 +64,8 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder:
-            (_) => CollectionDetailsScreen(
-              data: _mapPlaylistToCollection(playlist),
-            ),
+        builder: (_) =>
+            CollectionDetailsScreen(data: _mapPlaylistToCollection(playlist)),
       ),
     );
   }
@@ -98,7 +95,9 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
                 label: 'Recently Added',
                 selected: _sortOption == PlaylistsSortOption.recentlyAdded,
                 onTap: () {
-                  setState(() => _sortOption = PlaylistsSortOption.recentlyAdded);
+                  setState(
+                    () => _sortOption = PlaylistsSortOption.recentlyAdded,
+                  );
                   Navigator.pop(context);
                 },
               ),
@@ -114,7 +113,9 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
                 label: 'Playlist Name',
                 selected: _sortOption == PlaylistsSortOption.playlistName,
                 onTap: () {
-                  setState(() => _sortOption = PlaylistsSortOption.playlistName);
+                  setState(
+                    () => _sortOption = PlaylistsSortOption.playlistName,
+                  );
                   Navigator.pop(context);
                 },
               ),
@@ -150,14 +151,13 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
 
     final query = _searchController.text.trim().toLowerCase();
     if (query.isNotEmpty) {
-      playlists =
-          playlists
-              .where(
-                (p) =>
-                    p.name.toLowerCase().contains(query) ||
-                    p.owner.toLowerCase().contains(query),
-              )
-              .toList();
+      playlists = playlists
+          .where(
+            (p) =>
+                p.name.toLowerCase().contains(query) ||
+                p.owner.toLowerCase().contains(query),
+          )
+          .toList();
     }
 
     if (_sortOption == PlaylistsSortOption.firstAdded) {
@@ -612,10 +612,9 @@ class _SortOption extends StatelessWidget {
           fontSize: 15,
         ),
       ),
-      trailing:
-          selected
-              ? const Icon(Icons.check, color: AppColors.primary, size: 20)
-              : null,
+      trailing: selected
+          ? const Icon(Icons.check, color: AppColors.primary, size: 20)
+          : null,
       onTap: onTap,
     );
   }

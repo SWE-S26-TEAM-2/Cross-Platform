@@ -45,11 +45,10 @@ class PlaylistTrack {
           'Untitled Track',
       artist: artistName.isEmpty ? 'Unknown Artist' : artistName,
       artworkUrl: rawArtwork,
-      durationSeconds:
-          json['duration_seconds'] is int
-              ? json['duration_seconds']
-              : int.tryParse(json['duration_seconds']?.toString() ?? '') ??
-                  (json['duration'] is int ? json['duration'] : 0),
+      durationSeconds: json['duration_seconds'] is int
+          ? json['duration_seconds']
+          : int.tryParse(json['duration_seconds']?.toString() ?? '') ??
+                (json['duration'] is int ? json['duration'] : 0),
     );
   }
 }
@@ -81,11 +80,10 @@ class Playlist {
 
   factory Playlist.fromJson(Map<String, dynamic> json) {
     final tracksJson = (json['tracks'] as List?) ?? [];
-    final tracks =
-        tracksJson
-            .whereType<Map<String, dynamic>>()
-            .map(PlaylistTrack.fromJson)
-            .toList();
+    final tracks = tracksJson
+        .whereType<Map<String, dynamic>>()
+        .map(PlaylistTrack.fromJson)
+        .toList();
 
     final int totalDurationSeconds = tracks.fold(
       0,
@@ -108,10 +106,7 @@ class Playlist {
         (tracks.isNotEmpty ? tracks.first.artworkUrl : '');
 
     return Playlist(
-      id:
-          json['playlist_id']?.toString() ??
-          json['id']?.toString() ??
-          '',
+      id: json['playlist_id']?.toString() ?? json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? 'Untitled Playlist',
       owner: json['owner_name']?.toString() ?? 'Playlist owner',
       coverUrl: cover,
