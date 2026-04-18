@@ -4,6 +4,7 @@ import 'package:my_project/constants/app_colors.dart';
 import 'package:my_project/constants/app_dimensions.dart';
 import 'package:my_project/constants/app_text_styles.dart';
 import 'package:my_project/models/conversation.dart';
+import 'package:my_project/screens/home/chat_screen.dart';
 import '../../providers/notifications_provider.dart';
 import '../../providers/messages_provider.dart';
 import '../../models/notification.dart' as model;
@@ -57,6 +58,153 @@ class _ActivityState extends ConsumerState<Activity> {
           ),
         ],
       ),
+
+      // ── NEW: FAB to start a new conversation ───────────────────────────────
+      floatingActionButton: selectedTab == 1
+          ? FloatingActionButton(
+              onPressed: _showNewMessageSheet,
+              backgroundColor: AppColors.primary,
+              child: const Icon(Icons.edit_outlined, color: Colors.white),
+            )
+          : null,
+    );
+  }
+
+  // ─── New message bottom sheet ──────────────────────────────────────────────
+
+  void _showNewMessageSheet() {
+    final controller = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.divider,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+
+              Text('New Message', style: AppTextStyles.heading1),
+              const SizedBox(height: 16),
+
+              TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Enter user ID or username',
+                  hintStyle: const TextStyle(color: AppColors.textMuted),
+                  filled: true,
+                  fillColor: AppColors.background,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.divider),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.divider),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.person_outline,
+                    color: AppColors.textMuted,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () async {
+                    final participantId = controller.text.trim();
+                    if (participantId.isEmpty) return;
+
+                    Navigator.pop(ctx); // close sheet
+
+                    try {
+                      // POST /conversations — create or get
+                      final conversationId = await ref
+                          .read(messagingServiceProvider)
+                          .createOrGetConversation(
+                            participantId: participantId,
+                          );
+
+                      if (!mounted) return;
+
+                      // Refresh conversation list
+                      ref.read(conversationsProvider.notifier).refresh();
+
+                      // Navigate to chat
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatScreen(
+                            conversationId: conversationId,
+                            participantName: participantId,
+                          ),
+                        ),
+                      );
+                    } catch (e) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            e.toString().replaceAll('Exception: ', ''),
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Start Conversation'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -142,9 +290,7 @@ class _ActivityState extends ConsumerState<Activity> {
         child: Row(
           children: [
             CircleAvatar(radius: 22, child: Icon(_iconForType(notif.type))),
-
             const SizedBox(width: 12),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,7 +307,6 @@ class _ActivityState extends ConsumerState<Activity> {
                 ],
               ),
             ),
-
             if (!notif.isRead)
               const CircleAvatar(radius: 5, backgroundColor: Colors.blue),
           ],
@@ -193,13 +338,26 @@ class _ActivityState extends ConsumerState<Activity> {
     final conversations = ref.watch(conversationsProvider).value ?? [];
 
     if (conversations.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.message_outlined, size: 40, color: Colors.grey),
-            SizedBox(height: 12),
-            Text('No messages yet', style: TextStyle(color: Colors.grey)),
+            const Icon(Icons.message_outlined, size: 40, color: Colors.grey),
+            const SizedBox(height: 12),
+            const Text('No messages yet', style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: _showNewMessageSheet,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              icon: const Icon(Icons.edit_outlined, size: 16),
+              label: const Text('New Message'),
+            ),
           ],
         ),
       );
@@ -211,7 +369,6 @@ class _ActivityState extends ConsumerState<Activity> {
           const Divider(height: 1, thickness: 1, color: AppColors.divider),
       itemBuilder: (context, index) {
         final conversation = conversations[index];
-        // get the other participant (not current user)
         final other = conversation.participants.isNotEmpty
             ? conversation.participants.first
             : null;
@@ -223,10 +380,16 @@ class _ActivityState extends ConsumerState<Activity> {
   Widget _buildMessageTile(Conversation conversation, Participant? other) {
     return InkWell(
       onTap: () {
-        // navigate to chat screen — pass conversationId
-        // Navigator.push(context, MaterialPageRoute(
-        //   builder: (_) => ChatScreen(conversationId: conversation.conversationId),
-        // ));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(
+              conversationId: conversation.conversationId,
+              participantName: other?.displayName ?? 'Unknown',
+              participantAvatar: other?.profilePicture,
+            ),
+          ),
+        );
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -241,9 +404,7 @@ class _ActivityState extends ConsumerState<Activity> {
                   ? const Icon(Icons.person)
                   : null,
             ),
-
             const SizedBox(width: 12),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,6 +434,7 @@ class _ActivityState extends ConsumerState<Activity> {
                 ],
               ),
             ),
+            const Icon(Icons.chevron_right, color: AppColors.textMuted),
           ],
         ),
       ),

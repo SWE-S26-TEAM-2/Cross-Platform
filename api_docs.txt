@@ -1,0 +1,1603 @@
+COMPLETE API REFERENCE DOCUMENTATION
+SoundCloud Clone
+All 12 Modules  ·  35+ Endpoints  ·  v1.0.0
+SWE-S26  ·  Backend Team  ·  Spring 2026
+Base URL
+https://api.soundcloud-clone.com/v1
+Version
+v1.0.0
+Auth Scheme
+JWT Bearer Token
+Data Format
+JSON
+Global Conventions
+All endpoints follow RESTful principles. Data is exchanged in JSON format unless noted (file uploads use multipart/form-data). Protected endpoints require Authorization: Bearer <token> in the request header.
+Authentication
+JWT Bearer Token · Authorization: Bearer <access_token>
+Token Expiry
+Access token: 15 min  |  Refresh token: 7 days
+Rate Limiting
+100 requests / minute per user  →  429 Too Many Requests on breach
+Pagination
+List endpoints support ?page=1&limit=20 query parameters
+Error Format
+{ "success": false, "error": { "code": 400, "message": "..." } }
+Complete Endpoint Index
+All 35+ endpoints across all 12 modules. 🔒 = JWT required, 🔓 = public.
+Method
+Endpoint
+Summary
+Auth
+MODULE 1 — AUTHENTICATION & USER MANAGEMENT
+POST
+/auth/register
+Register a new user account
+🔓
+POST
+/auth/verify-email
+Verify email with token
+🔓
+POST
+/auth/resend-verification
+Resend verification email
+🔓
+POST
+/auth/login
+Login with email & password
+🔓
+POST
+/auth/google
+Social login via Google OAuth2
+🔓
+POST
+/auth/refresh
+Refresh expired access token
+🔓
+POST
+/auth/logout
+Invalidate tokens & end session
+🔒
+POST
+/auth/forgot-password
+Request password reset email
+🔓
+POST
+/auth/reset-password
+Reset password using token
+🔓
+MODULE 2 — USER PROFILE & SOCIAL IDENTITY
+GET
+/users/me
+Get current authenticated user
+🔒
+GET
+/users/{user_id}
+Get any user profile by ID
+🔓
+PATCH
+/users/me
+Update own profile fields
+🔒
+PATCH
+/users/me/privacy
+Toggle public / private visibility
+🔒
+PUT
+/users/me/avatar
+Upload profile picture
+🔒
+PUT
+/users/me/cover
+Upload cover photo
+🔒
+GET
+/users/me/social-links
+Get external social profile links
+🔒
+PUT
+/users/me/social-links
+Update external social profile links
+🔒
+MODULE 3 — FOLLOWERS & SOCIAL GRAPH
+POST
+/users/{id}/follow
+Follow a user
+🔒
+DELETE
+/users/{id}/follow
+Unfollow a user
+🔒
+POST
+/users/{id}/block
+Block a user
+🔒
+DELETE
+/users/{id}/block
+Unblock a user
+🔒
+MODULE 4 — AUDIO UPLOAD & TRACK MANAGEMENT
+POST
+/tracks
+Upload a new track
+🔒
+GET
+/tracks/{id}
+Get track details
+🔓
+PUT
+/tracks/{id}
+Update track metadata
+🔒
+DELETE
+/tracks/{id}
+Delete a track
+🔒
+MODULE 5 — PLAYBACK & STREAMING ENGINE
+GET
+/tracks/{id}/stream
+Get streamable audio URL
+🔓
+MODULE 6 — ENGAGEMENT & SOCIAL INTERACTIONS
+POST
+/likes/tracks/{id}
+Like a track
+🔒
+DELETE
+/likes/tracks/{id}
+Unlike a track
+🔒
+POST
+/reposts/tracks/{id}
+Repost a track
+🔒
+DELETE
+/reposts/tracks/{id}
+Remove a repost
+🔒
+GET
+/tracks/{id}/comments
+Get track comments
+🔓
+POST
+/tracks/{id}/comments
+Add a timestamped comment
+🔒
+MODULE 7 — SETS & PLAYLISTS
+POST
+/playlists/
+Create a new playlist
+🔒
+GET
+/playlists/{playlist_id}
+Get playlist details
+🔓
+PATCH
+/playlists/{playlist_id}
+Update playlist
+🔒
+DELETE
+/playlists/{playlist_id}
+Delete playlist
+🔒
+POST
+/playlists/{playlist_id}/tracks
+Add track to playlist
+🔒
+DELETE
+/playlists/{playlist_id}/tracks/{track_id}
+Remove track from playlist
+🔒
+MODULE 8 — FEED, SEARCH & DISCOVERY
+GET
+/search?keyword=...
+Global search across tracks, playlists, users
+🔓
+MODULE 9 — MESSAGING & TRACK SHARING
+POST
+/conversations
+Create or retrieve a 1-to-1 conversation
+🔒
+GET
+/conversations
+List all user conversations
+🔒
+DELETE
+/conversations/{conversation_id}
+Delete a conversation
+🔒
+GET
+/conversations/{conversation_id}/messages
+Get all messages
+🔒
+POST
+/conversations/{conversation_id}/messages
+Send a message or share media
+🔒
+PATCH
+/conversations/{conversation_id}/messages/{message_id}/read
+Mark message as read
+🔒
+MODULE 10 — REAL-TIME NOTIFICATIONS
+GET
+/notifications
+Get all notifications
+🔒
+PUT
+/notifications/{id}/read
+Mark notification as read
+🔒
+MODULE 11 — MODERATION & ADMIN DASHBOARD
+POST
+/reports
+Report inappropriate content
+🔒
+GET
+/admin/analytics
+Get platform health metrics
+🔒
+MODULE 12 — PREMIUM SUBSCRIPTION
+GET
+/subscriptions/me
+Get subscription status and usage
+🔒
+POST
+/subscriptions/upgrade
+Upgrade to Premium (Stripe mock)
+🔒
+MODULE 1
+Authentication & User Management
+Registration · Login · Social Auth · Token Management · Password Recovery
+1.1  Registration & Account Verification
+POST
+/auth/register
+Register new user
+Creates a new user account. Sends an automated email with a verification token. Account remains unverified until /auth/verify-email is called. CAPTCHA token must be obtained from the client-side Google reCAPTCHA widget.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+email
+string
+Yes
+Valid email address — must be unique. Example: "user@example.com"
+password
+string
+Yes
+Min 8 chars, at least 1 uppercase, 1 number. Example: "StrongPass1!"
+display_name
+string
+Yes
+Public display name. Example: "DJ Khaled"
+captcha_token
+string
+Yes
+Google reCAPTCHA v2 response token from the frontend widget.
+account_type
+string
+No
+"artist" or "listener". Defaults to "listener" if omitted.
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "message": "Registration successful. Please check your email to verify your account.",
+  "data": {
+    "user_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "email": "user@example.com",
+    "display_name": "DJ Khaled",
+    "is_verified": false
+  }
+}
+Error codes: 400 Invalid input / missing fields  |  409 Email already registered  |  422 CAPTCHA validation failed
+POST
+/auth/verify-email
+Verify email address
+Validates the email verification token sent after registration. Token is single-use and expires after 24 hours.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+token
+string
+Yes
+Verification token from the email link. Example: "abc-123-verification-token"
+RESPONSE EXAMPLE
+{"success": true, "message": "Account verified. You can now log in."}
+Error codes: 400 Invalid or malformed token  |  410 Token expired — use /auth/resend-verification
+POST
+/auth/resend-verification
+Resend verification email
+Resends a fresh verification email. Rate-limited to 3 requests per hour per email address.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+email
+string
+Yes
+The registered email address. Example: "user@example.com"
+RESPONSE EXAMPLE
+{"success": true, "message": "Verification email resent. Please check your inbox."}
+Error codes: 404 Email not found  |  409 Account already verified  |  429 Rate limit exceeded
+1.2  Login & Social Authentication
+POST
+/auth/login
+Login with email & password
+Authenticates a verified user and issues a JWT access token and refresh token. Access token must be sent as Bearer in all protected requests.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+email
+string
+Yes
+Registered email. Example: "user@example.com"
+password
+string
+Yes
+Account password. Example: "StrongPass1!"
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refresh_token": "def502abc...",
+    "token_type": "bearer",
+    "expires_in": 900,
+    "user": {
+      "user_id": "a1b2c3d4-...",
+      "display_name": "DJ Khaled",
+      "account_type": "artist",
+      "is_premium": false
+    }
+  }
+}
+Error codes: 400 Missing fields  |  401 Invalid credentials  |  403 Account not verified  |  403 Account suspended
+POST
+/auth/google
+Google OAuth2 social login
+Authenticates or auto-registers a user via Google OAuth2. If no account exists for the Google email, one is created with is_verified = true. The google_token is the ID token returned by the Google Sign-In client library.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+google_token
+string
+Yes
+Google ID token from the client-side Google Sign-In SDK. Example: "ya29.a0AfH6SM..."
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refresh_token": "def502abc...",
+    "token_type": "bearer",
+    "expires_in": 900,
+    "is_new_user": false
+  }
+}
+Error codes: 400 Missing or empty google_token  |  401 Google token invalid or expired  |  503 Google OAuth service unavailable
+📝 If is_new_user is true, redirect to a profile completion screen.
+POST
+/auth/refresh
+Refresh access token
+Issues a new access token using a valid refresh token. Implements refresh token rotation — old token is invalidated and a new one is returned.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+refresh_token
+string
+Yes
+Current valid refresh token. Example: "def502abc..."
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9_NEW...",
+    "refresh_token": "ghi789_NEW...",
+    "token_type": "bearer",
+    "expires_in": 900
+  }
+}
+Error codes: 401 Refresh token invalid  |  401 Refresh token expired — user must log in again
+POST
+/auth/logout
+Logout & invalidate session
+🔒 JWT
+Invalidates the current refresh token server-side. Client must also discard the access token locally.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+refresh_token
+string
+Yes
+The refresh token to invalidate. Example: "def502abc..."
+RESPONSE EXAMPLE
+{"success": true, "message": "Logged out successfully."}
+Error codes: 401 Missing or invalid Authorization header  |  400 Missing refresh_token
+1.3  Password Management
+POST
+/auth/forgot-password
+Request password reset
+Sends a password reset link to the given email. Always returns 200 regardless of whether the email exists — prevents user enumeration attacks.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+email
+string
+Yes
+Email address of the account. Example: "user@example.com"
+RESPONSE EXAMPLE
+{"success": true, "message": "If an account with that email exists, a reset link has been sent."}
+Error codes: 429 Rate limit exceeded — max 3 reset requests per hour
+📝 Always returns 200 even if email is not registered. This is intentional to prevent user enumeration.
+POST
+/auth/reset-password
+Reset password with token
+Updates the account password using the reset token received by email. Token expires after 1 hour. All active refresh tokens are invalidated upon success.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+token
+string
+Yes
+Password reset token from the email link. Example: "reset-token-xyz"
+new_password
+string
+Yes
+New password. Min 8 chars, 1 uppercase, 1 number. Example: "NewStrongPass1!"
+RESPONSE EXAMPLE
+{"success": true, "message": "Password updated successfully. All sessions have been terminated."}
+Error codes: 400 Token invalid or malformed  |  400 Password does not meet requirements  |  410 Token expired
+MODULE 2
+User Profile & Social Identity
+Profile Management · Privacy · Media Uploads · Social Links
+2.1  Profile Retrieval & Update
+GET
+/users/me
+Get current user profile
+🔒 JWT
+Returns the full profile object for the currently authenticated user.
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": {
+    "user_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "display_name": "DJ Khaled",
+    "email": "user@example.com",
+    "bio": "We the best music!",
+    "location": "Cairo, Egypt",
+    "account_type": "artist",
+    "is_premium": false,
+    "is_private": false,
+    "profile_picture": "https://bucket.s3.com/avatars/a1b2c3d4.jpg",
+    "cover_photo": "https://bucket.s3.com/covers/a1b2c3d4.jpg",
+    "follower_count": 1042,
+    "following_count": 87,
+    "track_count": 14,
+    "created_at": "2024-01-15T10:30:00Z"
+  }
+}
+Error codes: 401 Missing or invalid JWT token
+GET
+/users/{user_id}
+Get user profile by ID
+Returns the public profile of any user. If profile is Private, only limited data is returned for non-followers.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+user_id
+string (UUID)
+Yes
+UUID of the target user. Example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": {
+    "user_id": "a1b2c3d4-...",
+    "display_name": "DJ Khaled",
+    "bio": "We the best music!",
+    "account_type": "artist",
+    "is_private": false,
+    "profile_picture": "https://bucket.s3.com/avatars/a1b2c3d4.jpg",
+    "follower_count": 1042,
+    "track_count": 14
+  }
+}
+Error codes: 404 User not found  |  403 User has blocked the requesting account
+📝 Private profiles return limited data for non-followers: display_name, profile_picture, and follower_count only.
+PATCH
+/users/me
+Update own profile
+🔒 JWT
+Updates one or more profile fields. All fields are optional — only provided fields are updated (partial update). Does not handle media file uploads.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+display_name
+string
+No
+New display name. Example: "DJ Khaled"
+bio
+string
+No
+Profile bio. Max 500 characters.
+location
+string
+No
+Location string. Example: "Cairo, Egypt"
+account_type
+string
+No
+"artist" or "listener"
+favorite_genres
+array
+No
+Array of genre strings. Example: ["hip-hop", "electronic"]
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "message": "Profile updated successfully.",
+  "data": { "user_id": "a1b2c3d4-...", "display_name": "DJ Khaled", "updated_at": "2024-06-01T12:00:00Z" }
+}
+Error codes: 400 Invalid field value  |  401 Unauthorized  |  422 Validation error
+PATCH
+/users/me/privacy
+Update profile visibility
+🔒 JWT
+Toggles the user's profile between Public and Private. Private profiles do not appear in search results.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+is_private
+boolean
+Yes
+true = Private profile, false = Public profile.
+RESPONSE EXAMPLE
+{"success": true, "message": "Profile visibility updated.", "data": {"is_private": true}}
+Error codes: 400 Missing is_private field  |  401 Unauthorized
+2.2  Media Asset Uploads
+PUT
+/users/me/avatar
+Upload profile picture
+🔒 JWT
+Uploads a new profile picture for the authenticated user. Uses multipart/form-data encoding. Old image is replaced. Accepted: JPEG, PNG, WEBP. Max 5MB.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+file
+binary (multipart)
+Yes
+Image file. Accepted: image/jpeg, image/png, image/webp. Max size: 5MB.
+RESPONSE EXAMPLE
+{"success": true, "data": {"profile_picture": "https://bucket.s3.com/avatars/a1b2c3d4_new.jpg"}}
+Error codes: 400 No file provided  |  400 Unsupported file type  |  413 File too large (max 5MB)  |  401 Unauthorized
+📝 Content-Type header must be multipart/form-data. Do not send as JSON.
+PUT
+/users/me/cover
+Upload cover photo
+🔒 JWT
+Uploads a high-resolution cover photo. Recommended dimensions: 2480×520px. Accepted: JPEG, PNG, WEBP. Max 10MB.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+file
+binary (multipart)
+Yes
+Image file. Accepted: image/jpeg, image/png, image/webp. Max size: 10MB. Recommended: 2480×520px.
+RESPONSE EXAMPLE
+{"success": true, "data": {"cover_photo": "https://bucket.s3.com/covers/a1b2c3d4_new.jpg"}}
+Error codes: 400 No file provided  |  400 Unsupported file type  |  413 File too large (max 10MB)  |  401 Unauthorized
+📝 Content-Type header must be multipart/form-data.
+2.3  External Social Links
+GET
+/users/me/social-links
+Get social profile links
+🔒 JWT
+Returns the list of external social platform links configured on the authenticated user's profile.
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": {
+    "social_links": [
+      {"platform": "instagram", "url": "https://instagram.com/djkhaled"},
+      {"platform": "twitter",   "url": "https://twitter.com/djkhaled"}
+    ]
+  }
+}
+Error codes: 401 Unauthorized
+PUT
+/users/me/social-links
+Update social profile links
+🔒 JWT
+Replaces the full set of external social links. Full replacement — not a merge. Send empty array [] to clear all links. Max 5 links per user.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+links
+array
+Yes
+Array of social link objects. Send empty array [] to remove all links.
+links[].platform
+string
+Yes
+Platform identifier. Accepted: "instagram", "twitter", "facebook", "youtube", "website"
+links[].url
+string
+Yes
+Full URL starting with https://. Example: "https://instagram.com/djkhaled"
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "message": "Social links updated successfully.",
+  "data": {"social_links": [{"platform": "instagram", "url": "https://instagram.com/djkhaled"}]}
+}
+Error codes: 400 Invalid platform value  |  400 URL must start with https://  |  400 Max 5 links exceeded  |  401 Unauthorized
+📝 This is a full replacement. Always send the complete desired array.
+MODULE 3
+Followers & Social Graph
+Follow · Unfollow · Block · Unblock
+POST
+/users/{id}/follow
+Follow a user
+🔒 JWT
+Follow a user by their UUID. Automatically increments follower_count on target and following_count on requester.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+id
+UUID
+Yes
+UUID of the user to follow
+RESPONSE EXAMPLE
+{"success": true, "message": "You are now following DJ Khaled."}
+Error codes: 400 Cannot follow yourself  |  400 Already following this user  |  401 Unauthorized  |  404 Target user does not exist
+📝 Increments follower_count on target and following_count on the requester.
+DELETE
+/users/{id}/follow
+Unfollow a user
+🔒 JWT
+Unfollow a user by their UUID. Decrements counts on both sides (never below 0).
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+id
+UUID
+Yes
+UUID of the user to unfollow
+RESPONSE EXAMPLE
+{"success": true, "message": "Successfully unfollowed."}
+Error codes: 401 Unauthorized  |  404 You are not following this user
+POST
+/users/{id}/block
+Block a user
+🔒 JWT
+Block a user by their UUID. Automatically removes any existing follow relationship in either direction between the two users.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+id
+UUID
+Yes
+UUID of the user to block
+RESPONSE EXAMPLE
+{"success": true, "message": "User blocked successfully."}
+Error codes: 400 Cannot block yourself  |  400 User already blocked  |  401 Unauthorized  |  404 Target user does not exist
+📝 Blocking automatically removes follow relationships in both directions.
+DELETE
+/users/{id}/block
+Unblock a user
+🔒 JWT
+Unblock a user by their UUID. A block record must exist to unblock.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+id
+UUID
+Yes
+UUID of the user to unblock
+RESPONSE EXAMPLE
+{"success": true, "message": "User unblocked successfully."}
+Error codes: 401 Unauthorized  |  404 This user is not currently blocked
+MODULE 4
+Audio Upload & Track Management
+Upload · Metadata · Visibility · Delete
+POST
+/tracks
+Upload a new track
+🔒 JWT
+Uploads a new audio track. Free users are limited to 3 tracks. Premium users have unlimited uploads.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+title
+string
+Yes
+Track title. Example: "Summer Vibes 2026"
+genre
+string
+Yes
+Music genre. Example: "Electronic"
+description
+string
+No
+Track description.
+tags
+array
+No
+Tags array. Example: ["chill", "house"]
+visibility
+string
+Yes
+"public" or "private"
+file
+binary (multipart)
+Yes
+MP3 or WAV audio file.
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": {
+    "id": "track-abc-123",
+    "title": "Summer Vibes 2026",
+    "genre": "Electronic",
+    "visibility": "public",
+    "status": "processing",
+    "created_at": "2024-06-01T10:00:00Z"
+  }
+}
+Error codes: 400 Title and genre are required  |  401 Unauthorized  |  403 Free plan upload limit reached (max 3 tracks)
+GET
+/tracks/{id}
+Get track details
+Returns full track details including uploader info, play count, and waveform data.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+id
+string
+Yes
+Track UUID
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": {
+    "id": "track-abc-123",
+    "title": "Summer Vibes 2026",
+    "genre": "Electronic",
+    "uploader_id": "user-uuid-...",
+    "play_count": 15420,
+    "visibility": "public",
+    "created_at": "2024-06-01T10:00:00Z"
+  }
+}
+Error codes: 404 Track does not exist  |  403 Track is private and user is not owner
+PUT
+/tracks/{id}
+Update track metadata
+🔒 JWT
+Updates metadata for a track. Only the track owner can update it.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+id
+string
+Yes
+Track UUID
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+title
+string
+No
+Updated title
+genre
+string
+No
+Updated genre
+description
+string
+No
+Updated description
+tags
+array
+No
+Updated tags array
+visibility
+string
+No
+"public" or "private"
+RESPONSE EXAMPLE
+{"success": true, "message": "Track updated successfully.", "data": {"id": "track-abc-123", "title": "Updated Title"}}
+Error codes: 401 Unauthorized  |  403 Not the track owner  |  404 Track not found
+DELETE
+/tracks/{id}
+Delete a track
+🔒 JWT
+Permanently deletes a track and its associated file. Only the track owner can delete it.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+id
+string
+Yes
+Track UUID
+RESPONSE EXAMPLE
+{"success": true, "message": "Track deleted successfully."}
+Error codes: 401 Unauthorized  |  403 Not the track owner  |  404 Track not found
+MODULE 5
+Playback & Streaming Engine
+Streaming URL · Play Count
+GET
+/tracks/{id}/stream
+Get streamable audio URL
+Returns a secure, time-limited streaming URL for the specified track. Also increments the track's play_count. Private tracks are only accessible by the owner.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+id
+string
+Yes
+Track UUID
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": {
+    "stream_url": "https://audio-cdn.example.com/stream/track-abc-123.mp3",
+    "expires_in": 3600
+  }
+}
+Error codes: 403 Track is private and user is not the owner  |  404 Track does not exist
+📝 The stream_url is time-limited (expires_in seconds). Client must request a new URL if it expires.
+MODULE 6
+Engagement & Social Interactions
+Likes · Reposts · Timestamped Comments
+6.1  Likes
+POST
+/likes/tracks/{id}
+Like a track
+🔒 JWT
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+id
+string
+Yes
+Track UUID
+RESPONSE EXAMPLE
+{"success": true, "message": "Track added to your likes."}
+Error codes: 400 Track already liked  |  401 Unauthorized  |  404 Track not found
+DELETE
+/likes/tracks/{id}
+Unlike a track
+🔒 JWT
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+id
+string
+Yes
+Track UUID
+RESPONSE EXAMPLE
+{"success": true, "message": "Track removed from your likes."}
+Error codes: 401 Unauthorized  |  404 Track not liked or not found
+6.2  Reposts
+POST
+/reposts/tracks/{id}
+Repost a track
+🔒 JWT
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+id
+string
+Yes
+Track UUID
+RESPONSE EXAMPLE
+{"success": true, "message": "Track reposted successfully."}
+Error codes: 400 Track already reposted  |  401 Unauthorized  |  404 Track not found
+DELETE
+/reposts/tracks/{id}
+Remove a repost
+🔒 JWT
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+id
+string
+Yes
+Track UUID
+RESPONSE EXAMPLE
+{"success": true, "message": "Repost removed successfully."}
+Error codes: 401 Unauthorized  |  404 Repost not found
+6.3  Comments
+GET
+/tracks/{id}/comments
+Get track comments
+Returns all comments for the specified track, ordered by timestamp in the audio. Supports pagination.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+id
+string
+Yes
+Track UUID
+QUERY PARAMETERS
+Field
+Type
+Required
+Description / Example
+limit
+integer
+No
+Pagination limit (default: 20)
+offset
+integer
+No
+Pagination offset (default: 0)
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": [
+    {
+      "id": "comment-1",
+      "user_id": "user-uuid-...",
+      "content": "Drop is insane!",
+      "timestamp_in_track": 65,
+      "created_at": "2024-06-01T10:05:00Z"
+    }
+  ]
+}
+Error codes: 404 Track not found
+POST
+/tracks/{id}/comments
+Add a timestamped comment
+🔒 JWT
+Posts a comment at a specific second in the audio track. Replies are limited to one level deep.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+id
+string
+Yes
+Track UUID
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+content
+string
+Yes
+Comment text. Max 500 characters.
+timestamp_in_track
+integer
+Yes
+Second marker in audio where comment is placed. Must be >= 0.
+parent_comment_id
+string (UUID)
+No
+UUID of parent comment for 1-level replies. Null for top-level comments.
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": {
+    "id": "comment-new-uuid",
+    "content": "Drop is insane!",
+    "timestamp_in_track": 65,
+    "created_at": "2024-06-01T10:05:00Z"
+  }
+}
+Error codes: 400 content is required  |  400 timestamp_in_track must be >= 0  |  401 Unauthorized  |  404 Track not found
+📝 Replies are limited to one level deep only. Cannot reply to a reply.
+MODULE 7
+Sets & Playlists
+Playlist CRUD · Track Add/Remove · Privacy
+POST
+/playlists/
+Create new playlist
+🔒 JWT
+Creates a new playlist owned by the authenticated user. description is not part of the create payload. Playlist ownership is automatically set from the authenticated user.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+name
+string
+Yes
+Playlist title. Example: "Gym Playlist"
+is_public
+boolean
+No
+Playlist visibility. true = public, false = private. Defaults to true.
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "message": "Playlist created successfully.",
+  "data": {
+    "playlist_id": "87703225-ead8-4d2f-a7d6-0be4831776ab",
+    "name": "Gym Playlist",
+    "is_public": true
+  }
+}
+Error codes: 401 Missing or invalid JWT  |  422 Validation error (missing name or wrong field type)  |  500 Internal server error
+GET
+/playlists/{playlist_id}
+Get playlist details by ID
+Returns the playlist details including its list of tracks for the specified playlist UUID.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+playlist_id
+UUID
+Yes
+Playlist UUID. Example: "87703225-ead8-4d2f-a7d6-0be4831776ab"
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": {
+    "playlist_id": "87703225-ead8-4d2f-a7d6-0be4831776ab",
+    "user_id": "5f1a8f12-91e2-4f31-9013-70200b98e9b6",
+    "name": "Gym Playlist",
+    "description": null,
+    "is_public": true,
+    "tracks": []
+  }
+}
+Error codes: 404 Playlist not found  |  422 Invalid UUID format
+PATCH
+/playlists/{playlist_id}
+Update playlist
+🔒 JWT
+Updates one or more playlist fields. Partial update — only provided fields are changed. Only the playlist owner can update it.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+playlist_id
+UUID
+Yes
+Playlist UUID
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+name
+string
+No
+New playlist name. Example: "Chill Playlist"
+description
+string
+No
+Optional playlist description. Example: "Songs for relaxing"
+is_public
+boolean
+No
+true = public, false = private
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "message": "Playlist updated successfully.",
+  "data": {
+    "playlist_id": "87703225-ead8-4d2f-a7d6-0be4831776ab",
+    "name": "Chill Playlist",
+    "description": "Songs for relaxing",
+    "is_public": false
+  }
+}
+Error codes: 400 No fields provided for update  |  401 Missing or invalid JWT  |  403 You can only update your own playlists  |  404 Playlist not found  |  422 Validation error
+DELETE
+/playlists/{playlist_id}
+Delete playlist
+🔒 JWT
+Deletes the specified playlist if it belongs to the authenticated user.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+playlist_id
+UUID
+Yes
+Playlist UUID
+RESPONSE EXAMPLE
+{"success": true, "message": "Playlist deleted successfully."}
+Error codes: 401 Missing or invalid JWT  |  403 You can only delete your own playlists  |  404 Playlist not found  |  422 Invalid UUID format
+POST
+/playlists/{playlist_id}/tracks
+Add track to playlist
+🔒 JWT
+Adds an already existing track to the specified playlist. Authenticated user must own the playlist. Does not create/upload a track — only links an existing one.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+playlist_id
+UUID
+Yes
+Playlist UUID
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+track_id
+UUID
+Yes
+Existing track UUID to add to the playlist
+RESPONSE EXAMPLE
+{"success": true, "message": "Track added to playlist successfully."}
+Error codes: 401 Missing or invalid JWT  |  403 You can only edit your own playlists  |  404 Playlist not found  |  404 Track not found  |  409 Track already exists in playlist  |  422 Validation error
+DELETE
+/playlists/{playlist_id}/tracks/{track_id}
+Remove track from playlist
+🔒 JWT
+Removes a track from the specified playlist. Authenticated user must own the playlist.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+playlist_id
+UUID
+Yes
+Playlist UUID
+track_id
+UUID
+Yes
+Track UUID to remove
+RESPONSE EXAMPLE
+{"success": true, "message": "Track removed from playlist successfully."}
+Error codes: 401 Missing or invalid JWT  |  403 You can only edit your own playlists  |  404 Playlist not found  |  404 Track not found in playlist  |  422 Validation error
+MODULE 8
+Feed, Search & Discovery
+Global Search · Trending
+GET
+/search?keyword=...
+Global search
+Performs a global keyword search across tracks, playlists, and users. Designed to support a unified search bar. Albums are not included (no album model in current backend).
+QUERY PARAMETERS
+Field
+Type
+Required
+Description / Example
+keyword
+string
+Yes
+Search term. Example: "amr"
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": {
+    "tracks": [
+      {"track_id": "5be39166-...", "title": "Tamaly Ma3ak", "description": "Amr Diab", "file_url": "test.mp3"}
+    ],
+    "playlists": [
+      {"playlist_id": "87703225-...", "name": "Amr Favorites", "is_public": true}
+    ],
+    "users": [
+      {"user_id": "5f1a8f12-...", "display_name": "Amr", "email": "amr@example.com"}
+    ]
+  }
+}
+Error codes: 422 Missing keyword or invalid query format
+📝 Searches track titles, playlist names, and user display names. Returns empty arrays (not 404) when no results found.
+MODULE 9
+Messaging & Track Sharing
+1-to-1 Conversations · Messages · Read Receipts
+POST
+/conversations
+Create or retrieve conversation
+🔒 JWT
+Starts a 1-to-1 conversation. Idempotent — if a conversation already exists between the two users, it is returned instead of creating a duplicate. Participant UUIDs are sorted internally so (A,B) and (B,A) always map to the same record.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+participant_id
+string (UUID)
+Yes
+UUID of the other participant
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": {
+    "conversation_id": "550e8400-e29b-41d4-a716-446655440000"
+  }
+}
+Error codes: 400 Cannot start a conversation with yourself  |  400 participant_id must be a valid UUID  |  401 Unauthorized
+GET
+/conversations
+List all conversations
+🔒 JWT
+Returns all conversations where the authenticated user is a participant. Each conversation includes both participants' user_id, display_name, and profile_picture. Ordered newest first.
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": [
+    {
+      "conversation_id": "550e8400-e29b-41d4-a716-446655440000",
+      "created_at": "2025-04-01T10:00:00Z",
+      "participants": [
+        {"user_id": "abc123...", "display_name": "DJ Khaled", "profile_picture": "..."},
+        {"user_id": "def456...", "display_name": "Current User", "profile_picture": null}
+      ]
+    }
+  ]
+}
+Error codes: 401 Unauthorized
+DELETE
+/conversations/{conversation_id}
+Delete a conversation
+🔒 JWT
+Permanently deletes a conversation and all its messages via CASCADE. Only a participant can delete it.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+conversation_id
+UUID
+Yes
+UUID of the conversation to delete
+RESPONSE EXAMPLE
+{"success": true, "message": "Conversation deleted successfully."}
+Error codes: 401 Unauthorized  |  403 You are not a participant in this conversation  |  404 Conversation does not exist
+GET
+/conversations/{conversation_id}/messages
+Get all messages
+🔒 JWT
+Returns all messages in the conversation, ordered oldest-first. Each message includes track_id and playlist_id fields (null if not a share). Only participants can read messages.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+conversation_id
+UUID
+Yes
+UUID of the conversation
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": [
+    {
+      "id": "msg-uuid-001",
+      "sender_id": "user-uuid-abc",
+      "receiver_id": "user-uuid-def",
+      "content": "Check out this track!",
+      "track_id": "track-uuid-xyz",
+      "playlist_id": null,
+      "is_read": false,
+      "created_at": "2025-04-01T10:05:00Z"
+    }
+  ]
+}
+Error codes: 401 Unauthorized  |  403 You are not a participant in this conversation  |  404 Conversation does not exist
+POST
+/conversations/{conversation_id}/messages
+Send a message or share media
+🔒 JWT
+Sends a message in a conversation. At least one of content, track_id, or playlist_id must be provided. receiver_id is automatically derived. New messages default to is_read = false.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+conversation_id
+UUID
+Yes
+UUID of the conversation
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+content
+string
+No
+Message text. Max 2000 characters. At least one of content/track_id/playlist_id required.
+track_id
+UUID
+No
+UUID of a track to share (optional).
+playlist_id
+UUID
+No
+UUID of a playlist to share (optional).
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": {
+    "id": "msg-uuid-002",
+    "sender_id": "user-uuid-abc",
+    "receiver_id": "user-uuid-def",
+    "content": "Check out this track!",
+    "track_id": "track-uuid-xyz",
+    "playlist_id": null,
+    "is_read": false,
+    "created_at": "2025-04-01T10:10:00Z"
+  }
+}
+Error codes: 400 At least one of content, track_id, or playlist_id must be provided  |  401 Unauthorized  |  403 You are not a participant in this conversation  |  404 Conversation does not exist
+PATCH
+/conversations/{conversation_id}/messages/{message_id}/read
+Mark message as read
+🔒 JWT
+Marks a specific message as read. Only the receiver of the message can mark it as read. Idempotent — calling on an already-read message returns success silently. No request body required.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+conversation_id
+UUID
+Yes
+UUID of the conversation
+message_id
+UUID
+Yes
+UUID of the message to mark as read
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "message": "Message marked as read.",
+  "data": {"message_id": "msg-uuid-001", "is_read": true}
+}
+Error codes: 401 Unauthorized  |  403 You are not the receiver of this message  |  404 Conversation or message does not exist
+MODULE 10
+Real-Time Notifications
+Activity Alerts · Read Status
+GET
+/notifications
+Get all notifications
+🔒 JWT
+Returns all notifications for the authenticated user, ordered newest first. Notification types include: like, comment, repost, follow, message.
+QUERY PARAMETERS
+Field
+Type
+Required
+Description / Example
+limit
+integer
+No
+Results per page (default: 20)
+offset
+integer
+No
+Pagination offset (default: 0)
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": [
+    {
+      "id": "notif-1",
+      "type": "like",
+      "message": "DJ Khaled liked your track.",
+      "is_read": false,
+      "created_at": "2025-04-01T10:00:00Z"
+    }
+  ]
+}
+Error codes: 401 Unauthorized
+PUT
+/notifications/{id}/read
+Mark notification as read
+🔒 JWT
+Marks a specific notification as read. Sets is_read to true.
+PATH PARAMETERS
+Field
+Type
+Required
+Description / Example
+id
+string
+Yes
+Notification UUID
+RESPONSE EXAMPLE
+{"success": true, "message": "Notification marked as read.", "data": {"id": "notif-1", "is_read": true}}
+Error codes: 401 Unauthorized  |  404 Notification does not exist
+MODULE 11
+Moderation & Admin Dashboard
+Reports · Admin Panel · Platform Analytics
+POST
+/reports
+Report inappropriate content
+🔒 JWT
+Submits a report for a track, comment, or user. Reports are reviewed by admins via the admin panel.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+entity_type
+string
+Yes
+"track", "comment", or "user"
+entity_id
+string
+Yes
+ID of the reported entity
+reason
+string
+Yes
+Reason for report. Example: "Copyright violation" or "Inappropriate content"
+RESPONSE EXAMPLE
+{"success": true, "message": "Report submitted successfully."}
+Error codes: 400 Missing required fields  |  401 Unauthorized  |  404 Reported entity does not exist
+GET
+/admin/analytics
+Get platform analytics
+🔒 JWT
+Returns platform health metrics. Accessible only to users with admin role.
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": {
+    "total_users": 15420,
+    "total_tracks": 50200,
+    "active_streams_today": 1205,
+    "total_plays": 2345000
+  }
+}
+Error codes: 401 Unauthorized  |  403 User is not an admin
+📝 Admin role must be assigned in the database. Regular users receive 403 Forbidden.
+MODULE 12
+Premium Subscription (Pro/Go+)
+Subscription Status · Stripe Mock Upgrade
+GET
+/subscriptions/me
+Get subscription status
+🔒 JWT
+Returns the current user's subscription plan and usage statistics (e.g., how many tracks uploaded vs. the free plan limit).
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "data": {
+    "plan": "Free",
+    "tracks_uploaded": 2,
+    "track_limit": 3,
+    "playlist_limit": 2,
+    "playlists_created": 1
+  }
+}
+Error codes: 401 Unauthorized
+POST
+/subscriptions/upgrade
+Upgrade to Premium (Stripe mock)
+🔒 JWT
+Upgrades the user's account to Premium using Stripe Test Mode (mock payments). On success, the user gets unlimited uploads, unlimited playlists, and mock offline listening.
+REQUEST BODY
+Field
+Type
+Required
+Description / Example
+payment_token
+string
+Yes
+Stripe test token. Example: "tok_visa_mock"
+plan
+string
+Yes
+Must be "Premium"
+RESPONSE EXAMPLE
+{
+  "success": true,
+  "message": "Welcome to Premium! Unlimited uploads unlocked.",
+  "data": {
+    "plan": "Premium",
+    "activated_at": "2025-04-01T10:00:00Z"
+  }
+}
+Error codes: 400 Invalid plan or missing fields  |  401 Unauthorized  |  402 Payment Required — card declined
+📝 Uses Stripe Test Mode. No real charges are made. Use test token tok_visa_mock to simulate a successful payment.
+Global Error Reference
+All error responses follow this standard structure:
+{
+  "success": false,
+  "error": {
+    "code": 401,
+    "message": "Authentication token is missing or invalid.",
+    "details": null
+  }
+}
+Code
+Status
+Common Cause
+400
+Bad Request
+Malformed request body, missing required fields, or failed validation
+401
+Unauthorized
+Missing, expired, or invalid JWT access token
+402
+Payment Required
+Card declined or payment failed (Stripe mock)
+403
+Forbidden
+Authenticated but insufficient permissions or not resource owner
+404
+Not Found
+Requested resource does not exist
+409
+Conflict
+Resource already exists (e.g., duplicate email, track already liked)
+410
+Gone
+Token has expired and can no longer be used
+413
+Payload Too Large
+Uploaded file exceeds the maximum allowed size
+422
+Unprocessable Entity
+Request structure valid but semantic validation failed
+429
+Too Many Requests
+Rate limit exceeded for this endpoint
+500
+Internal Server Error
+Unexpected server-side error — report to DevOps
+Document Version 1.0  ·  SWE S2026  ·  Backend Team  ·  For internal team use and TA evaluation
