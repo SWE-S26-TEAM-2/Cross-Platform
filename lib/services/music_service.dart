@@ -13,7 +13,7 @@ class MusicService {
   Future<List<Track>> searchTracks(String query) async {
     final res = await _dio.get(
       '/api/search/tracks',
-      queryParameters: {"keyword": query},
+      queryParameters: {'keyword': query},
     );
 
     final data = res.data;
