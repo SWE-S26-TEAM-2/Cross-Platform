@@ -26,7 +26,21 @@ class _ActivityState extends ConsumerState<Activity> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Activity')),
+      appBar: AppBar(
+        title: const Text('Activity'),
+        actions: [
+          if (selectedTab == 0)
+            TextButton(
+              onPressed: () {
+                ref.read(notificationsProvider.notifier).markAllAsRead();
+              },
+              child: const Text(
+                'Mark all read',
+                style: TextStyle(color: AppColors.primary),
+              ),
+            ),
+        ],
+      ),
       body: Column(
         children: [
           Container(
@@ -276,35 +290,87 @@ class _ActivityState extends ConsumerState<Activity> {
   }
 
   Widget _buildNotificationTile(model.Notification notif) {
-    return InkWell(
-      onTap: () {
-        ref.read(notificationsProvider.notifier).markAsRead(notif.id);
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        child: Row(
-          children: [
-            CircleAvatar(radius: 22, child: Icon(_iconForType(notif.type))),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    notif.message,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    notif.createdAt ?? '',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              ),
+    return Dismissible(
+      key: Key(notif.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        color: Colors.red,
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      confirmDismiss: (_) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: const Text(
+              'Delete Notification',
+              style: TextStyle(color: AppColors.textPrimary),
             ),
-            if (!notif.isRead)
-              const CircleAvatar(radius: 5, backgroundColor: Colors.blue),
-          ],
+            content: const Text(
+              'Are you sure you want to delete this notification?',
+              style: TextStyle(color: AppColors.textMuted),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+        );
+      },
+      onDismissed: (_) async {
+        try {
+          await ref
+              .read(notificationsProvider.notifier)
+              .deleteNotification(notif.id);
+        } catch (e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString().replaceAll('Exception: ', '')),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      child: InkWell(
+        onTap: () {
+          ref.read(notificationsProvider.notifier).markAsRead(notif.id);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          child: Row(
+            children: [
+              CircleAvatar(radius: 22, child: Icon(_iconForType(notif.type))),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      notif.message,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      notif.createdAt ?? '',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+              if (!notif.isRead)
+                const CircleAvatar(radius: 5, backgroundColor: Colors.blue),
+            ],
+          ),
         ),
       ),
     );
@@ -426,12 +492,11 @@ class _ActivityState extends ConsumerState<Activity> {
       },
       child: InkWell(
         onTap: () {
-          final convId = conversation.conversationId;
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => ChatScreen(
-                conversationId: convId,
+                conversationId: conversation.conversationId,
                 participantName: other?.displayName ?? 'Unknown',
                 participantAvatar: other?.profilePicture,
               ),

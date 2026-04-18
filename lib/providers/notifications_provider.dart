@@ -4,30 +4,11 @@ import '../services/notifications_service.dart';
 import '../models/notification.dart';
 import 'auth_providers.dart';
 
-// Mock data to use as fallback
-final _mockNotifications = [
-  Notification(
-    id: '1',
-    type: 'like',
-    message: 'Someone liked your track.',
-    isRead: false,
-    createdAt: '2025-04-01T10:00:00Z',
-  ),
-  Notification(
-    id: '2',
-    type: 'follow',
-    message: 'Someone followed you.',
-    isRead: false,
-    createdAt: '2025-04-01T09:00:00Z',
-  ),
-];
-
 // ─── Service Provider ─────────────────────────────────────────────────────────
 
 final notificationsServiceProvider = Provider<NotificationsService>((ref) {
   final token = ref.watch(authProvider).tokens?.accessToken ?? '';
   final dio = Dio();
-
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) {
@@ -36,8 +17,17 @@ final notificationsServiceProvider = Provider<NotificationsService>((ref) {
       },
     ),
   );
-
   return NotificationsService(dio: dio);
+});
+
+// ─── Unread Count Provider ────────────────────────────────────────────────────
+
+final unreadNotificationsCountProvider = FutureProvider<int>((ref) async {
+  try {
+    return await ref.read(notificationsServiceProvider).getUnreadCount();
+  } catch (_) {
+    return 0;
+  }
 });
 
 // ─── Notifications Notifier ───────────────────────────────────────────────────
@@ -51,24 +41,17 @@ class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
       if (e.response?.statusCode == 401) {
         throw Exception('You are not logged in.');
       }
-      if (e.response?.statusCode == 404) {
-        return _mockNotifications; // API not ready yet
-      }
       throw Exception('Could not load notifications. Please try again.');
     } catch (e) {
       throw Exception(e.toString());
     }
   }
 
+  // Mark single notification as read
   Future<void> markAsRead(String id) async {
-    final intId = int.tryParse(id);
-    if (intId == null) return;
+    await ref.read(notificationsServiceProvider).markNotificationAsRead(id: id);
 
-    await ref
-        .read(notificationsServiceProvider)
-        .markNotificationAsRead(id: intId);
-
-    // update locally so the blue dot disappears instantly
+    // Update locally so blue dot disappears instantly
     state = AsyncData(
       state.value?.map((n) {
             return n.id == id
@@ -83,6 +66,38 @@ class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
           }).toList() ??
           [],
     );
+    ref.invalidate(unreadNotificationsCountProvider);
+  }
+
+  // Mark all notifications as read
+  Future<void> markAllAsRead() async {
+    await ref.read(notificationsServiceProvider).markAllAsRead();
+
+    // Update all locally
+    state = AsyncData(
+      state.value
+              ?.map(
+                (n) => Notification(
+                  id: n.id,
+                  type: n.type,
+                  message: n.message,
+                  isRead: true,
+                  createdAt: n.createdAt,
+                ),
+              )
+              .toList() ??
+          [],
+    );
+    ref.invalidate(unreadNotificationsCountProvider);
+  }
+
+  // Delete a single notification
+  Future<void> deleteNotification(String id) async {
+    await ref.read(notificationsServiceProvider).deleteNotification(id: id);
+
+    // Remove locally immediately
+    state = AsyncData(state.value?.where((n) => n.id != id).toList() ?? []);
+    ref.invalidate(unreadNotificationsCountProvider);
   }
 
   Future<void> refresh() async {
@@ -90,6 +105,7 @@ class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
     state = await AsyncValue.guard(
       () => ref.read(notificationsServiceProvider).getNotifications(),
     );
+    ref.invalidate(unreadNotificationsCountProvider);
   }
 }
 
