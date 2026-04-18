@@ -49,9 +49,9 @@ class MoreLikeSection extends StatelessWidget {
                             borderRadius: BorderRadius.circular(
                               AppDimensions.borderRadiusSmall,
                             ),
-                            child: tracks[i].artworkUrl.isNotEmpty
+                            child: tracks[i].artworkUrlSafe.isNotEmpty
                                 ? Image.network(
-                                    tracks[i].artworkUrl,
+                                    tracks[i].artworkUrlSafe,
                                     width: 150,
                                     height: 130,
                                     fit: BoxFit.cover,

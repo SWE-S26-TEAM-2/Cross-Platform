@@ -49,9 +49,9 @@ class TodayPickCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(
                           AppDimensions.borderRadiusSmall,
                         ),
-                        child: track.artworkUrl.isNotEmpty
+                        child: track.artworkUrlSafe.isNotEmpty
                             ? Image.network(
-                                track.artworkUrl,
+                                track.artworkUrlSafe,
                                 width: 72,
                                 height: 72,
                                 fit: BoxFit.cover,

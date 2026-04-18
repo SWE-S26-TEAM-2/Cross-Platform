@@ -1,7 +1,7 @@
 import '../models/track.dart';
 
 class MockTracks {
-  static const List<Track> likedTracks = [
+  static final List<Track> likedTracks = [
     Track(
       id: '1',
       userId: 'user_1',
@@ -96,7 +96,7 @@ class MockTracks {
     ),
   ];
 
-  static const Track hotTrack = Track(
+  static final Track hotTrack = Track(
     id: '5',
     userId: 'user_2',
     userDisplayName: 'Kendrick Lamar ft. SZA',
@@ -120,7 +120,7 @@ class MockTracks {
     createdAt: '2024-01-01T00:00:00Z',
   );
 
-  static const List<Track> recommendedTracks = [
+  static final List<Track> recommendedTracks = [
     Track(
       id: '6',
       userId: 'user_5',
@@ -215,7 +215,7 @@ class MockTracks {
     ),
   ];
 
-  static const List<Track> historyTracks = [
+  static final List<Track> historyTracks = [
     Track(
       id: '4',
       userId: 'user_4',
@@ -310,7 +310,7 @@ class MockTracks {
     ),
   ];
 
-  static const List<Track> recentlyPlayedTracks = [
+  static final List<Track> recentlyPlayedTracks = [
     Track(
       id: '8',
       userId: 'user_6',

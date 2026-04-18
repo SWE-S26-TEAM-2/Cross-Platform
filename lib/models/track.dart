@@ -9,6 +9,27 @@ class Track {
   final List<String> tags;
   final String? artworkUrl;
   final String fileUrl;
+
+  // ─── Backward compatibility getters ────────────────────────────────────────
+
+  /// Alias for [userDisplayName] — replaces the old flat `artist` field.
+  String get artist => userDisplayName;
+
+  /// Alias for [fileUrl] — replaces the old `audioPath` field.
+  String get audioPath => fileUrl;
+
+  /// Safe non-nullable getter for [artworkUrl] — falls back to empty string.
+  String get artworkUrlSafe => artworkUrl ?? '';
+
+  /// Safe non-nullable getter for [genre] — falls back to empty string.
+  String get genreSafe => genre ?? '';
+
+  /// Safe non-nullable getter for [userProfilePicture] — falls back to empty string.
+  String get profilePictureSafe => userProfilePicture ?? '';
+
+  /// Safe non-nullable getter for [releaseDate] — falls back to empty string.
+  String get releaseDateSafe => releaseDate ?? '';
+
   final String visibility;
   final int duration;
   final int playCount;
@@ -20,7 +41,7 @@ class Track {
   final String? releaseDate;
   final String createdAt;
 
-  const Track({
+  Track({
     required this.id,
     required this.userId,
     required this.userDisplayName,

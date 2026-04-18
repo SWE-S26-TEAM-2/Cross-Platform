@@ -84,8 +84,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                           AppDimensions.borderRadiusSmall,
                                         ),
                                         child: Image.network(
-                                          track.artworkUrl.isNotEmpty
-                                              ? track.artworkUrl
+                                          track.artworkUrlSafe.isNotEmpty
+                                              ? track.artworkUrlSafe
                                               : 'https://via.placeholder.com/150',
                                           width: 50,
                                           height: 50,

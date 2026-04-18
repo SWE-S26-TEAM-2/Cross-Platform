@@ -94,9 +94,9 @@ class ProfileTrackListSection extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(6),
-                    child: track.artworkUrl.isNotEmpty
+                    child: track.artworkUrlSafe.isNotEmpty
                         ? Image.network(
-                            track.artworkUrl,
+                            track.artworkUrlSafe,
                             width: 58,
                             height: 58,
                             fit: BoxFit.cover,
