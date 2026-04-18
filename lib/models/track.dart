@@ -66,9 +66,9 @@ class Track {
 
   factory Track.fromJson(Map<String, dynamic> json) {
     return Track(
-      id: json['id'].toString(),
-      userId: json['user_id'].toString(),
-      userDisplayName: json['display_name'] ?? '',
+      id: (json['track_id'] ?? json['id'] ?? '').toString(),
+      userId: json['user_id']?.toString() ?? '',
+      userDisplayName: json['display_name'] ?? json['username'] ?? '',
       userProfilePicture: json['profile_picture'] as String?,
       title: json['title'] ?? '',
       description: json['description'] ?? '',
@@ -77,9 +77,12 @@ class Track {
           .map((e) => e.toString())
           .toList(),
       artworkUrl: json['artwork_url'] as String?,
-      fileUrl: json['file_url'] ?? '',
+      fileUrl: (json['file_url'] ?? '').toString().replaceAll(
+        'http://127.0.0.1:8000',
+        'http://68.210.102.76',
+      ),
       visibility: json['visibility'] ?? 'public',
-      duration: json['duration'] ?? 0,
+      duration: json['duration_seconds'] ?? json['duration'] ?? 0,
       playCount: json['play_count'] ?? 0,
       likeCount: json['like_count'] ?? 0,
       repostCount: json['repost_count'] ?? 0,

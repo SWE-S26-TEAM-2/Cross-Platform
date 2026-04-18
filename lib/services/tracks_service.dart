@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../models/track.dart';
+import '../models/play_back.dart';
 
 class TracksService {
   final Dio _dio;
@@ -77,7 +78,9 @@ class TracksService {
   // GET /tracks/{track_id}/stream
   Future<String> getTrackStreamUrl({required String trackId}) async {
     final response = await _dio.get('$baseUrl/tracks/$trackId/stream');
-    return response.data['data']['stream_url'] as String;
+    final relativePath = response.data['data']['stream_url'] as String;
+    if (relativePath.startsWith('http')) return relativePath;
+    return 'http://68.210.102.76$relativePath';
   }
 
   // POST /tracks/{track_id}/plays
@@ -94,10 +97,14 @@ class TracksService {
   }
 
   // GET /tracks/{track_id}/playback
-  Future<Map<String, dynamic>> getTrackPlayback({
-    required String trackId,
-  }) async {
+  Future<Playback> getTrackPlayback({required String trackId}) async {
     final response = await _dio.get('$baseUrl/tracks/$trackId/playback');
-    return response.data['data'] as Map<String, dynamic>;
+    return Playback.fromJson(response.data['data']);
   }
+
+  // GET /tracks/{track_id}/audio — streams actual audio bytes (requires auth)
+  // NOTE: This endpoint is called via just_audio using a temp file download.
+  // Use getTrackPlayback() first to get the stream_url, then call this:
+  //   GET {playback.fullStreamUrl}  with  Authorization: Bearer <token>
+  // This is handled in root_screen.dart → _handlePlay()
 }

@@ -1,32 +1,37 @@
+import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_project/mock_data/mock_tracks.dart';
 import 'package:my_project/models/track.dart';
+import 'package:my_project/providers/track_provider.dart';
+import 'package:my_project/providers/auth_providers.dart';
 import 'package:my_project/screens/feed/feed_screen.dart';
 import 'package:my_project/screens/search/search_screen.dart';
 import 'package:my_project/screens/upgrade/upgrade_screen.dart';
 import 'package:my_project/widgets/mini_player.dart';
 import 'package:my_project/navigation/bottom_nav_bar.dart';
 import 'package:my_project/screens/home/home_screen.dart';
-import 'package:my_project/screens/home/temp_feed_screen.dart';
-import 'package:my_project/screens/home/temp_upgrade_screen.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:my_project/screens/library/library_screen.dart';
+import 'package:path_provider/path_provider.dart';
 
-class RootScreen extends StatefulWidget {
+class RootScreen extends ConsumerStatefulWidget {
   const RootScreen({super.key});
 
   @override
-  State<RootScreen> createState() => _RootScreenState();
+  ConsumerState<RootScreen> createState() => _RootScreenState();
 }
 
-class _RootScreenState extends State<RootScreen> {
+class _RootScreenState extends ConsumerState<RootScreen> {
   int _selectedIndex = 0;
   final AudioPlayer _player = AudioPlayer();
   bool _isPlaying = false;
   bool _hasLoaded = false;
+  bool _isLoadingStream = false;
   Track _currentTrack = MockTracks.hotTrack;
 
-  //Sub-screens
+  // Sub-screens
   final Map<int, Widget> _subScreens = {};
 
   void _pushSubScreen(Widget screen) {
@@ -43,66 +48,89 @@ class _RootScreenState extends State<RootScreen> {
     super.dispose();
   }
 
-  // @override
-  // void initState() {
-  //   // runs once when screen first opens
-  //   super.initState();
-  //   _initPlayer(); // calls your preload function
-  // }
-
-  // Future<void> _initPlayer() async {
-  //   await _player.setAsset(
-  //     MockTracks.hotTrack.audioPath,
-  //   ); // s preloads the audio
-  // }
-
   Future<void> _handlePlay(Track track) async {
     print('=== HANDLE PLAY CALLED ===');
     print('Track: ${track.title}');
-    print('Path: ${track.audioPath}');
 
-    if (track.audioPath.isEmpty) {
-      print('=== PATH IS EMPTY, RETURNING ===');
-      return;
-    }
-
-    print('=== CALLING PLAYER ===');
-
+    // ── Pause if same track is already playing ──────────────────────────────
     if (_currentTrack.id == track.id && _isPlaying) {
       await _player.pause();
       setState(() => _isPlaying = false);
       print('=== PLAYER PAUSED ===');
-    } else {
-      if (_currentTrack.id != track.id || !_hasLoaded) {
-        _hasLoaded = true;
-        await _player.setAsset(track.audioPath);
-        print('=== NEW TRACK LOADED ===');
-      }
-      _player.play();
-
-      ///Without await as the .play was waiting for the entire song to finish
-      setState(() {
-        _currentTrack = track;
-        _isPlaying = true;
-      });
-      print('=== PLAYER PLAYING ===');
+      return;
     }
+
+    // ── Load new track ───────────────────────────────────────────────────────
+    if (_currentTrack.id != track.id || !_hasLoaded) {
+      // Mock track — use local asset directly
+      if (track.fileUrl.startsWith('assets/')) {
+        print('=== LOADING LOCAL ASSET ===');
+        setState(() => _isLoadingStream = true);
+        await _player.setAsset(track.fileUrl);
+        setState(() {
+          _isLoadingStream = false;
+          _hasLoaded = true;
+          _currentTrack = track;
+        });
+      }
+      // Real API track — fetch playback info then download audio with auth token
+      else {
+        print('=== FETCHING PLAYBACK INFO ===');
+        setState(() => _isLoadingStream = true);
+        try {
+          // Step 1 — get playback info (stream_url + waveform + duration)
+          final playback = await ref.read(
+            trackPlaybackProvider(track.id).future,
+          );
+          print('=== STREAM URL: ${playback.fullStreamUrl} ===');
+
+          // Step 2 — download audio to temp file using Dio with auth header
+          // TODO: remove this block and replace with direct streaming
+          // once GET /tracks/{id}/audio endpoint is fixed on the backend
+          final token = ref.read(authProvider).tokens?.accessToken ?? '';
+          final tempDir = await getTemporaryDirectory();
+          final tempFile = File('${tempDir.path}/${track.id}.mp3');
+
+          if (!await tempFile.exists()) {
+            print('=== DOWNLOADING TO TEMP FILE ===');
+            await Dio().download(
+              playback.fullStreamUrl,
+              tempFile.path,
+              options: Options(headers: {'Authorization': 'Bearer $token'}),
+            );
+            print('=== DOWNLOAD COMPLETE ===');
+          } else {
+            print('=== USING CACHED TEMP FILE ===');
+          }
+
+          // Step 3 — play from temp file
+          await _player.setFilePath(tempFile.path);
+
+          setState(() {
+            _isLoadingStream = false;
+            _hasLoaded = true;
+            _currentTrack = track;
+          });
+        } catch (e) {
+          print('=== PLAYBACK FETCH FAILED: $e ===');
+          print('=== TRACK ID: ${track.id} ===');
+          setState(() => _isLoadingStream = false);
+          return;
+        }
+      }
+    }
+
+    // ── Play ─────────────────────────────────────────────────────────────────
+    _player.play();
+    setState(() => _isPlaying = true);
+    print('=== PLAYER PLAYING ===');
   }
 
   List<Widget> _buildScreens() => [
-    // 0
     HomeScreen(onTrackTap: _handlePlay),
-
-    /// 1
     const FeedScreen(),
-
-    /// 2
     SearchScreen(),
-
-    /// 3
     LibraryScreen(onNavigate: _pushSubScreen, onBack: _popSubScreen),
-
-    /// 4
     const UpgradeScreen(),
   ];
 
@@ -116,7 +144,8 @@ class _RootScreenState extends State<RootScreen> {
           MiniPlayer(
             track: _currentTrack,
             isPlaying: _isPlaying,
-            onPlay: () => _handlePlay(_currentTrack!),
+            isLoading: _isLoadingStream,
+            onPlay: () => _handlePlay(_currentTrack),
           ),
           BottomNavBar(
             onTabSelected: (index) => setState(() {

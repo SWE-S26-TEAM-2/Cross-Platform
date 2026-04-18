@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_project/models/track.dart';
+import 'package:my_project/models/play_back.dart';
 import 'package:my_project/services/tracks_service.dart';
 import 'auth_providers.dart';
 
@@ -277,10 +278,9 @@ final recordPlayProvider =
 
 // ─── GET /tracks/{track_id}/playback ─────────────────────────────────────────
 
-class TrackPlaybackNotifier
-    extends FamilyAsyncNotifier<Map<String, dynamic>, String> {
+class TrackPlaybackNotifier extends FamilyAsyncNotifier<Playback, String> {
   @override
-  Future<Map<String, dynamic>> build(String arg) async {
+  Future<Playback> build(String arg) async {
     try {
       return await ref
           .read(tracksServiceProvider)
@@ -300,8 +300,6 @@ class TrackPlaybackNotifier
 }
 
 final trackPlaybackProvider =
-    AsyncNotifierProviderFamily<
-      TrackPlaybackNotifier,
-      Map<String, dynamic>,
-      String
-    >(TrackPlaybackNotifier.new);
+    AsyncNotifierProviderFamily<TrackPlaybackNotifier, Playback, String>(
+      TrackPlaybackNotifier.new,
+    );

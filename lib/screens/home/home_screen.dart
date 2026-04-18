@@ -103,7 +103,7 @@ class HomeScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Mixed for You',
+                      'Mixed for You #Errors is not empty ',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
