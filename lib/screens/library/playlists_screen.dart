@@ -1,35 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
 import '../../models/playlist.dart';
-import '../../mock_data/mock_playlists.dart';
-import '../../mock_data/mock_tracks.dart';
+import '../../providers/playlist_provider.dart';
 import '../library/widgets/playlist_tiles.dart';
 import 'collections_screen.dart';
 
 enum PlaylistsSortOption { recentlyAdded, firstAdded, playlistName }
 
-class PlaylistsScreen extends StatefulWidget {
+class PlaylistsScreen extends ConsumerStatefulWidget {
   final VoidCallback? onBack;
+
   const PlaylistsScreen({super.key, this.onBack});
 
   @override
-  State<PlaylistsScreen> createState() => _PlaylistsScreenState();
+  ConsumerState<PlaylistsScreen> createState() => _PlaylistsScreenState();
 }
 
-class _PlaylistsScreenState extends State<PlaylistsScreen> {
+class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
   PlaylistsSortOption _sortOption = PlaylistsSortOption.recentlyAdded;
   final TextEditingController _searchController = TextEditingController();
-  List<Playlist> _filteredPlaylists = [];
-  List<Playlist> _allPlaylists = [];
 
   @override
   void initState() {
     super.initState();
-    _allPlaylists = List.from(MockPlaylists.playlists);
-    _filteredPlaylists = List.from(_allPlaylists);
-    _searchController.addListener(_onSearchChanged);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(playlistProvider.notifier).fetchTestPlaylist();
+    });
   }
 
   @override
@@ -38,51 +38,7 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
     super.dispose();
   }
 
-  void _onSearchChanged() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      _filteredPlaylists = _allPlaylists
-          .where(
-            (p) =>
-                p.name.toLowerCase().contains(query) ||
-                p.owner.toLowerCase().contains(query),
-          )
-          .toList();
-    });
-  }
-
-  void _applySort(PlaylistsSortOption option) {
-    setState(() {
-      _sortOption = option;
-      switch (option) {
-        case PlaylistsSortOption.recentlyAdded:
-          _filteredPlaylists = List.from(_allPlaylists);
-          break;
-        case PlaylistsSortOption.firstAdded:
-          _filteredPlaylists = List.from(_allPlaylists.reversed);
-          break;
-        case PlaylistsSortOption.playlistName:
-          _filteredPlaylists.sort((a, b) => a.name.compareTo(b.name));
-          break;
-      }
-    });
-  }
-
   CollectionDetailsData _mapPlaylistToCollection(Playlist playlist) {
-    final tracks = MockTracks.recommendedTracks
-        .take(playlist.trackCount > MockTracks.recommendedTracks.length
-            ? MockTracks.recommendedTracks.length
-            : playlist.trackCount)
-        .map(
-          (track) => CollectionTrack(
-            title: track.title,
-            artist: track.artist,
-            artworkPath: track.artworkUrl,
-            isAvailable: true,
-          ),
-        )
-        .toList();
-
     return CollectionDetailsData(
       type: CollectionType.playlist,
       title: playlist.name,
@@ -91,7 +47,17 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
       ownerAvatarPath: '',
       yearText: '2026',
       likesText: '0',
-      tracks: tracks,
+      tracks:
+          playlist.tracks
+              .map(
+                (track) => CollectionTrack(
+                  title: track.title,
+                  artist: track.artist,
+                  artworkPath: track.artworkUrl,
+                  isAvailable: true,
+                ),
+              )
+              .toList(),
     );
   }
 
@@ -99,9 +65,10 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => CollectionDetailsScreen(
-          data: _mapPlaylistToCollection(playlist),
-        ),
+        builder:
+            (_) => CollectionDetailsScreen(
+              data: _mapPlaylistToCollection(playlist),
+            ),
       ),
     );
   }
@@ -131,24 +98,24 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
                 label: 'Recently Added',
                 selected: _sortOption == PlaylistsSortOption.recentlyAdded,
                 onTap: () {
+                  setState(() => _sortOption = PlaylistsSortOption.recentlyAdded);
                   Navigator.pop(context);
-                  _applySort(PlaylistsSortOption.recentlyAdded);
                 },
               ),
               _SortOption(
                 label: 'First Added',
                 selected: _sortOption == PlaylistsSortOption.firstAdded,
                 onTap: () {
+                  setState(() => _sortOption = PlaylistsSortOption.firstAdded);
                   Navigator.pop(context);
-                  _applySort(PlaylistsSortOption.firstAdded);
                 },
               ),
               _SortOption(
                 label: 'Playlist Name',
                 selected: _sortOption == PlaylistsSortOption.playlistName,
                 onTap: () {
+                  setState(() => _sortOption = PlaylistsSortOption.playlistName);
                   Navigator.pop(context);
-                  _applySort(PlaylistsSortOption.playlistName);
                 },
               ),
             ],
@@ -174,6 +141,31 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final playlistState = ref.watch(playlistProvider);
+
+    List<Playlist> playlists = [];
+    if (playlistState.playlist != null) {
+      playlists = [playlistState.playlist!];
+    }
+
+    final query = _searchController.text.trim().toLowerCase();
+    if (query.isNotEmpty) {
+      playlists =
+          playlists
+              .where(
+                (p) =>
+                    p.name.toLowerCase().contains(query) ||
+                    p.owner.toLowerCase().contains(query),
+              )
+              .toList();
+    }
+
+    if (_sortOption == PlaylistsSortOption.firstAdded) {
+      playlists = playlists.reversed.toList();
+    } else if (_sortOption == PlaylistsSortOption.playlistName) {
+      playlists.sort((a, b) => a.name.compareTo(b.name));
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
@@ -211,6 +203,7 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
                                 ),
                                 child: TextField(
                                   controller: _searchController,
+                                  onChanged: (_) => setState(() {}),
                                   style: const TextStyle(
                                     color: AppColors.textPrimary,
                                     fontSize: 14,
@@ -302,14 +295,36 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
               ],
             ),
           ),
-          SliverToBoxAdapter(
-            child: PlaylistTiles(
-              title: '',
-              playlists: _filteredPlaylists,
-              onPlaylistTap: _openPlaylistDetails,
-              onMoreTap: (_) {},
+
+          if (playlistState.isLoading)
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (playlistState.error != null)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Text(
+                    playlistState.error!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                ),
+              ),
+            )
+          else
+            SliverToBoxAdapter(
+              child: PlaylistTiles(
+                title: '',
+                playlists: playlists,
+                onPlaylistTap: _openPlaylistDetails,
+                onMoreTap: (_) {},
+              ),
             ),
-          ),
+
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
@@ -597,9 +612,10 @@ class _SortOption extends StatelessWidget {
           fontSize: 15,
         ),
       ),
-      trailing: selected
-          ? const Icon(Icons.check, color: AppColors.primary, size: 20)
-          : null,
+      trailing:
+          selected
+              ? const Icon(Icons.check, color: AppColors.primary, size: 20)
+              : null,
       onTap: onTap,
     );
   }

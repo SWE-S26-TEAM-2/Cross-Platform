@@ -78,17 +78,36 @@ class CollectionDetailsScreen extends StatelessWidget {
                   const SizedBox(height: AppDimensions.spaceLarge),
                   _ActionRow(likesText: data.likesText),
                   const SizedBox(height: AppDimensions.spaceLarge),
-                  ...List.generate(
-                    data.tracks.length,
-                    (index) => Padding(
-                      padding: EdgeInsets.only(
-                        bottom: index == data.tracks.length - 1
-                            ? 0
-                            : AppDimensions.spaceMedium,
+                  if (data.tracks.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.borderRadiusMedium,
+                        ),
                       ),
-                      child: _TrackTile(track: data.tracks[index]),
+                      child: Text(
+                        'This playlist has no tracks yet.',
+                        style: AppTextStyles.caption.copyWith(
+                          color: Colors.white70,
+                          fontSize: 15,
+                        ),
+                      ),
+                    )
+                  else
+                    ...List.generate(
+                      data.tracks.length,
+                      (index) => Padding(
+                        padding: EdgeInsets.only(
+                          bottom:
+                              index == data.tracks.length - 1
+                                  ? 0
+                                  : AppDimensions.spaceMedium,
+                        ),
+                        child: _TrackTile(track: data.tracks[index]),
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 130),
                 ],
               ),
@@ -345,12 +364,13 @@ class _CollectionImage extends StatelessWidget {
           width: width,
           height: height,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(
-            width: width,
-            height: height,
-            color: AppColors.surfaceLight,
-            child: const Icon(Icons.broken_image, color: Colors.white70),
-          ),
+          errorBuilder:
+              (_, __, ___) => Container(
+                width: width,
+                height: height,
+                color: AppColors.surfaceLight,
+                child: const Icon(Icons.broken_image, color: Colors.white70),
+              ),
         ),
       );
     }
@@ -383,15 +403,9 @@ class _CollectionAvatar extends StatelessWidget {
     }
 
     if (path.startsWith('http')) {
-      return CircleAvatar(
-        radius: 18,
-        backgroundImage: NetworkImage(path),
-      );
+      return CircleAvatar(radius: 18, backgroundImage: NetworkImage(path));
     }
 
-    return CircleAvatar(
-      radius: 18,
-      backgroundImage: AssetImage(path),
-    );
+    return CircleAvatar(radius: 18, backgroundImage: AssetImage(path));
   }
 }
