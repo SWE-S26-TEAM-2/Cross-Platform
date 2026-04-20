@@ -1,13 +1,12 @@
 // services/user_service.dart
 import 'package:dio/dio.dart';
-import '../models/user.dart';
-import 'package:dio/dio.dart';
 import 'dart:io';
+import '../constants/api_constants.dart';
 import '../models/user.dart';
 
 class UserService {
   final Dio _dio;
-  String baseUrl = 'http://68.210.102.76/api';
+  String baseUrl = apiBaseUrl;
   UserService({required Dio dio}) : _dio = dio;
 
   Future<User> getMe(String accessToken) async {

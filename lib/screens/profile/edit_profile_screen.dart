@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../constants/api_constants.dart';
 import '../../providers/auth_providers.dart';
 import '../../services/user_profile_services.dart';
 import 'package:my_project/models/user.dart';
@@ -142,9 +143,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       );
 
       if (newAvatarUrl != null && currentUser != null) {
-        final fullAvatarUrl = newAvatarUrl.startsWith('http')
-            ? newAvatarUrl
-            : 'http://68.210.102.76/api/$newAvatarUrl';
+        final fullAvatarUrl = resolveApiUrl(newAvatarUrl);
 
         final updatedUser = User(
           id: currentUser.id,
