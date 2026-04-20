@@ -1,10 +1,11 @@
 import 'package:dio/dio.dart';
+import '../constants/api_constants.dart';
 import '../models/conversation.dart';
 import '../models/message.dart';
 
 class MessagesService {
   final Dio _dio;
-  String baseUrl = 'http://68.210.102.76/api';
+  String baseUrl = apiBaseUrl;
   MessagesService({required Dio dio}) : _dio = dio; //must set private like this
 
   // POST /conversations — create or retrieve a conversation

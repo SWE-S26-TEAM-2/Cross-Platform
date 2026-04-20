@@ -1,9 +1,10 @@
 import 'package:dio/dio.dart';
+import '../constants/api_constants.dart';
 import '../models/playlist.dart';
 
 class CreatePlaylistService {
   final Dio _dio;
-  final String baseUrl = 'http://68.210.102.76/api';
+  final String baseUrl = apiBaseUrl;
 
   CreatePlaylistService({required Dio dio}) : _dio = dio;
 

@@ -1,9 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:my_project/models/auth_token.dart';
+import '../constants/api_constants.dart';
 
 class AuthService {
   final Dio _dio;
-  String baseUrl = 'http://68.210.102.76/api';
+  String baseUrl = apiBaseUrl;
 
   AuthService({required Dio dio}) : _dio = dio;
 

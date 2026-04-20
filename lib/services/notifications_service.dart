@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
-import 'package:my_project/models/user.dart';
+import '../constants/api_constants.dart';
 import '../models/notification.dart';
 
 class NotificationsService {
   final Dio _dio;
-  String baseUrl = 'http://68.210.102.76/api';
+  String baseUrl = apiBaseUrl;
   NotificationsService({required Dio dio})
     : _dio = dio; //must set private like this
 

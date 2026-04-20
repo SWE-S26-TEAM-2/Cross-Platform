@@ -1,3 +1,5 @@
+import '../constants/api_constants.dart';
+
 class User {
   final String email;
   final String? id;
@@ -30,9 +32,7 @@ class User {
           json['avatar_url']?.toString() ?? json['profile_picture']?.toString();
 
       if (raw == null || raw.isEmpty) return null;
-      if (raw.startsWith('http')) return raw;
-
-      return 'http://68.210.102.76/api/$raw';
+      return resolveApiUrl(raw);
     })(),
     location: json['location']?.toString(),
     bio: json['bio']?.toString(),
