@@ -15,15 +15,8 @@ class CreatePlaylistService {
   }) async {
     final res = await _dio.post(
       '$baseUrl/playlists/',
-      data: {
-        'name': name,
-        'description': description ?? '',
-      },
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $accessToken',
-        },
-      ),
+      data: {'name': name, 'description': description ?? ''},
+      options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
     );
 
     print('CREATE PLAYLIST STATUS: ${res.statusCode}');

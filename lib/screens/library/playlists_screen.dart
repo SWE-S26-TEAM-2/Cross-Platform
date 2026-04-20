@@ -65,9 +65,8 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => CollectionDetailsScreen(
-          data: _mapPlaylistToCollection(playlist),
-        ),
+        builder: (_) =>
+            CollectionDetailsScreen(data: _mapPlaylistToCollection(playlist)),
       ),
     );
   }
@@ -140,19 +139,18 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
       ),
       builder: (_) => _CreatePlaylistSheet(
         onCreate: (name, description) async {
-          await ref.read(createPlaylistProvider.notifier).createPlaylist(
-                name: name,
-                description: description,
-              );
+          await ref
+              .read(createPlaylistProvider.notifier)
+              .createPlaylist(name: name, description: description);
 
           final createState = ref.read(createPlaylistProvider);
 
           if (!mounted) return;
 
           if (createState.error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(createState.error!)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(createState.error!)));
             return;
           }
 
@@ -366,9 +364,7 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
 class _CreatePlaylistSheet extends StatefulWidget {
   final Future<void> Function(String name, String description) onCreate;
 
-  const _CreatePlaylistSheet({
-    required this.onCreate,
-  });
+  const _CreatePlaylistSheet({required this.onCreate});
 
   @override
   State<_CreatePlaylistSheet> createState() => _CreatePlaylistSheetState();
