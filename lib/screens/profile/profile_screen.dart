@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import '../../mock_data/mock_users.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../mock_data/mock_tracks.dart';
+import '../../providers/auth_providers.dart';
 import 'widgets/profile_header_section.dart';
 import 'widgets/profile_completion_section.dart';
 import '../home/more_like_section.dart';
 import 'widgets/profile_track_list_section.dart';
+import 'edit_profile_screen.dart';
 
 const Color kBackgroundColor = Color(0xFF0F0F0F);
 
@@ -51,14 +53,14 @@ const List<ProfileCompletionCardData> profileCompletionCards = [
   ),
 ];
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool isProfileSectionExpanded = true;
 
   int get completeCount =>
@@ -66,11 +68,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = mockUsers.last;
+    final user = ref.watch(authProvider).user;
     final size = MediaQuery.of(context).size;
     final screenHeight = size.height;
 
     final double sectionGap = (screenHeight * 0.018).clamp(18.0, 26.0);
+
+    if (user == null) {
+      return Scaffold(
+        backgroundColor: kBackgroundColor,
+        body: const SafeArea(
+          child: Center(
+            child: Text(
+              'No profile data found',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: kBackgroundColor,
@@ -89,7 +105,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   debugPrint('More clicked');
                 },
                 onEditPressed: () {
-                  debugPrint('Edit clicked');
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const EditProfileScreen(),
+                    ),
+                  );
                 },
                 onShufflePressed: () {
                   debugPrint('Shuffle clicked');

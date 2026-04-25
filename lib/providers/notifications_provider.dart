@@ -56,7 +56,7 @@ class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
       }
       throw Exception('Could not load notifications. Please try again.');
     } catch (e) {
-      throw Exception('Something went wrong. Please check your connection.');
+      throw Exception(e.toString());
     }
   }
 

@@ -7,6 +7,7 @@ class User {
   final String? location;
   final int? followers;
   final int? following;
+  final String? bio;
 
   User({
     this.id,
@@ -17,19 +18,41 @@ class User {
     this.location,
     this.followers,
     this.following,
+    this.bio,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
     id: json['id']?.toString() ?? json['user_id']?.toString(),
     email: json['email']?.toString() ?? '',
     userName: json['username']?.toString() ?? json['display_name']?.toString(),
-    avatarUrl: json['avatar_url']?.toString(),
+    avatarUrl: (() {
+      final raw =
+          json['avatar_url']?.toString() ?? json['profile_picture']?.toString();
+
+      if (raw == null || raw.isEmpty) return null;
+      if (raw.startsWith('http')) return raw;
+
+      return 'http://68.210.102.76/api/$raw';
+    })(),
     location: json['location']?.toString(),
+    bio: json['bio']?.toString(),
     followers: json['followers'] is int
         ? json['followers']
-        : int.tryParse(json['followers']?.toString() ?? ''),
+        : json['follower_count'] is int
+        ? json['follower_count']
+        : int.tryParse(
+            json['followers']?.toString() ??
+                json['follower_count']?.toString() ??
+                '',
+          ),
     following: json['following'] is int
         ? json['following']
-        : int.tryParse(json['following']?.toString() ?? ''),
+        : json['following_count'] is int
+        ? json['following_count']
+        : int.tryParse(
+            json['following']?.toString() ??
+                json['following_count']?.toString() ??
+                '',
+          ),
   );
 }

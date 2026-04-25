@@ -11,7 +11,23 @@ class NotificationsService {
   // Endpoint #1 (Module 10) — GET /notifications
   Future<List<Notification>> getNotifications() async {
     final response = await _dio.get('$baseUrl/notifications');
-    final List data = response.data['data'];
+
+    final raw = response.data['data'];
+
+    // API should return a List, but guard against a Map wrapper
+    final List data;
+    if (raw is List) {
+      data = raw;
+    } else if (raw is Map) {
+      // e.g. { "notifications": [...], "unread_count": 5 }
+      // try common nested keys
+      data =
+          (raw['notifications'] ?? raw['items'] ?? raw['results'] ?? [])
+              as List;
+    } else {
+      data = [];
+    }
+
     return data.map((e) => Notification.fromJson(e)).toList();
   }
 
