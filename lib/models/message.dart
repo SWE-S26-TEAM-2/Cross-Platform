@@ -1,25 +1,28 @@
 class Message {
-  final String messageId;
-  final String senderId;
+  final String id;
+  final String? senderId; // ← nullable, some contexts might omit it
+  final String? receiverId;
   final String content;
   final bool isRead;
-  final String createdAt;
+  final String? createdAt;
 
   Message({
-    required this.messageId,
-    required this.senderId,
+    required this.id,
+    this.senderId,
+    this.receiverId,
     required this.content,
     required this.isRead,
-    required this.createdAt,
+    this.createdAt,
   });
 
   factory Message.fromJson(Map<String, dynamic> json) {
     return Message(
-      messageId: json['message_id'],
-      senderId: json['sender_id'],
-      content: json['content'],
-      isRead: json['is_read'],
-      createdAt: json['created_at'],
+      id: json['id'] as String,
+      senderId: json['sender_id'] as String?, // ← snake_case
+      receiverId: json['receiver_id'] as String?, // ← snake_case
+      content: json['content'] as String? ?? '',
+      isRead: json['is_read'] as bool? ?? false,
+      createdAt: json['created_at'] as String?, // ← snake_case
     );
   }
 }

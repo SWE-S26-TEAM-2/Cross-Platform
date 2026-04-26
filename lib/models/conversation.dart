@@ -1,5 +1,5 @@
 class Participant {
-  final String userId;
+  final String? userId;
   final String displayName;
   final String? profilePicture;
 
@@ -9,11 +9,12 @@ class Participant {
     this.profilePicture,
   });
 
+  // models/conversation.dart — Participant part
   factory Participant.fromJson(Map<String, dynamic> json) {
     return Participant(
-      userId: json['user_id'],
-      displayName: json['display_name'],
-      profilePicture: json['profile_picture'],
+      userId: json['user_id'] as String?, // ← snake_case
+      displayName: json['display_name'] as String? ?? 'Unknown',
+      profilePicture: json['profile_picture'] as String?,
     );
   }
 }

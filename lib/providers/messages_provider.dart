@@ -9,12 +9,16 @@ import 'auth_providers.dart';
 
 final messagingServiceProvider = Provider<MessagesService>((ref) {
   final token = ref.watch(authProvider).tokens?.accessToken ?? '';
+  print('TOKEN: $token');
+  //final fakeToken = 'invalidtoken123'; // Temporarily for testig purposes
+
   final dio = Dio();
 
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) {
         options.headers['Authorization'] = 'Bearer $token';
+        //options.headers['Authorization'] = 'Bearer $fakeToken';
         handler.next(options);
       },
     ),
