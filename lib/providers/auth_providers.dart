@@ -29,14 +29,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   AuthNotifier(this._authService, this._userService) : super(const AuthState());
 
-  Future<void> register(
-    String email,
-    String password,
-    String displayName,
-  ) async {
+  // register now requires username
+  Future<void> register({
+    required String email,
+    required String username,
+    required String password,
+    required String displayName,
+    String accountType = 'listener',
+  }) async {
     state = const AuthState(isLoading: true);
     try {
-      await _authService.register(email, password, displayName);
+      await _authService.register(
+        email: email,
+        username: username,
+        password: password,
+        displayName: displayName,
+        accountType: accountType,
+      );
       state = const AuthState(
         successMessage: 'Account created! Check your email to verify.',
       );
@@ -67,10 +76,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> login(String email, String password) async {
+  // identifier can be email or username — matches API's LoginRequest
+  Future<void> login(String identifier, String password) async {
     state = const AuthState(isLoading: true);
     try {
-      final tokens = await _authService.login(email, password);
+      final tokens = await _authService.login(identifier, password);
       final user = await _userService.getMe(tokens.accessToken);
       state = AuthState(tokens: tokens, user: user);
     } catch (e) {
@@ -89,10 +99,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> facebookLogin(String facebookToken) async {
+    state = const AuthState(isLoading: true);
+    try {
+      final tokens = await _authService.facebookLogin(facebookToken);
+      final user = await _userService.getMe(tokens.accessToken);
+      state = AuthState(tokens: tokens, user: user);
+    } catch (e) {
+      state = AuthState(error: e.toString());
+    }
+  }
+
   Future<void> refreshTokens() async {
     final current = state.tokens;
     if (current == null) return;
-
     try {
       final newTokens = await _authService.refreshTokens(current.refreshToken);
       state = AuthState(tokens: newTokens, user: state.user);
@@ -101,17 +121,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  // logout now passes both accessToken and refreshToken
   Future<void> logout() async {
-    final token = state.tokens?.accessToken;
-
-    if (token != null) {
+    final tokens = state.tokens;
+    if (tokens != null) {
       try {
-        await _authService.logout(token);
+        await _authService.logout(
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+        );
       } catch (_) {
         // ignore backend logout failure and clear local state
       }
     }
-
     state = const AuthState();
   }
 
@@ -142,7 +164,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
 }
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  final authService = AuthService(dio: Dio());
-  final userService = UserService(dio: Dio());
+  final dio = Dio();
+  final authService = AuthService(dio: dio);
+  final userService = UserService(dio: dio);
   return AuthNotifier(authService, userService);
 });

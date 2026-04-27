@@ -9,7 +9,6 @@ import 'auth_providers.dart';
 final engagementServiceProvider = Provider<EngagementService>((ref) {
   final token = ref.watch(authProvider).tokens?.accessToken ?? '';
   final dio = Dio();
-
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) {
@@ -18,11 +17,10 @@ final engagementServiceProvider = Provider<EngagementService>((ref) {
       },
     ),
   );
-
   return EngagementService(dio: dio);
 });
 
-// ─── POST/DELETE /likes/tracks/{track_id} ────────────────────────────────────
+// ─── POST/DELETE /tracks/{track_id}/like ─────────────────────────────────────
 
 class TrackLikeNotifier extends FamilyAsyncNotifier<void, String> {
   @override
@@ -32,15 +30,10 @@ class TrackLikeNotifier extends FamilyAsyncNotifier<void, String> {
     try {
       await ref.read(engagementServiceProvider).likeTrack(trackId: arg);
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
+      if (e.response?.statusCode == 401)
         throw Exception('You are not logged in.');
-      }
-      if (e.response?.statusCode == 404) {
-        throw Exception('Track not found.');
-      }
+      if (e.response?.statusCode == 404) throw Exception('Track not found.');
       throw Exception('Could not like track. Please try again.');
-    } catch (e) {
-      throw Exception(e.toString());
     }
   }
 
@@ -48,15 +41,10 @@ class TrackLikeNotifier extends FamilyAsyncNotifier<void, String> {
     try {
       await ref.read(engagementServiceProvider).unlikeTrack(trackId: arg);
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
+      if (e.response?.statusCode == 401)
         throw Exception('You are not logged in.');
-      }
-      if (e.response?.statusCode == 404) {
-        throw Exception('Track not found.');
-      }
+      if (e.response?.statusCode == 404) throw Exception('Track not found.');
       throw Exception('Could not unlike track. Please try again.');
-    } catch (e) {
-      throw Exception(e.toString());
     }
   }
 }
@@ -66,48 +54,38 @@ final trackLikeProvider =
       TrackLikeNotifier.new,
     );
 
-// ─── POST/DELETE /reposts/tracks/{track_id} ──────────────────────────────────
+// ─── POST/DELETE /playlists/{playlist_id}/like ────────────────────────────────
 
-class TrackRepostNotifier extends FamilyAsyncNotifier<void, String> {
+class PlaylistLikeNotifier extends FamilyAsyncNotifier<void, String> {
   @override
   Future<void> build(String arg) async {}
 
-  Future<void> repost() async {
+  Future<void> like() async {
     try {
-      await ref.read(engagementServiceProvider).repostTrack(trackId: arg);
+      await ref.read(engagementServiceProvider).likePlaylist(playlistId: arg);
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
+      if (e.response?.statusCode == 401)
         throw Exception('You are not logged in.');
-      }
-      if (e.response?.statusCode == 404) {
-        throw Exception('Track not found.');
-      }
-      throw Exception('Could not repost track. Please try again.');
-    } catch (e) {
-      throw Exception(e.toString());
+      if (e.response?.statusCode == 404) throw Exception('Playlist not found.');
+      throw Exception('Could not like playlist. Please try again.');
     }
   }
 
-  Future<void> removeRepost() async {
+  Future<void> unlike() async {
     try {
-      await ref.read(engagementServiceProvider).removeRepost(trackId: arg);
+      await ref.read(engagementServiceProvider).unlikePlaylist(playlistId: arg);
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
+      if (e.response?.statusCode == 401)
         throw Exception('You are not logged in.');
-      }
-      if (e.response?.statusCode == 404) {
-        throw Exception('Track not found.');
-      }
-      throw Exception('Could not remove repost. Please try again.');
-    } catch (e) {
-      throw Exception(e.toString());
+      if (e.response?.statusCode == 404) throw Exception('Playlist not found.');
+      throw Exception('Could not unlike playlist. Please try again.');
     }
   }
 }
 
-final trackRepostProvider =
-    AsyncNotifierProviderFamily<TrackRepostNotifier, void, String>(
-      TrackRepostNotifier.new,
+final playlistLikeProvider =
+    AsyncNotifierProviderFamily<PlaylistLikeNotifier, void, String>(
+      PlaylistLikeNotifier.new,
     );
 
 // ─── GET /tracks/{track_id}/comments ─────────────────────────────────────────
@@ -120,9 +98,7 @@ class CommentsNotifier extends FamilyAsyncNotifier<List<Comment>, String> {
           .read(engagementServiceProvider)
           .getComments(trackId: arg);
     } on DioException catch (e) {
-      if (e.response?.statusCode == 404) {
-        return []; // no comments yet
-      }
+      if (e.response?.statusCode == 404) return [];
       throw Exception('Could not load comments. Please try again.');
     } catch (e) {
       throw Exception(e.toString());
@@ -145,15 +121,10 @@ class CommentsNotifier extends FamilyAsyncNotifier<List<Comment>, String> {
           );
       ref.invalidateSelf();
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
+      if (e.response?.statusCode == 401)
         throw Exception('You are not logged in.');
-      }
-      if (e.response?.statusCode == 404) {
-        throw Exception('Track not found.');
-      }
+      if (e.response?.statusCode == 404) throw Exception('Track not found.');
       throw Exception('Could not post comment. Please try again.');
-    } catch (e) {
-      throw Exception(e.toString());
     }
   }
 

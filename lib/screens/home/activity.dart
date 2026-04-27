@@ -7,7 +7,9 @@ import 'package:my_project/models/conversation.dart';
 import 'package:my_project/screens/home/chat_screen.dart';
 import '../../providers/notifications_provider.dart';
 import '../../providers/messages_provider.dart';
-import '../../models/notification.dart' as model;
+import '../../models/notification.dart';
+import '../../providers/music_providers.dart';
+import '../../providers/auth_providers.dart';
 
 class Activity extends ConsumerStatefulWidget {
   const Activity({super.key});
@@ -126,7 +128,7 @@ class _ActivityState extends ConsumerState<Activity> {
                 controller: controller,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: 'Enter user ID or username',
+                  hintText: 'Enter username',
                   hintStyle: const TextStyle(color: AppColors.textMuted),
                   filled: true,
                   fillColor: AppColors.background,
@@ -170,20 +172,17 @@ class _ActivityState extends ConsumerState<Activity> {
                     ),
                   ),
                   onPressed: () async {
-                    final participantId = controller.text.trim();
-                    if (participantId.isEmpty) return;
+                    final username = controller.text.trim();
+                    if (username.isEmpty) return;
 
                     Navigator.pop(ctx);
 
                     try {
                       final conversationId = await ref
                           .read(messagingServiceProvider)
-                          .createOrGetConversation(
-                            participantId: participantId,
-                          );
+                          .createOrGetConversation(username: username);
 
                       if (!mounted) return;
-
                       ref.read(conversationsProvider.notifier).refresh();
 
                       Navigator.push(
@@ -191,7 +190,7 @@ class _ActivityState extends ConsumerState<Activity> {
                         MaterialPageRoute(
                           builder: (_) => ChatScreen(
                             conversationId: conversationId,
-                            participantName: participantId,
+                            participantName: username,
                           ),
                         ),
                       );
@@ -289,7 +288,7 @@ class _ActivityState extends ConsumerState<Activity> {
     );
   }
 
-  Widget _buildNotificationTile(model.Notification notif) {
+  Widget _buildNotificationTile(AppNotification notif) {
     return Dismissible(
       key: Key(notif.id),
       direction: DismissDirection.endToStart,
@@ -430,15 +429,17 @@ class _ActivityState extends ConsumerState<Activity> {
           const Divider(height: 1, thickness: 1, color: AppColors.divider),
       itemBuilder: (context, index) {
         final conversation = conversations[index];
-        final other = conversation.participants.isNotEmpty
-            ? conversation.participants.first
-            : null;
+        final myId = ref.read(authProvider).user?.id;
+        final other = conversation.participants.firstWhere(
+          (p) => p.userId != myId,
+          orElse: () => conversation.participants.first,
+        );
         return _buildMessageTile(conversation, other);
       },
     );
   }
 
-  Widget _buildMessageTile(Conversation conversation, Participant? other) {
+  Widget _buildMessageTile(Conversation conversation, Participant other) {
     return Dismissible(
       key: Key(conversation.conversationId),
       direction: DismissDirection.endToStart,
@@ -497,8 +498,8 @@ class _ActivityState extends ConsumerState<Activity> {
             MaterialPageRoute(
               builder: (_) => ChatScreen(
                 conversationId: conversation.conversationId,
-                participantName: other?.displayName ?? 'Unknown',
-                participantAvatar: other?.profilePicture,
+                participantName: other.displayName,
+                participantAvatar: other.profilePicture,
               ),
             ),
           );
@@ -509,10 +510,10 @@ class _ActivityState extends ConsumerState<Activity> {
             children: [
               CircleAvatar(
                 radius: 22,
-                backgroundImage: other?.profilePicture != null
-                    ? NetworkImage(other!.profilePicture!)
+                backgroundImage: other.profilePicture != null
+                    ? NetworkImage(other.profilePicture!)
                     : null,
-                child: other?.profilePicture == null
+                child: other.profilePicture == null
                     ? const Icon(Icons.person)
                     : null,
               ),
@@ -531,7 +532,7 @@ class _ActivityState extends ConsumerState<Activity> {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            other?.displayName ?? 'Unknown',
+                            other.displayName,
                             style: const TextStyle(fontWeight: FontWeight.w600),
                             overflow: TextOverflow.ellipsis,
                           ),

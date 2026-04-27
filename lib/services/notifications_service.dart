@@ -3,13 +3,13 @@ import '../models/notification.dart';
 
 class NotificationsService {
   final Dio _dio;
-  final String baseUrl = 'http://68.210.102.76/api';
+  static const String _baseUrl = 'https://streamline-swp.duckdns.org/api';
 
   NotificationsService({required Dio dio}) : _dio = dio;
 
   // GET /notifications
-  Future<List<Notification>> getNotifications() async {
-    final response = await _dio.get('$baseUrl/notifications');
+  Future<List<AppNotification>> getNotifications() async {
+    final response = await _dio.get('$_baseUrl/notifications');
     final raw = response.data['data'];
     final List data;
     if (raw is List) {
@@ -21,27 +21,27 @@ class NotificationsService {
     } else {
       data = [];
     }
-    return data.map((e) => Notification.fromJson(e)).toList();
+    return data.map((e) => AppNotification.fromJson(e)).toList();
   }
 
   // GET /notifications/unread-count
   Future<int> getUnreadCount() async {
-    final response = await _dio.get('$baseUrl/notifications/unread-count');
+    final response = await _dio.get('$_baseUrl/notifications/unread-count');
     return response.data['data']['unread_count'] as int? ?? 0;
   }
 
   // PUT /notifications/read-all
   Future<void> markAllAsRead() async {
-    await _dio.put('$baseUrl/notifications/read-all');
+    await _dio.put('$_baseUrl/notifications/read-all');
   }
 
   // PUT /notifications/{notification_id}/read
   Future<void> markNotificationAsRead({required String id}) async {
-    await _dio.put('$baseUrl/notifications/$id/read');
+    await _dio.put('$_baseUrl/notifications/$id/read');
   }
 
   // DELETE /notifications/{notification_id}
   Future<void> deleteNotification({required String id}) async {
-    await _dio.delete('$baseUrl/notifications/$id');
+    await _dio.delete('$_baseUrl/notifications/$id');
   }
 }

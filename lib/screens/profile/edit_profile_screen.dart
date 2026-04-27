@@ -144,7 +144,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       if (newAvatarUrl != null && currentUser != null) {
         final fullAvatarUrl = newAvatarUrl.startsWith('http')
             ? newAvatarUrl
-            : 'http://68.210.102.76/api/$newAvatarUrl';
+            //: 'http://68.210.102.76/api/$newAvatarUrl';
+            : 'https://streamline-swp.duckdns.org/api/$newAvatarUrl';
 
         final updatedUser = User(
           id: currentUser.id,
