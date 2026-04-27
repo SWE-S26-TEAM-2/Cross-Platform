@@ -178,9 +178,7 @@ class _ActivityState extends ConsumerState<Activity> {
                     try {
                       final conversationId = await ref
                           .read(messagingServiceProvider)
-                          .createOrGetConversation(
-                            participantId: participantId,
-                          );
+                          .createOrGetConversation(displayName: participantId);
 
                       if (!mounted) return;
 

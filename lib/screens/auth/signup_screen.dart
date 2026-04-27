@@ -72,9 +72,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     await ref
         .read(authProvider.notifier)
         .register(
-          emailController.text.trim(),
-          passwordController.text,
-          displayNameController.text.trim(),
+          email: emailController.text.trim(),
+          username: displayNameController.text.trim(), // same field for now
+          password: passwordController.text,
+          displayName: displayNameController.text.trim(),
         );
 
     final authState = ref.read(authProvider);

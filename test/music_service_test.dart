@@ -6,7 +6,8 @@ void main() {
   late MusicService service;
 
   setUp(() {
-    service = MusicService();
+    //service = MusicService();
+    service = MusicService(dio: Dio()); // ✅ pass Dio instance
   });
 
   test('searchTracks returns a list', () async {
