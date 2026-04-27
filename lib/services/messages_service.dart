@@ -10,14 +10,32 @@ class MessagesService {
 
   // POST /conversations
   // API requires: display_name (NOT participant_id — check CreateConversationRequest in spec)
-  Future<String> createOrGetConversation({
-    required String participantId,
-  }) async {
-    final response = await _dio.post(
-      '$_baseUrl/conversations',
-      data: {'participant_id': participantId},
-    );
-    return response.data['data']['conversation_id'];
+  // Future<String> createOrGetConversation({required String username}) async {
+  //   print('SERVICE SENDING: $username');
+  //   try {
+  //     final response = await _dio.post(
+  //       '$_baseUrl/conversations',
+  //       data: {'username': username},
+  //     );
+  //     print('SERVICE RESPONSE: ${response.data}');
+  //     return response.data['data']['conversation_id'];
+  //   } on DioException catch (e) {
+  //     print('SERVICE ERROR STATUS: ${e.response?.statusCode}');
+  //     print('SERVICE ERROR BODY: ${e.response?.data}');
+  //     rethrow;
+  //   }
+  // }
+  Future<String> createOrGetConversation({required String username}) async {
+    try {
+      final response = await _dio.post(
+        '$_baseUrl/conversations',
+        data: {'username': username},
+      );
+      return response.data['data']['conversation_id'];
+    } on DioException catch (e) {
+      print('CONVO ERROR: ${e.response?.data}');
+      rethrow;
+    }
   }
 
   // GET /conversations

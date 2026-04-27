@@ -9,6 +9,7 @@ import '../../providers/notifications_provider.dart';
 import '../../providers/messages_provider.dart';
 import '../../models/notification.dart';
 import '../../providers/music_providers.dart';
+import '../../providers/auth_providers.dart';
 
 class Activity extends ConsumerStatefulWidget {
   const Activity({super.key});
@@ -127,7 +128,7 @@ class _ActivityState extends ConsumerState<Activity> {
                 controller: controller,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: 'Enter user ID or username',
+                  hintText: 'Enter username',
                   hintStyle: const TextStyle(color: AppColors.textMuted),
                   filled: true,
                   fillColor: AppColors.background,
@@ -171,48 +172,17 @@ class _ActivityState extends ConsumerState<Activity> {
                     ),
                   ),
                   onPressed: () async {
-                    final query = controller.text.trim();
-                    if (query.isEmpty) return;
+                    final username = controller.text.trim();
+                    if (username.isEmpty) return;
 
                     Navigator.pop(ctx);
 
                     try {
-                      // Step 1: search for the user by username/display name
-                      final results = await ref
-                          .read(
-                            musicServiceProvider,
-                          ) // musicService has searchUsers
-                          .searchUsers(query);
-
-                      if (results.isEmpty) {
-                        if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('No user found with that name.'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                        return;
-                      }
-
-                      // Step 2: take the first result's user_id
-                      // final userId = results.first['user_id'] as String;
-                      // final displayName =
-                      //     results.first['display_name'] as String? ?? query;
-                      final user = results.first as Map<String, dynamic>;
-                      final userId = user['user_id'] as String;
-                      print('USER JSON: $user'); // ← add this temporarily
-
-                      final displayName =
-                          user['display_name'] as String? ?? query;
-
-                      // Step 3: create/get conversation with UUID
                       final conversationId = await ref
                           .read(messagingServiceProvider)
-                          .createOrGetConversation(participantId: userId);
+                          .createOrGetConversation(username: username);
 
                       if (!mounted) return;
-
                       ref.read(conversationsProvider.notifier).refresh();
 
                       Navigator.push(
@@ -220,7 +190,7 @@ class _ActivityState extends ConsumerState<Activity> {
                         MaterialPageRoute(
                           builder: (_) => ChatScreen(
                             conversationId: conversationId,
-                            participantName: displayName,
+                            participantName: username,
                           ),
                         ),
                       );
@@ -459,15 +429,17 @@ class _ActivityState extends ConsumerState<Activity> {
           const Divider(height: 1, thickness: 1, color: AppColors.divider),
       itemBuilder: (context, index) {
         final conversation = conversations[index];
-        final other = conversation.participants.isNotEmpty
-            ? conversation.participants.first
-            : null;
+        final myId = ref.read(authProvider).user?.id;
+        final other = conversation.participants.firstWhere(
+          (p) => p.userId != myId,
+          orElse: () => conversation.participants.first,
+        );
         return _buildMessageTile(conversation, other);
       },
     );
   }
 
-  Widget _buildMessageTile(Conversation conversation, Participant? other) {
+  Widget _buildMessageTile(Conversation conversation, Participant other) {
     return Dismissible(
       key: Key(conversation.conversationId),
       direction: DismissDirection.endToStart,
@@ -526,8 +498,8 @@ class _ActivityState extends ConsumerState<Activity> {
             MaterialPageRoute(
               builder: (_) => ChatScreen(
                 conversationId: conversation.conversationId,
-                participantName: other?.displayName ?? 'Unknown',
-                participantAvatar: other?.profilePicture,
+                participantName: other.displayName,
+                participantAvatar: other.profilePicture,
               ),
             ),
           );
@@ -538,10 +510,10 @@ class _ActivityState extends ConsumerState<Activity> {
             children: [
               CircleAvatar(
                 radius: 22,
-                backgroundImage: other?.profilePicture != null
-                    ? NetworkImage(other!.profilePicture!)
+                backgroundImage: other.profilePicture != null
+                    ? NetworkImage(other.profilePicture!)
                     : null,
-                child: other?.profilePicture == null
+                child: other.profilePicture == null
                     ? const Icon(Icons.person)
                     : null,
               ),
@@ -560,7 +532,7 @@ class _ActivityState extends ConsumerState<Activity> {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            other?.displayName ?? 'Unknown',
+                            other.displayName,
                             style: const TextStyle(fontWeight: FontWeight.w600),
                             overflow: TextOverflow.ellipsis,
                           ),

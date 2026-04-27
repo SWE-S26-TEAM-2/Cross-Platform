@@ -130,11 +130,11 @@ final messagesProvider =
 class CreateConversationNotifier extends FamilyAsyncNotifier<String, String> {
   @override
   Future<String> build(String arg) async {
-    // arg = participant_id (UUID) of the other user
+    // arg = username of the other user
     try {
       return await ref
           .read(messagingServiceProvider)
-          .createOrGetConversation(participantId: arg);
+          .createOrGetConversation(username: arg);
     } on DioException catch (e) {
       if (e.response?.statusCode == 400)
         throw Exception('Cannot start a conversation with yourself.');
