@@ -19,13 +19,13 @@ class Track {
 
   factory Track.fromJson(Map<String, dynamic> json) {
     return Track(
-      id: json['id'].toString(),
-      title: json['title'] ?? '',
-      artist: json['artist'] ?? '',
-      artworkUrl: json['artworkUrl'] ?? '',
-      likeCount: json['likeCount'] ?? 0,
-      duration: json['duration'] ?? 0,
-      audioPath: json['audioPath'] ?? '',
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      artist: json['display_name']?.toString() ?? '', // uploader's name
+      artworkUrl: json['cover_image']?.toString() ?? '',
+      likeCount: json['like_count'] as int? ?? 0,
+      duration: json['duration'] as int? ?? 0,
+      audioPath: json['file_url']?.toString() ?? '',
     );
   }
 
