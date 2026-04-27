@@ -4,9 +4,12 @@ import 'package:my_project/constants/app_colors.dart';
 import 'package:my_project/constants/app_dimensions.dart';
 import 'package:my_project/constants/app_text_styles.dart';
 import 'package:my_project/models/conversation.dart';
+import 'package:my_project/screens/home/chat_screen.dart';
 import '../../providers/notifications_provider.dart';
 import '../../providers/messages_provider.dart';
-import '../../models/notification.dart' as model;
+import '../../models/notification.dart';
+import '../../providers/music_providers.dart';
+import '../../providers/auth_providers.dart';
 
 class Activity extends ConsumerStatefulWidget {
   const Activity({super.key});
@@ -25,7 +28,21 @@ class _ActivityState extends ConsumerState<Activity> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Activity')),
+      appBar: AppBar(
+        title: const Text('Activity'),
+        actions: [
+          if (selectedTab == 0)
+            TextButton(
+              onPressed: () {
+                ref.read(notificationsProvider.notifier).markAllAsRead();
+              },
+              child: const Text(
+                'Mark all read',
+                style: TextStyle(color: AppColors.primary),
+              ),
+            ),
+        ],
+      ),
       body: Column(
         children: [
           Container(
@@ -57,6 +74,145 @@ class _ActivityState extends ConsumerState<Activity> {
           ),
         ],
       ),
+
+      floatingActionButton: selectedTab == 1
+          ? FloatingActionButton(
+              onPressed: _showNewMessageSheet,
+              backgroundColor: AppColors.primary,
+              child: const Icon(Icons.edit_outlined, color: Colors.white),
+            )
+          : null,
+    );
+  }
+
+  // ─── New message bottom sheet ──────────────────────────────────────────────
+
+  void _showNewMessageSheet() {
+    final controller = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.divider,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+
+              Text('New Message', style: AppTextStyles.heading1),
+              const SizedBox(height: 16),
+
+              TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Enter username',
+                  hintStyle: const TextStyle(color: AppColors.textMuted),
+                  filled: true,
+                  fillColor: AppColors.background,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.divider),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.divider),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.person_outline,
+                    color: AppColors.textMuted,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () async {
+                    final username = controller.text.trim();
+                    if (username.isEmpty) return;
+
+                    Navigator.pop(ctx);
+
+                    try {
+                      final conversationId = await ref
+                          .read(messagingServiceProvider)
+                          .createOrGetConversation(username: username);
+
+                      if (!mounted) return;
+                      ref.read(conversationsProvider.notifier).refresh();
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatScreen(
+                            conversationId: conversationId,
+                            participantName: username,
+                          ),
+                        ),
+                      );
+                    } catch (e) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            e.toString().replaceAll('Exception: ', ''),
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Start Conversation'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -132,39 +288,88 @@ class _ActivityState extends ConsumerState<Activity> {
     );
   }
 
-  Widget _buildNotificationTile(model.Notification notif) {
-    return InkWell(
-      onTap: () {
-        ref.read(notificationsProvider.notifier).markAsRead(notif.id);
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        child: Row(
-          children: [
-            CircleAvatar(radius: 22, child: Icon(_iconForType(notif.type))),
-
-            const SizedBox(width: 12),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    notif.message,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    notif.createdAt,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              ),
+  Widget _buildNotificationTile(AppNotification notif) {
+    return Dismissible(
+      key: Key(notif.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        color: Colors.red,
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      confirmDismiss: (_) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: const Text(
+              'Delete Notification',
+              style: TextStyle(color: AppColors.textPrimary),
             ),
-
-            if (!notif.isRead)
-              const CircleAvatar(radius: 5, backgroundColor: Colors.blue),
-          ],
+            content: const Text(
+              'Are you sure you want to delete this notification?',
+              style: TextStyle(color: AppColors.textMuted),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+        );
+      },
+      onDismissed: (_) async {
+        try {
+          await ref
+              .read(notificationsProvider.notifier)
+              .deleteNotification(notif.id);
+        } catch (e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString().replaceAll('Exception: ', '')),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      child: InkWell(
+        onTap: () {
+          ref.read(notificationsProvider.notifier).markAsRead(notif.id);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          child: Row(
+            children: [
+              CircleAvatar(radius: 22, child: Icon(_iconForType(notif.type))),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      notif.message,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      notif.createdAt ?? '',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+              if (!notif.isRead)
+                const CircleAvatar(radius: 5, backgroundColor: Colors.blue),
+            ],
+          ),
         ),
       ),
     );
@@ -193,13 +398,26 @@ class _ActivityState extends ConsumerState<Activity> {
     final conversations = ref.watch(conversationsProvider).value ?? [];
 
     if (conversations.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.message_outlined, size: 40, color: Colors.grey),
-            SizedBox(height: 12),
-            Text('No messages yet', style: TextStyle(color: Colors.grey)),
+            const Icon(Icons.message_outlined, size: 40, color: Colors.grey),
+            const SizedBox(height: 12),
+            const Text('No messages yet', style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: _showNewMessageSheet,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              icon: const Icon(Icons.edit_outlined, size: 16),
+              label: const Text('New Message'),
+            ),
           ],
         ),
       );
@@ -211,69 +429,127 @@ class _ActivityState extends ConsumerState<Activity> {
           const Divider(height: 1, thickness: 1, color: AppColors.divider),
       itemBuilder: (context, index) {
         final conversation = conversations[index];
-        // get the other participant (not current user)
-        final other = conversation.participants.isNotEmpty
-            ? conversation.participants.first
-            : null;
+        final myId = ref.read(authProvider).user?.id;
+        final other = conversation.participants.firstWhere(
+          (p) => p.userId != myId,
+          orElse: () => conversation.participants.first,
+        );
         return _buildMessageTile(conversation, other);
       },
     );
   }
 
-  Widget _buildMessageTile(Conversation conversation, Participant? other) {
-    return InkWell(
-      onTap: () {
-        // navigate to chat screen — pass conversationId
-        // Navigator.push(context, MaterialPageRoute(
-        //   builder: (_) => ChatScreen(conversationId: conversation.conversationId),
-        // ));
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 22,
-              backgroundImage: other?.profilePicture != null
-                  ? NetworkImage(other!.profilePicture!)
-                  : null,
-              child: other?.profilePicture == null
-                  ? const Icon(Icons.person)
-                  : null,
+  Widget _buildMessageTile(Conversation conversation, Participant other) {
+    return Dismissible(
+      key: Key(conversation.conversationId),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        color: Colors.red,
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      confirmDismiss: (_) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: const Text(
+              'Delete Conversation',
+              style: TextStyle(color: AppColors.textPrimary),
             ),
-
-            const SizedBox(width: 12),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.message,
-                        size: 18,
-                        color: AppColors.textMuted,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          other?.displayName ?? 'Unknown',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Tap to open conversation',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
+            content: const Text(
+              'Are you sure you want to delete this conversation? This cannot be undone.',
+              style: TextStyle(color: AppColors.textMuted),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+        );
+      },
+      onDismissed: (_) async {
+        try {
+          await ref
+              .read(conversationsProvider.notifier)
+              .deleteConversation(conversation.conversationId);
+        } catch (e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString().replaceAll('Exception: ', '')),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChatScreen(
+                conversationId: conversation.conversationId,
+                participantName: other.displayName,
+                participantAvatar: other.profilePicture,
               ),
             ),
-          ],
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 22,
+                backgroundImage: other.profilePicture != null
+                    ? NetworkImage(other.profilePicture!)
+                    : null,
+                child: other.profilePicture == null
+                    ? const Icon(Icons.person)
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.message,
+                          size: 18,
+                          color: AppColors.textMuted,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            other.displayName,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Tap to open conversation',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ],
+          ),
         ),
       ),
     );

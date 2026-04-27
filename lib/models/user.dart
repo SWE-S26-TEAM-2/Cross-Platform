@@ -32,7 +32,7 @@ class User {
       if (raw == null || raw.isEmpty) return null;
       if (raw.startsWith('http')) return raw;
 
-      return 'http://68.210.102.76/api/$raw';
+      return 'https://streamline-swp.duckdns.org/api/$raw';
     })(),
     location: json['location']?.toString(),
     bio: json['bio']?.toString(),

@@ -1,38 +1,47 @@
 import 'package:dio/dio.dart';
-import 'package:my_project/models/user.dart';
 import '../models/notification.dart';
 
 class NotificationsService {
   final Dio _dio;
-  String baseUrl = 'http://68.210.102.76/api';
-  NotificationsService({required Dio dio})
-    : _dio = dio; //must set private like this
+  static const String _baseUrl = 'https://streamline-swp.duckdns.org/api';
 
-  // Endpoint #1 (Module 10) — GET /notifications
-  Future<List<Notification>> getNotifications() async {
-    final response = await _dio.get('$baseUrl/notifications');
+  NotificationsService({required Dio dio}) : _dio = dio;
 
+  // GET /notifications
+  Future<List<AppNotification>> getNotifications() async {
+    final response = await _dio.get('$_baseUrl/notifications');
     final raw = response.data['data'];
-
-    // API should return a List, but guard against a Map wrapper
     final List data;
     if (raw is List) {
       data = raw;
     } else if (raw is Map) {
-      // e.g. { "notifications": [...], "unread_count": 5 }
-      // try common nested keys
       data =
           (raw['notifications'] ?? raw['items'] ?? raw['results'] ?? [])
               as List;
     } else {
       data = [];
     }
-
-    return data.map((e) => Notification.fromJson(e)).toList();
+    return data.map((e) => AppNotification.fromJson(e)).toList();
   }
 
-  // Endpoint #2 (Module 10) — PUT /notifications/{id}/read
-  Future<void> markNotificationAsRead({required int id}) async {
-    await _dio.put('$baseUrl/notifications/$id/read');
+  // GET /notifications/unread-count
+  Future<int> getUnreadCount() async {
+    final response = await _dio.get('$_baseUrl/notifications/unread-count');
+    return response.data['data']['unread_count'] as int? ?? 0;
+  }
+
+  // PUT /notifications/read-all
+  Future<void> markAllAsRead() async {
+    await _dio.put('$_baseUrl/notifications/read-all');
+  }
+
+  // PUT /notifications/{notification_id}/read
+  Future<void> markNotificationAsRead({required String id}) async {
+    await _dio.put('$_baseUrl/notifications/$id/read');
+  }
+
+  // DELETE /notifications/{notification_id}
+  Future<void> deleteNotification({required String id}) async {
+    await _dio.delete('$_baseUrl/notifications/$id');
   }
 }
