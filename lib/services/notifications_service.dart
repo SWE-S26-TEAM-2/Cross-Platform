@@ -8,7 +8,7 @@ class NotificationsService {
   NotificationsService({required Dio dio}) : _dio = dio;
 
   // GET /notifications
-  Future<List<Notification>> getNotifications() async {
+  Future<List<AppNotification>> getNotifications() async {
     final response = await _dio.get('$_baseUrl/notifications');
     final raw = response.data['data'];
     final List data;
@@ -21,7 +21,7 @@ class NotificationsService {
     } else {
       data = [];
     }
-    return data.map((e) => Notification.fromJson(e)).toList();
+    return data.map((e) => AppNotification.fromJson(e)).toList();
   }
 
   // GET /notifications/unread-count

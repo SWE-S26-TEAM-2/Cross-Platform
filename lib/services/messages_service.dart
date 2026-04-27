@@ -10,10 +10,12 @@ class MessagesService {
 
   // POST /conversations
   // API requires: display_name (NOT participant_id — check CreateConversationRequest in spec)
-  Future<String> createOrGetConversation({required String displayName}) async {
+  Future<String> createOrGetConversation({
+    required String participantId,
+  }) async {
     final response = await _dio.post(
       '$_baseUrl/conversations',
-      data: {'display_name': displayName},
+      data: {'participant_id': participantId},
     );
     return response.data['data']['conversation_id'];
   }

@@ -7,7 +7,8 @@ import 'package:my_project/models/conversation.dart';
 import 'package:my_project/screens/home/chat_screen.dart';
 import '../../providers/notifications_provider.dart';
 import '../../providers/messages_provider.dart';
-import '../../models/notification.dart' as model;
+import '../../models/notification.dart';
+import '../../providers/music_providers.dart';
 
 class Activity extends ConsumerStatefulWidget {
   const Activity({super.key});
@@ -170,15 +171,45 @@ class _ActivityState extends ConsumerState<Activity> {
                     ),
                   ),
                   onPressed: () async {
-                    final participantId = controller.text.trim();
-                    if (participantId.isEmpty) return;
+                    final query = controller.text.trim();
+                    if (query.isEmpty) return;
 
                     Navigator.pop(ctx);
 
                     try {
+                      // Step 1: search for the user by username/display name
+                      final results = await ref
+                          .read(
+                            musicServiceProvider,
+                          ) // musicService has searchUsers
+                          .searchUsers(query);
+
+                      if (results.isEmpty) {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('No user found with that name.'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
+
+                      // Step 2: take the first result's user_id
+                      // final userId = results.first['user_id'] as String;
+                      // final displayName =
+                      //     results.first['display_name'] as String? ?? query;
+                      final user = results.first as Map<String, dynamic>;
+                      final userId = user['user_id'] as String;
+                      print('USER JSON: $user'); // ← add this temporarily
+
+                      final displayName =
+                          user['display_name'] as String? ?? query;
+
+                      // Step 3: create/get conversation with UUID
                       final conversationId = await ref
                           .read(messagingServiceProvider)
-                          .createOrGetConversation(displayName: participantId);
+                          .createOrGetConversation(participantId: userId);
 
                       if (!mounted) return;
 
@@ -189,7 +220,7 @@ class _ActivityState extends ConsumerState<Activity> {
                         MaterialPageRoute(
                           builder: (_) => ChatScreen(
                             conversationId: conversationId,
-                            participantName: participantId,
+                            participantName: displayName,
                           ),
                         ),
                       );
@@ -287,7 +318,7 @@ class _ActivityState extends ConsumerState<Activity> {
     );
   }
 
-  Widget _buildNotificationTile(model.Notification notif) {
+  Widget _buildNotificationTile(AppNotification notif) {
     return Dismissible(
       key: Key(notif.id),
       direction: DismissDirection.endToStart,

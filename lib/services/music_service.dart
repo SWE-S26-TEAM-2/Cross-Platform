@@ -13,7 +13,8 @@ class MusicService {
       '$_baseUrl/search/tracks',
       queryParameters: {'keyword': query},
     );
-    final List tracks = res.data['data'] ?? [];
+    final raw = res.data['data'];
+    final List tracks = (raw is Map ? (raw['tracks'] ?? []) : raw) ?? [];
     return tracks.map<Track>((json) => Track.fromJson(json)).toList();
   }
 
@@ -24,8 +25,6 @@ class MusicService {
   }
 
   // POST /tracks/ (multipart/form-data)
-  // Required: title, description, file
-  // Optional: genre, tags (comma-separated string), release_date, visibility, cover_image
   Future<Track> createTrack({
     required String title,
     required String description,
@@ -98,7 +97,7 @@ class MusicService {
     return res.data['data'];
   }
 
-  // GET /tracks/{track_id}/audio (actual audio stream)
+  // GET /tracks/{track_id}/audio
   Future<String> getTrackAudioUrl({required String trackId}) async {
     return '$_baseUrl/tracks/$trackId/audio';
   }
@@ -133,20 +132,24 @@ class MusicService {
   }
 
   // GET /search/users?keyword=query
-  Future<List<dynamic>> searchUsers(String query) async {
+  Future<List<Map<String, dynamic>>> searchUsers(String query) async {
     final res = await _dio.get(
       '$_baseUrl/search/users',
       queryParameters: {'keyword': query},
     );
-    return res.data['data'] ?? [];
+    final raw = res.data['data'];
+    final List data = (raw is Map ? (raw['users'] ?? []) : raw) ?? [];
+    return data.map((e) => e as Map<String, dynamic>).toList();
   }
 
   // GET /search/playlists?keyword=query
-  Future<List<dynamic>> searchPlaylists(String query) async {
+  Future<List<Map<String, dynamic>>> searchPlaylists(String query) async {
     final res = await _dio.get(
       '$_baseUrl/search/playlists',
       queryParameters: {'keyword': query},
     );
-    return res.data['data'] ?? [];
+    final raw = res.data['data'];
+    final List data = (raw is Map ? (raw['playlists'] ?? []) : raw) ?? [];
+    return data.map((e) => e as Map<String, dynamic>).toList();
   }
 }

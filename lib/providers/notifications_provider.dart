@@ -32,18 +32,17 @@ final unreadNotificationsCountProvider = FutureProvider<int>((ref) async {
 
 // ─── Notifications Notifier ───────────────────────────────────────────────────
 
-class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
+class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
   @override
-  Future<List<Notification>> build() async {
+  Future<List<AppNotification>> build() async {
     try {
       return await ref.read(notificationsServiceProvider).getNotifications();
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        throw Exception('You are not logged in.');
-      }
-      throw Exception('Could not load notifications. Please try again.');
-    } catch (e) {
-      throw Exception(e.toString());
+      throw Exception(
+        'DioError ${e.response?.statusCode}: ${e.response?.data}',
+      );
+    } catch (e, st) {
+      throw Exception('Unknown error: $e\n$st');
     }
   }
 
@@ -55,7 +54,7 @@ class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
     state = AsyncData(
       state.value?.map((n) {
             return n.id == id
-                ? Notification(
+                ? AppNotification(
                     id: n.id,
                     type: n.type,
                     message: n.message,
@@ -77,7 +76,7 @@ class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
     state = AsyncData(
       state.value
               ?.map(
-                (n) => Notification(
+                (n) => AppNotification(
                   id: n.id,
                   type: n.type,
                   message: n.message,
@@ -110,6 +109,6 @@ class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
 }
 
 final notificationsProvider =
-    AsyncNotifierProvider<NotificationsNotifier, List<Notification>>(
+    AsyncNotifierProvider<NotificationsNotifier, List<AppNotification>>(
       NotificationsNotifier.new,
     );
