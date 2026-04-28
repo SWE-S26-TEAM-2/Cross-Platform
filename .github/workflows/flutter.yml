@@ -1,0 +1,87 @@
+name: Flutter
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: flutter-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: flutter analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          # pubspec.yaml constrains the SDK to ^3.11.0; pin to the latest
+          # stable that satisfies that constraint.
+          flutter-version: '3.x'
+          channel: stable
+          cache: true
+
+      - name: Show Flutter / Dart versions
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Static analysis
+        run: flutter analyze
+
+  unit:
+    name: flutter test (unit + widget)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run unit + widget tests
+        run: flutter test --reporter expanded
+
+  integration:
+    name: flutter test integration_test (mock)
+    runs-on: ubuntu-latest
+    # Integration tests require a running device. On Linux GitHub runners
+    # we have no Android emulator / iOS Simulator and `flutter test` does
+    # not support headless `integration_test` out of the box without
+    # `flutter drive` + chromedriver. Gate this job off until a
+    # browser/emulator runner is wired up.
+    # TODO(qa): enable once a dedicated runner (macOS w/ Simulator or
+    # Linux w/ chromedriver) is provisioned and replace `if: false` with
+    # `if: github.event_name == 'pull_request'` (or remove entirely).
+    if: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run integration suite (mock auth)
+        run: |
+          flutter test integration_test \
+            --dart-define=USE_MOCK_AUTH=true \
+            --reporter expanded

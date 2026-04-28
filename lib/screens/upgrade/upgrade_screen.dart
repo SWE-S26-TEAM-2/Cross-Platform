@@ -424,6 +424,7 @@ class UpgradePlanCard extends StatelessWidget {
             width: double.infinity,
             height: 42,
             child: ElevatedButton(
+              key: const Key('upgrade.subscribe'),
               onPressed: onSubscribePressed,
               style: ElevatedButton.styleFrom(
                 elevation: 0,
@@ -562,6 +563,7 @@ class _UpgradeFaqTileState extends State<UpgradeFaqTile> {
     return Column(
       children: [
         InkWell(
+          key: const Key('upgrade.faq.expand'),
           onTap: () {
             setState(() {
               isExpanded = !isExpanded;

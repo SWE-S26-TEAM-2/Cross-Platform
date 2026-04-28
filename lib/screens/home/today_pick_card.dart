@@ -84,6 +84,7 @@ class TodayPickCard extends StatelessWidget {
                       ),
                       const SizedBox(width: AppDimensions.spaceSmall),
                       GestureDetector(
+                        key: const Key('home.todayPick.0'),
                         onTap: track != null
                             ? () => onTrackTap?.call(track)
                             : null,

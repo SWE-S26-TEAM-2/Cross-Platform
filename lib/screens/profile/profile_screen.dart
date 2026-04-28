@@ -114,6 +114,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               SizedBox(height: sectionGap),
               MoreLikeSection(
+                key: const Key('profile.playlistsTab'),
                 sectionTitle: 'Playlists',
                 tracks: MockTracks.recommendedTracks,
                 onTrackTap: (track) {
@@ -122,6 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               SizedBox(height: sectionGap),
               ProfileTrackListSection(
+                key: const Key('profile.tracksTab'),
                 title: 'Reposts',
                 showSeeAll: true,
                 tracks: MockTracks.recommendedTracks,

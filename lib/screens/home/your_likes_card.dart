@@ -103,6 +103,7 @@ class YourLikesCard extends StatelessWidget {
             children: [
               for (final track in tracks)
                 _TrackGridTile(
+                  key: Key('home.trackTile.${track.id}'),
                   title: track.title,
                   artist: track.artist,
                   track: track,
@@ -123,6 +124,7 @@ class _TrackGridTile extends StatelessWidget {
   final void Function(Track)? onTrackTap;
 
   const _TrackGridTile({
+    super.key,
     required this.title,
     required this.artist,
     this.track,

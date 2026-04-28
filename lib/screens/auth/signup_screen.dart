@@ -1,29 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
+import '../../main.dart' show kUseMockAuth;
+import '../../providers/auth_providers.dart';
 import '../../services/mock_auth_service.dart';
 import '../../widgets/social_buttons.dart';
 
-class SignupScreen extends StatefulWidget {
+class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
 
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends ConsumerState<SignupScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final MockAuthService authService = MockAuthService();
 
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
 
+  bool _navigatedFromProvider = false;
+
   @override
   void dispose() {
     emailController.dispose();
+    usernameController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
     super.dispose();
@@ -59,11 +66,13 @@ class _SignupScreenState extends State<SignupScreen> {
     return regex.hasMatch(email);
   }
 
-  void handleSignup() {
-    if (_formKey.currentState!.validate()) {
-      final email = emailController.text.trim();
-      final password = passwordController.text;
+  Future<void> handleSignup() async {
+    if (!_formKey.currentState!.validate()) return;
+    final email = emailController.text.trim();
+    final username = usernameController.text.trim();
+    final password = passwordController.text;
 
+    if (kUseMockAuth) {
       final success = authService.signup(email, password);
 
       if (!success) {
@@ -80,11 +89,36 @@ class _SignupScreenState extends State<SignupScreen> {
       );
 
       Navigator.pushNamed(context, '/login');
+      return;
     }
+
+    await ref
+        .read(authProvider.notifier)
+        .register(email, password, username, '');
   }
 
   @override
   Widget build(BuildContext context) {
+    final authState = kUseMockAuth ? null : ref.watch(authProvider);
+    final isLoading = authState?.isLoading ?? false;
+    final errorMessage = authState?.error;
+
+    if (!kUseMockAuth) {
+      ref.listen<AuthState>(authProvider, (prev, next) {
+        if (!_navigatedFromProvider &&
+            (next.successMessage ?? '').isNotEmpty) {
+          _navigatedFromProvider = true;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(next.successMessage!)),
+          );
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/login',
+            (route) => route.settings.name == '/',
+          );
+        }
+      });
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Create account')),
@@ -125,6 +159,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(height: AppDimensions.spaceMedium),
 
                 TextFormField(
+                  key: const Key('signup.email'),
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
                   style: AppTextStyles.trackTitle,
@@ -143,7 +178,28 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: AppDimensions.spaceMedium),
 
+                if (!kUseMockAuth) ...[
+                  TextFormField(
+                    key: const Key('signup.username'),
+                    controller: usernameController,
+                    style: AppTextStyles.trackTitle,
+                    decoration: buildInputDecoration('Username'),
+                    validator: (value) {
+                      final username = value?.trim() ?? '';
+                      if (username.isEmpty) {
+                        return 'Username is required';
+                      }
+                      if (username.length < 3 || username.length > 20) {
+                        return 'Username must be 3-20 characters';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: AppDimensions.spaceMedium),
+                ],
+
                 TextFormField(
+                  key: const Key('signup.password'),
                   controller: passwordController,
                   obscureText: true,
                   style: AppTextStyles.trackTitle,
@@ -181,11 +237,33 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: AppDimensions.spaceLarge),
 
+                if (errorMessage != null && errorMessage.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: AppDimensions.spaceSmall,
+                    ),
+                    child: Text(
+                      errorMessage,
+                      key: const Key('signup.error'),
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: handleSignup,
-                    child: const Text('Create account'),
+                    key: const Key('signup.submit'),
+                    onPressed: isLoading ? null : handleSignup,
+                    child: isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Create account'),
                   ),
                 ),
 

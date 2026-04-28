@@ -4,7 +4,7 @@ import '../helpers/app_test_helpers.dart';
 
 void main() {
   ensureBinding();
-
+ 
   group('authentication', () {
     testWidgets('launches welcome screen and supports auth entry navigation', (
       tester,

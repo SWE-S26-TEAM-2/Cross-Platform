@@ -25,6 +25,7 @@ class MiniPlayer extends StatelessWidget {
         bottom: AppDimensions.spaceMedium,
       ),
       child: Container(
+        key: const Key('miniPlayer.root'),
         padding: const EdgeInsets.all(AppDimensions.spaceSmall),
         height: AppDimensions.miniPlayerBarHeight,
         // decoration: const BoxDecoration(
@@ -43,6 +44,7 @@ class MiniPlayer extends StatelessWidget {
         child: Row(
           children: [
             GestureDetector(
+              key: const Key('miniPlayer.playPause'),
               onTap: onPlay,
               child: Container(
                 margin: const EdgeInsets.all(AppDimensions.spaceExtraSmall),
@@ -68,7 +70,11 @@ class MiniPlayer extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(track.title, style: AppTextStyles.trackTitle),
+                  Text(
+                    track.title,
+                    key: const Key('miniPlayer.title'),
+                    style: AppTextStyles.trackTitle,
+                  ),
                   Text(track.artist, style: AppTextStyles.artistName),
                 ],
               ),
@@ -77,6 +83,7 @@ class MiniPlayer extends StatelessWidget {
             const SizedBox(width: AppDimensions.spaceSmall),
             const Icon(
               Icons.favorite_border,
+              key: Key('miniPlayer.favorite'),
               color: AppColors.textPrimary,
               size: 28,
             ),

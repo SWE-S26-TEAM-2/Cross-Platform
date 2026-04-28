@@ -46,11 +46,22 @@ class _SearchScreenState extends State<SearchScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SearchBar1(
+                key: const Key('search.field'),
                 controller: _controller,
                 onChanged: _filterTracks
               ),
+              if (_controller.text.isNotEmpty && filteredTracks.isEmpty)
+                const Padding(
+                  key: Key('search.empty'),
+                  padding: EdgeInsets.all(AppDimensions.spaceMedium),
+                  child: Text(
+                    'No tracks match your search',
+                    style: AppTextStyles.artistName,
+                  ),
+                ),
               Expanded(
               child: ListView(
+                key: const Key('search.results'),
                 children: filteredTracks.map(
                   (track) => Material(
                     color: AppColors.background,

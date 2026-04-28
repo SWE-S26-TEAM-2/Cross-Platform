@@ -38,6 +38,7 @@ class WelcomeScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
+                  key: const Key('welcome.signup'),
                   onPressed: () {
                     Navigator.pushNamed(context, '/signup');
                   },
@@ -51,6 +52,7 @@ class WelcomeScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
+                  key: const Key('welcome.login'),
                   onPressed: () {
                     Navigator.pushNamed(context, '/login');
                   },

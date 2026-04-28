@@ -50,4 +50,9 @@ class MockAuthService {
 
     return null;
   }
+
+  /// Mock logout. The mock does not persist any session state, so this is a
+  /// no-op kept for parity with [AuthService.logout] / [AuthNotifier.logout]
+  /// so callers can swap implementations behind `kUseMockAuth`.
+  void logout() {}
 }

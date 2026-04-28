@@ -94,7 +94,8 @@ class ProfileHeaderSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                user.userName ?? '',
+                user.userName ?? user.email,
+                key: const Key('profile.username'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
@@ -125,6 +126,7 @@ class ProfileHeaderSection extends StatelessWidget {
               Row(
                 children: [
                   IconButton(
+                    key: const Key('profile.followBtn'),
                     onPressed: onEditPressed,
                     icon: Icon(
                       Icons.edit_outlined,

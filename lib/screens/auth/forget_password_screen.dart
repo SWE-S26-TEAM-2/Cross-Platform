@@ -59,6 +59,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return regex.hasMatch(email);
   }
 
+  String? _resetError;
+  String? _resetSuccess;
+
   void handleReset() {
     if (_formKey.currentState!.validate()) {
       final email = emailController.text.trim();
@@ -66,6 +69,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       final exists = authService.emailExists(email);
 
       if (!exists) {
+        setState(() {
+          _resetError = 'No account found with this email';
+          _resetSuccess = null;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('No account found with this email'),
@@ -73,6 +80,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         );
         return;
       }
+
+      setState(() {
+        _resetError = null;
+        _resetSuccess = 'Check your email for reset instructions';
+      });
 
       Navigator.push(
         context,
@@ -110,6 +122,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                 /// EMAIL FIELD
                 TextFormField(
+                  key: const Key('forgot.email'),
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
                   style: AppTextStyles.trackTitle,
@@ -127,11 +140,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   },
                 ),
 
+                if (_resetError != null) ...[
+                  const SizedBox(height: AppDimensions.spaceSmall),
+                  Text(
+                    _resetError!,
+                    key: const Key('forgot.error'),
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ],
+
+                if (_resetSuccess != null) ...[
+                  const SizedBox(height: AppDimensions.spaceSmall),
+                  Text(
+                    _resetSuccess!,
+                    key: const Key('forgot.success'),
+                    style: const TextStyle(color: AppColors.primary),
+                  ),
+                ],
+
                 const SizedBox(height: AppDimensions.spaceLarge),
 
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
+                    key: const Key('forgot.submit'),
                     onPressed: handleReset,
                     child: const Text('Change password'),
                   ),

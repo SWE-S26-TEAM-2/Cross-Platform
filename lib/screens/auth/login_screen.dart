@@ -1,23 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
+import '../../main.dart' show kUseMockAuth;
+import '../../providers/auth_providers.dart';
 import '../../services/mock_auth_service.dart';
 import '../../widgets/social_buttons.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final MockAuthService authService = MockAuthService();
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  bool _navigatedFromProvider = false;
 
   @override
   void dispose() {
@@ -56,11 +61,12 @@ class _LoginScreenState extends State<LoginScreen> {
     return regex.hasMatch(email);
   }
 
-  void handleLogin() {
-    if (_formKey.currentState!.validate()) {
-      final email = emailController.text.trim();
-      final password = passwordController.text;
+  Future<void> handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+    final email = emailController.text.trim();
+    final password = passwordController.text;
 
+    if (kUseMockAuth) {
       final success = authService.login(email, password);
 
       if (!success) {
@@ -75,11 +81,29 @@ class _LoginScreenState extends State<LoginScreen> {
       ).showSnackBar(const SnackBar(content: Text('Login successful')));
 
       Navigator.pushNamed(context, '/root');
+      return;
     }
+
+    await ref.read(authProvider.notifier).login(email, password);
   }
 
   @override
   Widget build(BuildContext context) {
+    final authState = kUseMockAuth ? null : ref.watch(authProvider);
+    final isLoading = authState?.isLoading ?? false;
+    final errorMessage = authState?.error;
+
+    if (!kUseMockAuth) {
+      ref.listen<AuthState>(authProvider, (prev, next) {
+        if (!_navigatedFromProvider && next.isLoggedIn) {
+          _navigatedFromProvider = true;
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil('/root', (_) => false);
+        }
+      });
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Log in')),
@@ -115,6 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: AppDimensions.spaceMedium),
                 TextFormField(
+                  key: const Key('login.email'),
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
                   style: AppTextStyles.trackTitle,
@@ -134,6 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: AppDimensions.spaceMedium),
 
                 TextFormField(
+                  key: const Key('login.password'),
                   controller: passwordController,
                   obscureText: true,
                   style: AppTextStyles.trackTitle,
@@ -152,9 +178,22 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: AppDimensions.spaceSmall),
 
+                if (errorMessage != null && errorMessage.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      top: AppDimensions.spaceExtraSmall,
+                    ),
+                    child: Text(
+                      errorMessage,
+                      key: const Key('login.error'),
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
+                    key: const Key('login.forgot'),
                     onPressed: () {
                       Navigator.pushNamed(context, '/forgot_password');
                     },
@@ -173,8 +212,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: handleLogin,
-                    child: const Text('Log in'),
+                    key: const Key('login.submit'),
+                    onPressed: isLoading ? null : handleLogin,
+                    child: isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Log in'),
                   ),
                 ),
 

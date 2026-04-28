@@ -52,6 +52,7 @@ class _BottomNavBarView extends StatelessWidget {
         children: [
           /// Home
           GestureDetector(
+            key: const Key('nav.home'),
             onTap: () => onTap(0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -78,6 +79,7 @@ class _BottomNavBarView extends StatelessWidget {
 
           /// Feed
           GestureDetector(
+            key: const Key('nav.feed'),
             onTap: () => onTap(1),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -106,6 +108,7 @@ class _BottomNavBarView extends StatelessWidget {
 
           /// Search
           GestureDetector(
+            key: const Key('nav.search'),
             onTap: () => onTap(2),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -132,6 +135,7 @@ class _BottomNavBarView extends StatelessWidget {
 
           /// Library
           GestureDetector(
+            key: const Key('nav.library'),
             onTap: () => onTap(3),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -160,6 +164,7 @@ class _BottomNavBarView extends StatelessWidget {
 
           /// Upgrade
           GestureDetector(
+            key: const Key('nav.upgrade'),
             onTap: () => onTap(4),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

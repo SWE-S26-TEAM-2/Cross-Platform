@@ -12,6 +12,7 @@ class SocialButtons extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
+            key: const Key('login.google'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: Colors.black,
@@ -54,6 +55,7 @@ class SocialButtons extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
+            key: const Key('login.facebook'),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF1877F2), // Facebook blue
               foregroundColor: Colors.white,
