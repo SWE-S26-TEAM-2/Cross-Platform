@@ -38,7 +38,8 @@ class Album {
       id: json['album_id']?.toString() ?? json['id']?.toString() ?? '',
       title: json['title']?.toString() ?? 'Untitled Album',
       // The API returns the uploader's info nested or flat — fall back chain
-      artist: json['artist']?.toString() ??
+      artist:
+          json['artist']?.toString() ??
           json['display_name']?.toString() ??
           json['owner']?.toString() ??
           'Unknown Artist',
@@ -54,10 +55,8 @@ class Album {
       likeCount: json['like_count'] is int
           ? json['like_count']
           : int.tryParse(json['like_count']?.toString() ?? '') ?? 0,
-      trackIds: (json['track_ids'] as List?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
+      trackIds:
+          (json['track_ids'] as List?)?.map((e) => e.toString()).toList() ?? [],
     );
   }
 }
