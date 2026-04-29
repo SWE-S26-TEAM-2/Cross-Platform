@@ -49,7 +49,7 @@ class SoundCloudApp extends StatelessWidget {
           final args = settings.arguments;
           final email = args is String ? args : '';
           return MaterialPageRoute(
-            builder: (_) => ChangePasswordScreen(email: email),
+            builder: (_) => ResetPasswordScreen(email: email),
             settings: settings,
           );
         }
