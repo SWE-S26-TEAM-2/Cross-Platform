@@ -1,23 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:my_project/screens/auth/change_password_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_dimensions.dart';
 import '../../constants/app_text_styles.dart';
-import '../../services/mock_auth_service.dart';
+import '../../providers/auth_providers.dart';
 import 'change_password_screen.dart';
 
-class ForgotPasswordScreen extends StatefulWidget {
+class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  State<ForgotPasswordScreen> createState() =>
+  ConsumerState<ForgotPasswordScreen> createState() =>
       _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final MockAuthService authService = MockAuthService();
-
   final TextEditingController emailController = TextEditingController();
 
   @override
@@ -33,18 +31,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       filled: true,
       fillColor: AppColors.surfaceLight,
       border: OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(AppDimensions.borderRadiusMedium),
+        borderRadius: BorderRadius.circular(AppDimensions.borderRadiusMedium),
         borderSide: BorderSide.none,
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(AppDimensions.borderRadiusMedium),
+        borderRadius: BorderRadius.circular(AppDimensions.borderRadiusMedium),
         borderSide: const BorderSide(color: Colors.red),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(AppDimensions.borderRadiusMedium),
+        borderRadius: BorderRadius.circular(AppDimensions.borderRadiusMedium),
         borderSide: const BorderSide(color: Colors.red),
       ),
       contentPadding: const EdgeInsets.symmetric(
@@ -59,48 +54,53 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return regex.hasMatch(email);
   }
 
-  String? _resetError;
-  String? _resetSuccess;
+  String extractBackendMessage(String error) {
+    final lower = error.toLowerCase();
 
-  void handleReset() {
-    if (_formKey.currentState!.validate()) {
-      final email = emailController.text.trim();
+    if (lower.contains('429')) {
+      return 'Too many reset requests. Please try again later.';
+    }
 
-      final exists = authService.emailExists(email);
+    return error;
+  }
 
-      if (!exists) {
-        setState(() {
-          _resetError = 'No account found with this email';
-          _resetSuccess = null;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No account found with this email'),
-          ),
-        );
-        return;
-      }
+  Future<void> handleForgotPassword() async {
+    if (!_formKey.currentState!.validate()) return;
 
-      setState(() {
-        _resetError = null;
-        _resetSuccess = 'Check your email for reset instructions';
-      });
+    final email = emailController.text.trim();
+
+    await ref.read(authProvider.notifier).forgotPassword(email);
+
+    final authState = ref.read(authProvider);
+
+    if (!mounted) return;
+
+    if (authState.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(extractBackendMessage(authState.error!))),
+      );
+      return;
+    }
+
+    if (authState.successMessage != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(authState.successMessage!)));
 
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => ChangePasswordScreen(email: email),),
+        MaterialPageRoute(builder: (_) => ResetPasswordScreen(email: email)),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Forgot password'),
-      ),
+      appBar: AppBar(title: const Text('Forgot password')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.spaceMedium),
@@ -115,12 +115,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
                 const SizedBox(height: AppDimensions.spaceSmall),
                 const Text(
-                  'Enter your email address and we will send you instructions to reset your password.',
+                  'Enter your email address and we will send you a reset token.',
                   style: AppTextStyles.artistName,
                 ),
                 const SizedBox(height: AppDimensions.spaceLarge),
 
-                /// EMAIL FIELD
                 TextFormField(
                   key: const Key('forgot.email'),
                   controller: emailController,
@@ -140,32 +139,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   },
                 ),
 
-                if (_resetError != null) ...[
-                  const SizedBox(height: AppDimensions.spaceSmall),
-                  Text(
-                    _resetError!,
-                    key: const Key('forgot.error'),
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                ],
-
-                if (_resetSuccess != null) ...[
-                  const SizedBox(height: AppDimensions.spaceSmall),
-                  Text(
-                    _resetSuccess!,
-                    key: const Key('forgot.success'),
-                    style: const TextStyle(color: AppColors.primary),
-                  ),
-                ],
-
                 const SizedBox(height: AppDimensions.spaceLarge),
 
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     key: const Key('forgot.submit'),
-                    onPressed: handleReset,
-                    child: const Text('Change password'),
+                    onPressed: authState.isLoading
+                        ? null
+                        : handleForgotPassword,
+                    child: authState.isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Send reset link'),
                   ),
                 ),
 

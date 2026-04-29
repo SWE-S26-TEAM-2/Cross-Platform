@@ -85,11 +85,9 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
   }
 
   void _openRestrictionsScreen(UpgradePlan plan) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => RestrictionsScreen(plan: plan),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => RestrictionsScreen(plan: plan)));
   }
 
   @override
@@ -192,7 +190,9 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
                                       onSubscribePressed: () =>
                                           _onSubscribePressed(_plans[index]),
                                       onRestrictionsPressed: () =>
-                                          _openRestrictionsScreen(_plans[index]),
+                                          _openRestrictionsScreen(
+                                            _plans[index],
+                                          ),
                                     ),
                                   ),
                                 ),

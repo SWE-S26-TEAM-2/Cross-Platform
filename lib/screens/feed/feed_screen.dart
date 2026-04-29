@@ -16,55 +16,60 @@ class _FeedScreenState extends State<FeedScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
-        title: const Text("Feed"),
-        ),
+        appBar: AppBar(title: const Text("Feed")),
         body: Column(
           children: [
             const Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppDimensions.spaceSmall),
+              padding: EdgeInsets.symmetric(
+                horizontal: AppDimensions.spaceSmall,
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spaceExtraLarge),
-                decoration: const BoxDecoration(
-                  color: AppColors.background,
-                ),
-                child: TabBar(
-                  indicator: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppDimensions.borderRadiusPill),
-                    color: AppColors.surfaceLight,
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.spaceExtraLarge,
+              ),
+              decoration: const BoxDecoration(color: AppColors.background),
+              child: TabBar(
+                indicator: BoxDecoration(
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.borderRadiusPill,
                   ),
-                   labelColor: AppColors.textPrimary,
-                   labelStyle: AppTextStyles.button,
-                   dividerColor: AppColors.background,
-                   padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.spaceExtraLarge
-                   ),
-                   overlayColor: const WidgetStatePropertyAll(AppColors.background),
-              //unselectedLabelColor: Colors.grey,
-              tabs: const [
-                Tab(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: AppDimensions.spaceSmall,
-                      horizontal: AppDimensions.spaceMedium
-                    ),
+                  color: AppColors.surfaceLight,
+                ),
+                labelColor: AppColors.textPrimary,
+                labelStyle: AppTextStyles.button,
+                dividerColor: AppColors.background,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.spaceExtraLarge,
+                ),
+                overlayColor: const WidgetStatePropertyAll(
+                  AppColors.background,
+                ),
+                //unselectedLabelColor: Colors.grey,
+                tabs: const [
+                  Tab(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: AppDimensions.spaceSmall,
+                        horizontal: AppDimensions.spaceMedium,
+                      ),
                       child: Text('Following'),
-                  ),
-                ),
-                Tab( child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: AppDimensions.spaceSmall,
-                      horizontal: AppDimensions.spaceMedium
                     ),
+                  ),
+                  Tab(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: AppDimensions.spaceSmall,
+                        horizontal: AppDimensions.spaceMedium,
+                      ),
                       child: Text('Discover'),
-                  ),),
-              ]
-                ),
-              ),     
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
-          ),
-
+        ),
       ),
     );
   }

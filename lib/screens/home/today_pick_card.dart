@@ -49,9 +49,11 @@ class TodayPickCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(
                           AppDimensions.borderRadiusSmall,
                         ),
-                        child: track.artworkUrl.isNotEmpty
+                        child:
+                            (track.coverImageUrl != null &&
+                                track.coverImageUrl!.isNotEmpty)
                             ? Image.network(
-                                track.artworkUrl,
+                                track.coverImageUrl!,
                                 width: 72,
                                 height: 72,
                                 fit: BoxFit.cover,
@@ -74,7 +76,7 @@ class TodayPickCard extends StatelessWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              track.artist,
+                              track.artist?.displayName ?? 'Unknown Artist',
                               style: AppTextStyles.artistName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,

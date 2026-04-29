@@ -97,10 +97,7 @@ class ProfileCompletionSection extends StatelessWidget {
               IconButton(
                 onPressed: onToggleExpanded,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(
-                  minWidth: 28,
-                  minHeight: 28,
-                ),
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                 splashRadius: 18,
                 icon: Icon(
                   isExpanded
@@ -182,11 +179,7 @@ class ProfileCompletionCard extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 2),
                   ),
-                  child: Icon(
-                    card.icon,
-                    size: iconSize,
-                    color: Colors.white,
-                  ),
+                  child: Icon(card.icon, size: iconSize, color: Colors.white),
                 ),
                 if (card.isCompleted)
                   Positioned(

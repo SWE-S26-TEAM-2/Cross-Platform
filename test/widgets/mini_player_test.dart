@@ -6,242 +6,178 @@ import 'package:my_project/models/track.dart';
 /// MINI PLAYER WIDGET TESTS
 ///
 /// Coverage: WGT-007 (MiniPlayer widget renders when track is active)
-/// Verifies that the mini player displays track information correctly
-/// and responds to user interaction.
-///
-/// The MiniPlayer is always visible after login at the bottom of the screen.
+/// Updated post-merge: Track model changed from flat artist String to
+/// TrackArtist object; MiniPlayer requires onOpenFullPlayer callback.
+
+Track _makeTrack({
+  String trackId = 'test-1',
+  String title = 'Test Track Title',
+  String artistDisplayName = 'Test Artist Name',
+}) {
+  return Track(
+    trackId: trackId,
+    title: title,
+    streamUrl: 'https://example.com/audio.mp3',
+    artist: TrackArtist(
+      userId: 'u1',
+      username: 'testuser',
+      displayName: artistDisplayName,
+      followerCount: 0,
+    ),
+    visibility: 'public',
+    processingStatus: 'ready',
+    playCount: 0,
+  );
+}
 
 void main() {
-  // Test fixture: mock track
-  const testTrack = Track(
-    id: 'test-1',
-    title: 'Test Track Title',
-    artist: 'Test Artist Name',
-    artworkUrl: 'https://example.com/artwork.png',
-    likeCount: 1000,
-    duration: 180,
-    audioPath: 'assets/audio/test.mp3',
-  );
+  final testTrack = _makeTrack();
+
+  Widget _wrap(MiniPlayer player) =>
+      MaterialApp(home: Scaffold(body: player));
 
   group('MiniPlayer widget', () {
     testWidgets('renders track title and artist', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: MiniPlayer(
-              track: testTrack,
-              isPlaying: false,
-              onPlay: () {},
-            ),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_wrap(MiniPlayer(
+        track: testTrack,
+        isPlaying: false,
+        onPlay: () {},
+        onOpenFullPlayer: () {},
+      )));
 
-      // Verify track information is displayed
       expect(find.text('Test Track Title'), findsOneWidget);
       expect(find.text('Test Artist Name'), findsOneWidget);
     });
 
     testWidgets('shows play icon when not playing', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: MiniPlayer(
-              track: testTrack,
-              isPlaying: false,
-              onPlay: () {},
-            ),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_wrap(MiniPlayer(
+        track: testTrack,
+        isPlaying: false,
+        onPlay: () {},
+        onOpenFullPlayer: () {},
+      )));
 
-      // Verify play icon is shown
       expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
       expect(find.byIcon(Icons.pause_rounded), findsNothing);
     });
 
     testWidgets('shows pause icon when playing', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: MiniPlayer(
-              track: testTrack,
-              isPlaying: true,
-              onPlay: () {},
-            ),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_wrap(MiniPlayer(
+        track: testTrack,
+        isPlaying: true,
+        onPlay: () {},
+        onOpenFullPlayer: () {},
+      )));
 
-      // Verify pause icon is shown
       expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
       expect(find.byIcon(Icons.play_arrow_rounded), findsNothing);
     });
 
-    testWidgets('tapping play button triggers onPlay callback', (
-      tester,
-    ) async {
+    testWidgets('tapping play button triggers onPlay callback', (tester) async {
       var callbackFired = false;
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: MiniPlayer(
-              track: testTrack,
-              isPlaying: false,
-              onPlay: () {
-                callbackFired = true;
-              },
-            ),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_wrap(MiniPlayer(
+        track: testTrack,
+        isPlaying: false,
+        onPlay: () { callbackFired = true; },
+        onOpenFullPlayer: () {},
+      )));
 
-      // Find and tap the play button
-      final playButton = find.byIcon(Icons.play_arrow_rounded);
-      await tester.tap(playButton);
+      await tester.tap(find.byKey(const Key('miniPlayer.playPause')));
       await tester.pumpAndSettle();
 
-      // Verify callback was triggered
       expect(callbackFired, isTrue);
     });
 
-    testWidgets('tapping pause button triggers onPlay callback', (
-      tester,
-    ) async {
+    testWidgets('tapping pause button triggers onPlay callback', (tester) async {
       var callbackFired = false;
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: MiniPlayer(
-              track: testTrack,
-              isPlaying: true,
-              onPlay: () {
-                callbackFired = true;
-              },
-            ),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_wrap(MiniPlayer(
+        track: testTrack,
+        isPlaying: true,
+        onPlay: () { callbackFired = true; },
+        onOpenFullPlayer: () {},
+      )));
 
-      // Find and tap the pause button
-      final pauseButton = find.byIcon(Icons.pause_rounded);
-      await tester.tap(pauseButton);
+      await tester.tap(find.byKey(const Key('miniPlayer.playPause')));
       await tester.pumpAndSettle();
 
-      // Verify callback was triggered
       expect(callbackFired, isTrue);
     });
 
-    testWidgets('displays additional controls (cast and favorite)', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: MiniPlayer(
-              track: testTrack,
-              isPlaying: false,
-              onPlay: () {},
-            ),
-          ),
-        ),
-      );
+    testWidgets('displays additional controls (cast and favorite)', (tester) async {
+      await tester.pumpWidget(_wrap(MiniPlayer(
+        track: testTrack,
+        isPlaying: false,
+        onPlay: () {},
+        onOpenFullPlayer: () {},
+      )));
 
-      // Verify additional control icons are present
       expect(find.byIcon(Icons.phone_android), findsOneWidget);
       expect(find.byIcon(Icons.favorite_border), findsOneWidget);
     });
 
     testWidgets('updates UI when isPlaying state changes', (tester) async {
-      // Start with not playing
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: MiniPlayer(
-              track: testTrack,
-              isPlaying: false,
-              onPlay: () {},
-            ),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_wrap(MiniPlayer(
+        track: testTrack,
+        isPlaying: false,
+        onPlay: () {},
+        onOpenFullPlayer: () {},
+      )));
 
       expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
 
-      // Rebuild with playing state
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: MiniPlayer(
-              track: testTrack,
-              isPlaying: true,
-              onPlay: () {},
-            ),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_wrap(MiniPlayer(
+        track: testTrack,
+        isPlaying: true,
+        onPlay: () {},
+        onOpenFullPlayer: () {},
+      )));
 
-      // Icon should update
       expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
       expect(find.byIcon(Icons.play_arrow_rounded), findsNothing);
     });
 
     testWidgets('updates track info when track prop changes', (tester) async {
-      const firstTrack = Track(
-        id: 'track-1',
-        title: 'First Track',
-        artist: 'First Artist',
-        artworkUrl: '',
-        likeCount: 0,
-        duration: 100,
-        audioPath: '',
-      );
+      final firstTrack = _makeTrack(trackId: 'track-1', title: 'First Track', artistDisplayName: 'First Artist');
+      final secondTrack = _makeTrack(trackId: 'track-2', title: 'Second Track', artistDisplayName: 'Second Artist');
 
-      const secondTrack = Track(
-        id: 'track-2',
-        title: 'Second Track',
-        artist: 'Second Artist',
-        artworkUrl: '',
-        likeCount: 0,
-        duration: 100,
-        audioPath: '',
-      );
-
-      // Render with first track
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: MiniPlayer(
-              track: firstTrack,
-              isPlaying: false,
-              onPlay: () {},
-            ),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_wrap(MiniPlayer(
+        track: firstTrack,
+        isPlaying: false,
+        onPlay: () {},
+        onOpenFullPlayer: () {},
+      )));
 
       expect(find.text('First Track'), findsOneWidget);
       expect(find.text('First Artist'), findsOneWidget);
 
-      // Rebuild with second track
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: MiniPlayer(
-              track: secondTrack,
-              isPlaying: false,
-              onPlay: () {},
-            ),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_wrap(MiniPlayer(
+        track: secondTrack,
+        isPlaying: false,
+        onPlay: () {},
+        onOpenFullPlayer: () {},
+      )));
 
-      // Track info should update
       expect(find.text('Second Track'), findsOneWidget);
       expect(find.text('Second Artist'), findsOneWidget);
       expect(find.text('First Track'), findsNothing);
+    });
+
+    testWidgets('tapping player body triggers onOpenFullPlayer', (tester) async {
+      var opened = false;
+
+      await tester.pumpWidget(_wrap(MiniPlayer(
+        track: testTrack,
+        isPlaying: false,
+        onPlay: () {},
+        onOpenFullPlayer: () { opened = true; },
+      )));
+
+      await tester.tap(find.byKey(const Key('miniPlayer.title')));
+      await tester.pumpAndSettle();
+
+      expect(opened, isTrue);
     });
   });
 }

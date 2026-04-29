@@ -49,9 +49,11 @@ class MoreLikeSection extends StatelessWidget {
                             borderRadius: BorderRadius.circular(
                               AppDimensions.borderRadiusSmall,
                             ),
-                            child: tracks[i].artworkUrl.isNotEmpty
+                            child:
+                                (tracks[i].coverImageUrl != null &&
+                                    tracks[i].coverImageUrl!.isNotEmpty)
                                 ? Image.network(
-                                    tracks[i].artworkUrl,
+                                    tracks[i].coverImageUrl!,
                                     width: 150,
                                     height: 130,
                                     fit: BoxFit.cover,
@@ -71,7 +73,7 @@ class MoreLikeSection extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            tracks[i].artist,
+                            tracks[i].artist?.displayName ?? 'Unknown Artist',
                             style: AppTextStyles.caption,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

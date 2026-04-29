@@ -71,18 +71,18 @@ class ProfileHeaderSection extends StatelessWidget {
                 backgroundColor: Colors.grey[800],
                 backgroundImage:
                     (user.avatarUrl != null &&
-                            user.avatarUrl.toString().isNotEmpty)
-                        ? NetworkImage(user.avatarUrl!)
-                        : null,
+                        user.avatarUrl.toString().isNotEmpty)
+                    ? NetworkImage(user.avatarUrl!)
+                    : null,
                 child:
                     (user.avatarUrl == null ||
-                            user.avatarUrl.toString().isEmpty)
-                        ? Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: avatarRadius,
-                          )
-                        : null,
+                        user.avatarUrl.toString().isEmpty)
+                    ? Icon(
+                        Icons.person,
+                        color: Colors.white,
+                        size: avatarRadius,
+                      )
+                    : null,
               ),
             ),
           ],

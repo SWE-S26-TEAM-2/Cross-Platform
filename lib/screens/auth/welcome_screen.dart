@@ -16,7 +16,7 @@ class WelcomeScreen extends StatelessWidget {
           child: Column(
             children: [
               const Spacer(),
-              
+
               const Image(
                 image: AssetImage('assets/images/soundcloud_logo.png'),
                 width: 120,

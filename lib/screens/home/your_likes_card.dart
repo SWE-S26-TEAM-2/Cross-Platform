@@ -105,7 +105,7 @@ class YourLikesCard extends StatelessWidget {
                 _TrackGridTile(
                   key: Key('home.trackTile.${track.id}'),
                   title: track.title,
-                  artist: track.artist,
+                  artist: track.artist?.displayName ?? 'Unknown Artist',
                   track: track,
                   onTrackTap: onTrackTap,
                 ),

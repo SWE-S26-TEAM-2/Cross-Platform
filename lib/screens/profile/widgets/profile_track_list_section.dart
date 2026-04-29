@@ -79,6 +79,7 @@ class ProfileTrackListSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
+
         ListView.separated(
           itemCount: tracks.length,
           shrinkWrap: true,
@@ -87,6 +88,12 @@ class ProfileTrackListSection extends StatelessWidget {
           separatorBuilder: (_, __) => const SizedBox(height: 14),
           itemBuilder: (context, index) {
             final track = tracks[index];
+
+            final imageUrl = track.coverImageUrl;
+            final artistName = track.artist?.displayName ?? 'Unknown Artist';
+            final likes = track.likeCount ?? 0;
+            final duration = track.durationSeconds ?? 0;
+
             return GestureDetector(
               onTap: () => onTrackTap?.call(track),
               child: Row(
@@ -94,9 +101,9 @@ class ProfileTrackListSection extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(6),
-                    child: track.artworkUrl.isNotEmpty
+                    child: (imageUrl != null && imageUrl.isNotEmpty)
                         ? Image.network(
-                            track.artworkUrl,
+                            imageUrl,
                             width: 58,
                             height: 58,
                             fit: BoxFit.cover,
@@ -105,7 +112,9 @@ class ProfileTrackListSection extends StatelessWidget {
                           )
                         : const _TrackThumbPlaceholder(),
                   ),
+
                   const SizedBox(width: 12),
+
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(top: 2),
@@ -118,44 +127,43 @@ class ProfileTrackListSection extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize:
-                                  (screenWidth * 0.046).clamp(14.0, 17.0),
+                              fontSize: (screenWidth * 0.046).clamp(14.0, 17.0),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(height: 3),
+
                           Text(
-                            track.artist,
+                            artistName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: Colors.grey[400],
-                              fontSize:
-                                  (screenWidth * 0.04).clamp(13.0, 15.0),
+                              fontSize: (screenWidth * 0.04).clamp(13.0, 15.0),
                             ),
                           ),
+
                           const SizedBox(height: 4),
+
                           Text(
-                            '▶ ${_formatCount(track.likeCount)} · ${_formatDuration(track.duration)}',
+                            '▶ ${_formatCount(likes)} · ${_formatDuration(duration)}',
                             style: TextStyle(
                               color: Colors.grey[500],
-                              fontSize:
-                                  (screenWidth * 0.037).clamp(12.0, 14.0),
+                              fontSize: (screenWidth * 0.037).clamp(12.0, 14.0),
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
+
                   const SizedBox(width: 8),
+
                   GestureDetector(
                     onTap: () => onMoreTap?.call(track),
                     child: const Padding(
                       padding: EdgeInsets.only(top: 6),
-                      child: Icon(
-                        Icons.more_horiz,
-                        color: Colors.white70,
-                      ),
+                      child: Icon(Icons.more_horiz, color: Colors.white70),
                     ),
                   ),
                 ],

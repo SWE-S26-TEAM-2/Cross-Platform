@@ -8,6 +8,8 @@ import 'screens/auth/login_screen.dart';
 import 'screens/auth/forget_password_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/auth/change_password_screen.dart';
+import 'screens/library/collections_screen.dart';
+import 'screens/auth/verify_email_screen.dart';
 
 /// Compile-time flag controlling whether auth flows use the in-memory mock
 /// service (default) or the real Dio-backed [AuthService] via Riverpod.
@@ -21,7 +23,7 @@ const bool kUseMockAuth = bool.fromEnvironment(
 );
 
 void main() {
-  runApp(const ProviderScope(child: SoundCloudApp()));
+  runApp(ProviderScope(child: const SoundCloudApp()));
 }
 
 class SoundCloudApp extends StatelessWidget {

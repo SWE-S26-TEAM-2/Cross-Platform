@@ -19,6 +19,7 @@ class AuthState {
     this.error,
     this.successMessage,
   });
+
   bool get isLoggedIn => tokens != null;
 }
 
@@ -28,15 +29,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   AuthNotifier(this._authService, this._userService) : super(const AuthState());
 
-  Future<void> register(
-    String email,
-    String password,
-    String username,
-    String captchaToken,
-  ) async {
+  // register now requires username
+  Future<void> register({
+    required String email,
+    required String username,
+    required String password,
+    required String displayName,
+    String accountType = 'listener',
+  }) async {
     state = const AuthState(isLoading: true);
     try {
-      await _authService.register(email, password, username, captchaToken);
+      await _authService.register(
+        email: email,
+        username: username,
+        password: password,
+        displayName: displayName,
+        accountType: accountType,
+      );
       state = const AuthState(
         successMessage: 'Account created! Check your email to verify.',
       );
@@ -67,10 +76,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> login(String email, String password) async {
+  // identifier can be email or username - matches API's LoginRequest
+  Future<void> login(String identifier, String password) async {
     state = const AuthState(isLoading: true);
     try {
-      final tokens = await _authService.login(email, password);
+      final tokens = await _authService.login(identifier, password);
       final user = await _userService.getMe(tokens.accessToken);
       state = AuthState(tokens: tokens, user: user);
     } catch (e) {
@@ -89,6 +99,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> facebookLogin(String facebookToken) async {
+    state = const AuthState(isLoading: true);
+    try {
+      final tokens = await _authService.facebookLogin(facebookToken);
+      final user = await _userService.getMe(tokens.accessToken);
+      state = AuthState(tokens: tokens, user: user);
+    } catch (e) {
+      state = AuthState(error: e.toString());
+    }
+  }
+
   Future<void> refreshTokens() async {
     final current = state.tokens;
     if (current == null) return;
@@ -100,13 +121,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  // logout now passes both accessToken and refreshToken
   Future<void> logout() async {
-    final token = state.tokens?.accessToken;
-    if (token != null) {
+    final tokens = state.tokens;
+    if (tokens != null) {
       try {
-        await _authService.logout(token);
+        await _authService.logout(
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+        );
       } catch (_) {
-        // clear state
+        // ignore backend logout failure and clear local state
       }
     }
     state = const AuthState();
@@ -117,7 +142,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await _authService.forgotPassword(email);
       state = const AuthState(
-        successMessage: 'If that email exists, a reset link has been sent.',
+        successMessage:
+            'If an account with that email exists, a reset link has been sent.',
       );
     } catch (e) {
       state = AuthState(error: e.toString());
@@ -129,7 +155,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await _authService.resetPassword(token, newPassword);
       state = const AuthState(
-        successMessage: 'Password reset successfully. Please log in.',
+        successMessage: 'Password updated successfully. You can now log in.',
       );
     } catch (e) {
       state = AuthState(error: e.toString());
@@ -138,59 +164,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
 }
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  final authService = AuthService(dio: Dio());
-  final userService = UserService(dio: Dio());
+  final dio = Dio();
+  final authService = AuthService(dio: dio);
+  final userService = UserService(dio: dio);
   return AuthNotifier(authService, userService);
 });
-
-
-/*
-How to use Provider in any screen : 
-
-1-add thse imports:
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/auth_provider.dart';
-
-
-If you are in a stateless Widget
-        2-Change StatelessWidget to ConsumerWidget
-        class MyScreen extends ConsumerWidget {.... }
-
-        3-Change the build function and make it as follows
-        Widget build(BuildContxt context , WidgetRef ref)
-
-        4- use ref inside the build function
-
-
-          final authState = ref.watch(authProvider); ----> // read state
-              
-          final user = ref.watch(authProvider).user; ----> // read user directly
-          
-          // call actions inside handlers:
-          onPressed: () => ref.read(authProvider.notifier).logout();  
-          
-If you are in a Stateful Widget
-        2-Change StatefulWidget  to ConsumerStatefulWidget
-        
-        3- add this line at the end of the ConsumerStatefulWidget after the consturctor
-            
-            @override
-            ConsumerState<MyScreen> createState() => _MyScreenState();
-        
-        3-Change the state class to extend ConsumerState
-        
-        ***No need to add ref here it is automatically implemented
-        therefore you can always write this line:
-        
-        final authState = ref.watch(authProvider); ----> // read state
-              
-        final user = ref.watch(authProvider).user; ----> // read user directly
-
-After changng the class itslef as mentioned use the 
-      You have 2 options
-        
-      ref.watch(authProvider)           // gives you AuthState  — the DATA
-      ref.watch(authProvider.notifier)  // gives you AuthNotifier — the ACTIONS
-
-
-*/

@@ -19,8 +19,7 @@ class ProfilePlaylistsSection extends StatelessWidget {
     final double horizontalPadding = (screenWidth * 0.04).clamp(14.0, 18.0);
     final double cardWidth = (screenWidth * 0.26).clamp(96.0, 128.0);
     final double imageSize = cardWidth;
-    final double sectionTitleFontSize =
-        (screenWidth * 0.055).clamp(17.0, 21.0);
+    final double sectionTitleFontSize = (screenWidth * 0.055).clamp(17.0, 21.0);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -40,6 +39,7 @@ class ProfilePlaylistsSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
+
         SizedBox(
           height: imageSize + 60,
           child: ListView.separated(
@@ -51,19 +51,21 @@ class ProfilePlaylistsSection extends StatelessWidget {
             separatorBuilder: (_, __) => const SizedBox(width: 10),
             itemBuilder: (context, index) {
               final track = tracks[index];
+
               return GestureDetector(
                 onTap: () => onTrackTap?.call(track),
                 child: SizedBox(
                   width: cardWidth,
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(4),
-                        child: track.artworkUrl.isNotEmpty
+                        child:
+                            (track.coverImageUrl != null &&
+                                track.coverImageUrl!.isNotEmpty)
                             ? Image.network(
-                                track.artworkUrl,
+                                track.coverImageUrl!,
                                 width: imageSize,
                                 height: imageSize,
                                 fit: BoxFit.cover,
@@ -73,28 +75,30 @@ class ProfilePlaylistsSection extends StatelessWidget {
                               )
                             : _PlaylistPlaceholder(size: imageSize),
                       ),
+
                       const SizedBox(height: 6),
+
                       Text(
                         track.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize:
-                              (screenWidth * 0.038).clamp(12.0, 14.0),
+                          fontSize: (screenWidth * 0.038).clamp(12.0, 14.0),
                           fontWeight: FontWeight.w600,
                           height: 1.1,
                         ),
                       ),
+
                       const SizedBox(height: 1),
+
                       Text(
-                        track.artist,
+                        track.artist?.displayName ?? 'Unknown Artist',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: Colors.grey[400],
-                          fontSize:
-                              (screenWidth * 0.032).clamp(10.0, 12.0),
+                          fontSize: (screenWidth * 0.032).clamp(10.0, 12.0),
                           height: 1.1,
                         ),
                       ),
@@ -121,11 +125,7 @@ class _PlaylistPlaceholder extends StatelessWidget {
       width: size,
       height: size,
       color: const Color(0xFF2A2A2A),
-      child: const Icon(
-        Icons.queue_music,
-        color: Colors.white54,
-        size: 30,
-      ),
+      child: const Icon(Icons.queue_music, color: Colors.white54, size: 30),
     );
   }
 }

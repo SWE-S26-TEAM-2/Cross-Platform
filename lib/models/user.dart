@@ -1,14 +1,38 @@
+const String _apiOrigin = 'https://streamline-swp.duckdns.org';
+const String _apiBaseUrl = '$_apiOrigin/api/';
+
+String _resolveApiUrl(String path) {
+  final normalized = path.trim();
+
+  if (normalized.isEmpty) {
+    return '';
+  }
+
+  if (normalized.startsWith('http://') || normalized.startsWith('https://')) {
+    return normalized;
+  }
+
+  final trimmed = normalized.startsWith('/')
+      ? normalized.substring(1)
+      : normalized;
+
+  if (trimmed.startsWith('api/')) {
+    return '$_apiOrigin/$trimmed';
+  }
+
+  return '$_apiBaseUrl$trimmed';
+}
+
 class User {
-  /// Password to be reomved & Values to be not nullable (Not needed to be stored here in the UI)
   final String email;
   final String? id;
   final String? userName;
   final String? avatarUrl;
-  String? password;  /// For 'Change-Password' purposes it is not final.
+  String? password;
   final String? location;
   final int? followers;
   final int? following;
-
+  final String? bio;
 
   User({
     this.id,
@@ -19,15 +43,39 @@ class User {
     this.location,
     this.followers,
     this.following,
+    this.bio,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
-    id: json['id'],
-    email: json['email'],
-    userName: json['username'],
-    avatarUrl: json['avatar_url'],
-    location: json['location'],
-    followers: json['followers'],
-    following: json['following'],
-  );  
+    id: json['id']?.toString() ?? json['user_id']?.toString(),
+    email: json['email']?.toString() ?? '',
+    userName: json['username']?.toString() ?? json['display_name']?.toString(),
+    avatarUrl: (() {
+      final raw =
+          json['avatar_url']?.toString() ?? json['profile_picture']?.toString();
+
+      if (raw == null || raw.isEmpty) return null;
+      return _resolveApiUrl(raw);
+    })(),
+    location: json['location']?.toString(),
+    bio: json['bio']?.toString(),
+    followers: json['followers'] is int
+        ? json['followers']
+        : json['follower_count'] is int
+        ? json['follower_count']
+        : int.tryParse(
+            json['followers']?.toString() ??
+                json['follower_count']?.toString() ??
+                '',
+          ),
+    following: json['following'] is int
+        ? json['following']
+        : json['following_count'] is int
+        ? json['following_count']
+        : int.tryParse(
+            json['following']?.toString() ??
+                json['following_count']?.toString() ??
+                '',
+          ),
+  );
 }
