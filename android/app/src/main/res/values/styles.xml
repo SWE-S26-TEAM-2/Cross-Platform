@@ -20,3 +20,9 @@
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
 </resources>
+<resources>
+    <string name="app_name">SoundCloud</string>
+    <string name="facebook_app_id">1955839768653807</string>
+    <string name="facebook_client_token">3047f06d06a45196cd83893daeae900b</string>
+    <string name="fb_login_protocol_scheme">fb1955839768653807</string>
+</resources>
