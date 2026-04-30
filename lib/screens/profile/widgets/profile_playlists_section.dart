@@ -39,6 +39,7 @@ class ProfilePlaylistsSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
+
         SizedBox(
           height: imageSize + 60,
           child: ListView.separated(
@@ -50,19 +51,21 @@ class ProfilePlaylistsSection extends StatelessWidget {
             separatorBuilder: (_, __) => const SizedBox(width: 10),
             itemBuilder: (context, index) {
               final track = tracks[index];
+
               return GestureDetector(
                 onTap: () => onTrackTap?.call(track),
                 child: SizedBox(
                   width: cardWidth,
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(4),
-                        child: track.artworkUrl.isNotEmpty
+                        child:
+                            (track.coverImageUrl != null &&
+                                track.coverImageUrl!.isNotEmpty)
                             ? Image.network(
-                                track.artworkUrl,
+                                track.coverImageUrl!,
                                 width: imageSize,
                                 height: imageSize,
                                 fit: BoxFit.cover,
@@ -72,7 +75,9 @@ class ProfilePlaylistsSection extends StatelessWidget {
                               )
                             : _PlaylistPlaceholder(size: imageSize),
                       ),
+
                       const SizedBox(height: 6),
+
                       Text(
                         track.title,
                         maxLines: 1,
@@ -84,9 +89,11 @@ class ProfilePlaylistsSection extends StatelessWidget {
                           height: 1.1,
                         ),
                       ),
+
                       const SizedBox(height: 1),
+
                       Text(
-                        track.artist,
+                        track.artist?.displayName ?? 'Unknown Artist',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(

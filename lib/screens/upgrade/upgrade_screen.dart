@@ -1,13 +1,232 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../providers/subscription_provider.dart';
+import '../subscription/stripe_helper.dart';
 
-class UpgradeScreen extends StatefulWidget {
+// ── Payment Bottom Sheet ─────────────────────────────────────────────────────
+
+void showPaymentSheet(BuildContext context, WidgetRef ref, UpgradePlan plan) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => _PaymentBottomSheet(plan: plan, ref: ref),
+  );
+}
+
+class _PaymentBottomSheet extends StatefulWidget {
+  const _PaymentBottomSheet({required this.plan, required this.ref});
+  final UpgradePlan plan;
+  final WidgetRef ref;
+
+  @override
+  State<_PaymentBottomSheet> createState() => _PaymentBottomSheetState();
+}
+
+class _PaymentBottomSheetState extends State<_PaymentBottomSheet> {
+  bool _cardComplete = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final subState = widget.ref.watch(subscriptionProvider);
+
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF111111),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Subscribe to ${widget.plan.title}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              widget.plan.price,
+              style: TextStyle(color: Colors.grey[400], fontSize: 14),
+            ),
+            const SizedBox(height: 20),
+            CardInputWidget(
+              onCardChanged: (details) {
+                setState(() => _cardComplete = details?.complete ?? false);
+              },
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Test card: 4242 4242 4242 4242 · any future date · any CVC',
+              style: TextStyle(color: Colors.grey[600], fontSize: 11),
+            ),
+            const SizedBox(height: 24),
+            if (subState.error != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade900.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.shade700),
+                ),
+                child: Text(
+                  subState.error ?? '',
+                  style: TextStyle(color: Colors.red.shade300, fontSize: 13),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: (!_cardComplete || subState.isUpgrading)
+                    ? null
+                    : () => _handleSubscribe(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF2F2F2),
+                  disabledBackgroundColor: Colors.grey[700],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
+                child: subState.isUpgrading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.black,
+                        ),
+                      )
+                    : const Text(
+                        'Subscribe now',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleSubscribe(BuildContext context) async {
+    widget.ref.read(subscriptionProvider.notifier).clearError();
+    final token = await StripeHelper.createToken(context);
+    if (token == null || !mounted) return;
+
+    final success = await widget.ref
+        .read(subscriptionProvider.notifier)
+        .upgrade(paymentToken: token, isYearly: widget.plan.isYearly);
+
+    if (!mounted) return;
+    if (success) {
+      Navigator.of(context).pop();
+      _showSuccessDialog(context);
+    }
+  }
+
+  void _showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 60,
+              height: 60,
+              decoration: const BoxDecoration(
+                color: Color(0xFF4CD38A),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check, color: Colors.white, size: 34),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "You're Premium!",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Welcome to ${widget.plan.title}. Enjoy all premium features.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.grey[400],
+                fontSize: 13,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF5500),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                ),
+                child: const Text(
+                  'Got it',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Upgrade Screen ───────────────────────────────────────────────────────────
+
+class UpgradeScreen extends ConsumerStatefulWidget {
   const UpgradeScreen({super.key});
 
   @override
-  State<UpgradeScreen> createState() => _UpgradeScreenState();
+  ConsumerState<UpgradeScreen> createState() => _UpgradeScreenState();
 }
 
-class _UpgradeScreenState extends State<UpgradeScreen> {
+class _UpgradeScreenState extends ConsumerState<UpgradeScreen> {
   final PageController _pageController = PageController(viewportFraction: 0.9);
   int _currentPage = 0;
 
@@ -15,9 +234,10 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
     UpgradePlan(
       title: 'Artist Pro',
       billingType: 'Monthly',
-      price: 'EGP 164.99/month',
+      price: '\$19.99/month',
       topColor: Color(0xFF6E3CC1),
       bottomColor: Color(0xFF9F35B3),
+      isPro: true,
       features: [
         'Unlimited track uploads',
         'Get paid directly and more fairly',
@@ -28,9 +248,10 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
     UpgradePlan(
       title: 'Artist Pro',
       billingType: 'Yearly',
-      price: 'EGP 1,149.99/year',
+      price: '\$149.99/year',
       topColor: Color(0xFFCC5978),
       bottomColor: Color(0xFFBA3A95),
+      isPro: true,
       features: [
         'Unlimited track uploads',
         'Get paid directly and more fairly',
@@ -41,9 +262,10 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
     UpgradePlan(
       title: 'Artist',
       billingType: 'Monthly',
-      price: 'EGP 65.00/month',
+      price: '\$9.99/month',
       topColor: Color(0xFFD06B77),
       bottomColor: Color(0xFFCC5C76),
+      isPro: false,
       features: [
         '3 hours of uploads',
         '2 distributed and monetized tracks per month',
@@ -54,9 +276,10 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
     UpgradePlan(
       title: 'Artist',
       billingType: 'Yearly',
-      price: 'EGP 479.99/year',
+      price: '\$99.99/year',
       topColor: Color(0xFF980097),
       bottomColor: Color(0xFF97008D),
+      isPro: false,
       features: [
         '3 hours of uploads',
         '2 distributed and monetized tracks per month',
@@ -68,7 +291,7 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
 
   final List<UpgradeFaq> _faqs = const [
     UpgradeFaq(
-      question: "What’s the difference between fan and artist plans?",
+      question: "What's the difference between fan and artist plans?",
       answer:
           "Our Fan-oriented plans are designed for those who primarily visit the site to listen to SoundCloud's 250+ million tracks. Artist plans offer unique features designed to help artists create and distribute their music and content.",
     ),
@@ -79,9 +302,102 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
     ),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(subscriptionProvider.notifier).fetchStatus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   void _onSubscribePressed(UpgradePlan plan) {
-    // TODO: Connect this to backend/payment flow later
-    debugPrint('Subscribe tapped: ${plan.title} - ${plan.billingType}');
+    final subState = ref.read(subscriptionProvider);
+
+    if (subState.isPremium) {
+      final currentPlanIndex = _plans.lastIndexWhere(
+        (p) => subState.isCurrentPlanFor(p.billingType),
+      );
+      final isThisCurrentPlan = currentPlanIndex == _plans.indexOf(plan);
+
+      if (isThisCurrentPlan) {
+        _showManageDialog();
+        return;
+      }
+
+      _showChangePlanDialog(plan);
+      return;
+    }
+
+    // Free user → open payment sheet
+    showPaymentSheet(context, ref, plan);
+  }
+
+  void _showManageDialog() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Manage Subscription',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'To cancel your subscription, go to your App Store or Play Store account settings and manage your active subscriptions from there.',
+          style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Got it', style: TextStyle(color: Colors.orange)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showChangePlanDialog(UpgradePlan newPlan) {
+    final subState = ref.read(subscriptionProvider);
+    final currentCycle = subState.status?.billingCycle ?? 'current';
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Change Plan',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'You are currently on a $currentCycle plan. To switch to ${newPlan.billingType.toLowerCase()}, please cancel your current subscription first from your App Store or Play Store settings, then subscribe again.',
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 13,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Got it', style: TextStyle(color: Colors.orange)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _openRestrictionsScreen(UpgradePlan plan) {
@@ -91,13 +407,8 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
   }
 
   @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final subState = ref.watch(subscriptionProvider);
     final currentPlan = _plans[_currentPage];
     final screenWidth = MediaQuery.of(context).size.width;
 
@@ -126,6 +437,46 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 24),
+
+                    // Premium status banner
+                    if (subState.isPremium)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4CD38A).withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: const Color(0xFF4CD38A),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.star_rounded,
+                                color: Color(0xFF4CD38A),
+                                size: 16,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                "You're on Premium · ${subState.status?.billingCycle ?? ''}",
+                                style: const TextStyle(
+                                  color: Color(0xFF4CD38A),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Text(
@@ -144,27 +495,29 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
                       child: AnimatedBuilder(
                         animation: _pageController,
                         builder: (context, child) {
+                          // Find the single current plan index — last match wins
+                          // (Artist over Artist Pro for same billing cycle)
+                          final int currentPlanIndex = subState.isPremium
+                              ? _plans.lastIndexWhere(
+                                  (p) =>
+                                      subState.isCurrentPlanFor(p.billingType),
+                                )
+                              : -1;
+
                           return PageView.builder(
                             controller: _pageController,
                             itemCount: _plans.length,
-                            onPageChanged: (index) {
-                              setState(() {
-                                _currentPage = index;
-                              });
-                            },
+                            onPageChanged: (index) =>
+                                setState(() => _currentPage = index),
                             itemBuilder: (context, index) {
                               double pageValue = _currentPage.toDouble();
-
                               if (_pageController.hasClients) {
                                 try {
                                   pageValue =
                                       _pageController.page ??
                                       _currentPage.toDouble();
-                                } catch (_) {
-                                  pageValue = _currentPage.toDouble();
-                                }
+                                } catch (_) {}
                               }
-
                               final double distance = (pageValue - index)
                                   .abs()
                                   .clamp(0.0, 1.0);
@@ -187,6 +540,8 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
                                     opacity: opacity,
                                     child: UpgradePlanCard(
                                       plan: _plans[index],
+                                      isCurrentPlan: currentPlanIndex == index,
+                                      isUpgrading: subState.isUpgrading,
                                       onSubscribePressed: () =>
                                           _onSubscribePressed(_plans[index]),
                                       onRestrictionsPressed: () =>
@@ -251,7 +606,7 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
                     ),
                     const SizedBox(height: 28),
                     const Text(
-                      "\"It's such a simple idea. Your monthly fees get split up between\nthe songs\"",
+                      '"It\'s such a simple idea. Your monthly fees get split up between\nthe songs"',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 14,
@@ -309,19 +664,35 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
   }
 }
 
+// ── Plan Card ────────────────────────────────────────────────────────────────
+
 class UpgradePlanCard extends StatelessWidget {
   const UpgradePlanCard({
     super.key,
     required this.plan,
     required this.onSubscribePressed,
     required this.onRestrictionsPressed,
+    this.isCurrentPlan = false,
+    this.isUpgrading = false,
   });
 
   final UpgradePlan plan;
   final VoidCallback onSubscribePressed;
   final VoidCallback onRestrictionsPressed;
+  final bool isCurrentPlan;
+  final bool isUpgrading;
 
   bool get isYearly => plan.billingType == 'Yearly';
+
+  String get _buttonLabel {
+    if (isCurrentPlan) return 'Current plan ✓';
+    return 'Subscribe now';
+  }
+
+  Color get _buttonColor {
+    if (isCurrentPlan) return const Color(0xFF4CD38A);
+    return const Color(0xFFF2F2F2);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -353,7 +724,6 @@ class UpgradePlanCard extends StatelessWidget {
           ),
           const SizedBox(height: 9),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
                 plan.title,
@@ -424,41 +794,64 @@ class UpgradePlanCard extends StatelessWidget {
             width: double.infinity,
             height: 42,
             child: ElevatedButton(
-              onPressed: onSubscribePressed,
+              onPressed: isUpgrading ? null : onSubscribePressed,
               style: ElevatedButton.styleFrom(
                 elevation: 0,
-                backgroundColor: const Color(0xFFF2F2F2),
+                backgroundColor: _buttonColor,
                 foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(22),
                 ),
                 padding: EdgeInsets.zero,
               ),
-              child: const Text(
-                'Subscribe now',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 13.8,
-                  fontWeight: FontWeight.w700,
-                  height: 1,
-                ),
-              ),
+              child: isUpgrading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
+                    )
+                  : Text(
+                      _buttonLabel,
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 13.8,
+                        fontWeight: FontWeight.w700,
+                        height: 1,
+                      ),
+                    ),
             ),
           ),
           const SizedBox(height: 14),
-          const Text(
-            'Cancel anytime.',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 11.4,
-              height: 1.15,
+          if (!isCurrentPlan)
+            const Text(
+              'Cancel anytime.',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 11.4,
+                height: 1.15,
+              ),
             ),
-          ),
+          if (isCurrentPlan)
+            GestureDetector(
+              onTap: onSubscribePressed,
+              child: const Text(
+                'Manage subscription',
+                style: TextStyle(
+                  color: Colors.white54,
+                  fontSize: 11.4,
+                  height: 1.15,
+                  decoration: TextDecoration.underline,
+                  decorationColor: Colors.white54,
+                ),
+              ),
+            ),
           const SizedBox(height: 6),
           TextButton(
             onPressed: onRestrictionsPressed,
             style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF6EA3FF),
               padding: EdgeInsets.zero,
               minimumSize: const Size(0, 0),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -479,13 +872,127 @@ class UpgradePlanCard extends StatelessWidget {
   }
 }
 
+// ── Restrictions Screen ───────────────────────────────────────────────────────
+
+class RestrictionsScreen extends StatelessWidget {
+  const RestrictionsScreen({super.key, required this.plan});
+  final UpgradePlan plan;
+
+  static const String _termsUrl =
+      'https://pages.soundcloud.com/geo/uk_us_ie/legal/terms-of-use-pro.ios.html?format=ios';
+  static const String _privacyUrl =
+      'https://pages.soundcloud.com/geo/uk_us_ie/legal/privacy-policy.ios.html?format=ios';
+
+  Future<void> _launchUrl(BuildContext context, String url) async {
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Could not open link')));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF090909),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Restrictions apply',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Subscription may be managed and cancelled at any time in the App Store Account Settings after purchase. All prices include applicable local sales taxes. SoundCloud ${plan.title} Terms of Use & Privacy Policy',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        height: 1.6,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      plan.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    GestureDetector(
+                      onTap: () => _launchUrl(context, _termsUrl),
+                      child: const Text(
+                        'Terms of Use',
+                        style: TextStyle(
+                          color: Color(0xFF4A90E2),
+                          fontSize: 15,
+                          height: 1.8,
+                          decoration: TextDecoration.underline,
+                          decorationColor: Color(0xFF4A90E2),
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => _launchUrl(context, _privacyUrl),
+                      child: const Text(
+                        'Privacy Policy',
+                        style: TextStyle(
+                          color: Color(0xFF4A90E2),
+                          fontSize: 15,
+                          height: 1.8,
+                          decoration: TextDecoration.underline,
+                          decorationColor: Color(0xFF4A90E2),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Reusable widgets ─────────────────────────────────────────────────────────
+
 class _UpgradeChip extends StatelessWidget {
   const _UpgradeChip({
     required this.text,
     required this.backgroundColor,
     required this.textColor,
   });
-
   final String text;
   final Color backgroundColor;
   final Color textColor;
@@ -517,7 +1024,6 @@ class _UpgradeChip extends StatelessWidget {
 
 class _PageIndicator extends StatelessWidget {
   const _PageIndicator({required this.count, required this.currentIndex});
-
   final int count;
   final int currentIndex;
 
@@ -547,7 +1053,6 @@ class _PageIndicator extends StatelessWidget {
 
 class UpgradeFaqTile extends StatefulWidget {
   const UpgradeFaqTile({super.key, required this.faq});
-
   final UpgradeFaq faq;
 
   @override
@@ -562,11 +1067,7 @@ class _UpgradeFaqTileState extends State<UpgradeFaqTile> {
     return Column(
       children: [
         InkWell(
-          onTap: () {
-            setState(() {
-              isExpanded = !isExpanded;
-            });
-          },
+          onTap: () => setState(() => isExpanded = !isExpanded),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 18),
             child: Row(
@@ -615,47 +1116,16 @@ class _UpgradeFaqTileState extends State<UpgradeFaqTile> {
   }
 }
 
-class RestrictionsScreen extends StatelessWidget {
-  const RestrictionsScreen({super.key, required this.plan});
-
-  final UpgradePlan plan;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF090909),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF090909),
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'Restrictions',
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Text(
-          '${plan.title} ${plan.billingType} restrictions screen.\n\n'
-          'Replace this placeholder with the real restrictions content later.',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            height: 1.5,
-          ),
-        ),
-      ),
-    );
-  }
-}
+// ── Data models ──────────────────────────────────────────────────────────────
 
 class UpgradePlan {
   final String title;
-  final String billingType;
+  final String billingType; // "Monthly" or "Yearly"
   final String price;
   final Color topColor;
   final Color bottomColor;
   final List<String> features;
+  final bool isPro;
 
   const UpgradePlan({
     required this.title,
@@ -664,12 +1134,14 @@ class UpgradePlan {
     required this.topColor,
     required this.bottomColor,
     required this.features,
+    required this.isPro,
   });
+
+  bool get isYearly => billingType == 'Yearly';
 }
 
 class UpgradeFaq {
   final String question;
   final String answer;
-
   const UpgradeFaq({required this.question, required this.answer});
 }

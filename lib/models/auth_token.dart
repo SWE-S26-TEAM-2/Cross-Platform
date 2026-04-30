@@ -12,4 +12,12 @@ class AuthTokens {
       refreshToken: data['refresh_token']?.toString() ?? '',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {'access_token': accessToken, 'refresh_token': refreshToken};
+  }
+
+  bool get isValid {
+    return accessToken.isNotEmpty && refreshToken.isNotEmpty;
+  }
 }

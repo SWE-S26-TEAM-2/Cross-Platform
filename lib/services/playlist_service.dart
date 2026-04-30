@@ -148,6 +148,73 @@ class PlaylistService {
     }
   }
 
+  Future<void> addTrackToPlaylist({
+    required String playlistId,
+    required String trackId,
+    required String accessToken,
+  }) async {
+    try {
+      final res = await _dio.post(
+        '$baseUrl/playlists/$playlistId/tracks',
+        data: {'track_id': trackId},
+        options: _authOptions(accessToken),
+      );
+
+      print('ADD TRACK STATUS: ${res.statusCode}');
+      print('ADD TRACK DATA: ${res.data}');
+    } on DioException catch (e) {
+      throw Exception(_readableError(e));
+    }
+  }
+
+  Future<void> removeTrackFromPlaylist({
+    required String playlistId,
+    required String trackId,
+    required String accessToken,
+  }) async {
+    try {
+      print('CALLING REMOVE TRACK ENDPOINT');
+      print('$baseUrl/playlists/$playlistId/tracks/$trackId');
+
+      final res = await _dio.delete(
+        '$baseUrl/playlists/$playlistId/tracks/$trackId',
+        options: _authOptions(accessToken),
+      );
+
+      print('REMOVE TRACK STATUS: ${res.statusCode}');
+      print('REMOVE TRACK DATA: ${res.data}');
+    } on DioException catch (e) {
+      print('REMOVE TRACK ERROR STATUS: ${e.response?.statusCode}');
+      print('REMOVE TRACK ERROR DATA: ${e.response?.data}');
+      throw Exception(_readableError(e));
+    }
+  }
+
+  Future<String?> uploadPlaylistCover({
+    required String playlistId,
+    required String filePath,
+    required String accessToken,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(filePath),
+      });
+
+      final res = await _dio.post(
+        '$baseUrl/playlists/$playlistId/cover',
+        data: formData,
+        options: _authOptions(accessToken),
+      );
+
+      print('UPLOAD COVER STATUS: ${res.statusCode}');
+      print('UPLOAD COVER DATA: ${res.data}');
+
+      return res.data['data']?['cover_photo_url'];
+    } on DioException catch (e) {
+      throw Exception(_readableError(e));
+    }
+  }
+
   Future<Playlist> createPlaylist({
     required String accessToken,
     required String name,

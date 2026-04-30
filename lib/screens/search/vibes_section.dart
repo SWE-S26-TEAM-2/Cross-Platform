@@ -3,6 +3,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:my_project/constants/app_colors.dart';
 import 'package:my_project/constants/app_dimensions.dart';
 import 'package:my_project/constants/app_text_styles.dart';
+import 'package:my_project/screens/search/vibes_screen.dart';
 
 class VibesSection extends StatelessWidget {
   const VibesSection({super.key});
@@ -67,7 +68,14 @@ class VibesSection extends StatelessWidget {
               final vibe = vibes[index];
 
               return GestureDetector(
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VibeScreen(vibe: vibe["title"]),
+                    ),
+                  );
+                },
                 child: Container(
                   height: _tileHeight(index),
                   decoration: BoxDecoration(

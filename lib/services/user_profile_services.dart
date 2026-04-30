@@ -159,7 +159,7 @@ class UserService {
       queryParameters: {'limit': limit},
       options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
     );
-    return res.data['data'] ?? [];
+    return (res.data['data']?['items'] as List?) ?? [];
   }
 
   // GET /users/me/listening-history
@@ -172,7 +172,7 @@ class UserService {
       queryParameters: {'limit': limit},
       options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
     );
-    return res.data['data'] ?? [];
+    return (res.data['data']?['items'] as List?) ?? [];
   }
 
   // POST /users/{username}/follow

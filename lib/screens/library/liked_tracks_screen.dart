@@ -5,6 +5,7 @@ import '../../constants/app_text_styles.dart';
 import '../../models/track.dart';
 import '../../mock_data/mock_tracks.dart';
 import '../profile/widgets/profile_track_list_section.dart';
+import 'context_menu_sheet.dart';
 
 enum LikedTracksSortOption { recentlyAdded, firstAdded, trackName, artist }
 
@@ -21,13 +22,12 @@ class _LikedTracksScreenState extends State<LikedTracksScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<Track> _filteredTracks = [];
   List<Track> _allTracks = [];
+  bool _isShuffled = false; // passed to player on play, does not reorder list
 
   @override
   void initState() {
     super.initState();
-    _allTracks = List.from(
-      MockTracks.recentlyPlayedTracks,
-    ); // will swap for liked tracks when ready
+    _allTracks = List.from(MockTracks.recentlyPlayedTracks);
     _filteredTracks = List.from(_allTracks);
     _searchController.addListener(_onSearchChanged);
   }
@@ -40,14 +40,16 @@ class _LikedTracksScreenState extends State<LikedTracksScreen> {
 
   void _onSearchChanged() {
     final query = _searchController.text.toLowerCase();
+
     setState(() {
-      _filteredTracks = _allTracks
-          .where(
-            (t) =>
-                t.title.toLowerCase().contains(query) ||
-                t.artist.toLowerCase().contains(query),
-          )
-          .toList();
+      _filteredTracks = _allTracks.where((t) {
+        final titleMatch = t.title.toLowerCase().contains(query);
+
+        final artistMatch =
+            t.artist?.displayName.toLowerCase().contains(query) ?? false;
+
+        return titleMatch || artistMatch;
+      }).toList();
     });
   }
 
@@ -65,7 +67,11 @@ class _LikedTracksScreenState extends State<LikedTracksScreen> {
           _filteredTracks.sort((a, b) => a.title.compareTo(b.title));
           break;
         case LikedTracksSortOption.artist:
-          _filteredTracks.sort((a, b) => a.artist.compareTo(b.artist));
+          _filteredTracks.sort(
+            (a, b) =>
+                a.artist?.displayName.compareTo(b.artist?.displayName ?? '') ??
+                0,
+          );
           break;
       }
     });
@@ -141,7 +147,6 @@ class _LikedTracksScreenState extends State<LikedTracksScreen> {
           SliverToBoxAdapter(
             child: Stack(
               children: [
-                // Big heart background
                 Positioned(
                   right: -30,
                   top: -10,
@@ -224,7 +229,6 @@ class _LikedTracksScreenState extends State<LikedTracksScreen> {
 
                         const SizedBox(height: 20),
 
-                        // "Your likes" title
                         const Padding(
                           padding: EdgeInsets.only(
                             left: AppDimensions.spaceSmall,
@@ -247,21 +251,24 @@ class _LikedTracksScreenState extends State<LikedTracksScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
+                              // Shuffle toggle — highlights when active
                               IconButton(
-                                icon: const Icon(
+                                icon: Icon(
                                   Icons.shuffle,
-                                  color: AppColors.textPrimary,
+                                  color: _isShuffled
+                                      ? AppColors.primary
+                                      : AppColors.textPrimary,
                                   size: 24,
                                 ),
-                                onPressed: () {
-                                  setState(() {
-                                    _filteredTracks.shuffle();
-                                  });
-                                },
+                                onPressed: () =>
+                                    setState(() => _isShuffled = !_isShuffled),
                               ),
                               const SizedBox(width: 8),
                               GestureDetector(
-                                onTap: () {}, // hook up to player later
+                                onTap: () {
+                                  // TODO: start player with _filteredTracks,
+                                  // shuffle: _isShuffled
+                                },
                                 child: Container(
                                   width: 52,
                                   height: 52,
@@ -294,8 +301,11 @@ class _LikedTracksScreenState extends State<LikedTracksScreen> {
             child: ProfileTrackListSection(
               title: '',
               tracks: _filteredTracks,
-              onTrackTap: (_) {}, // hook up to player later
-              onMoreTap: (_) {}, // hook up context menu later
+              onTrackTap: (_) {
+                // To do: start player at tapped index,
+                // shuffle: _isShuffled
+              },
+              onMoreTap: (track) => showTrackContextMenu(context, track),
             ),
           ),
 

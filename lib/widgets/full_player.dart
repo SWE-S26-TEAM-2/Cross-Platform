@@ -1,32 +1,41 @@
+// widgets/full_player.dart
+
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:my_project/constants/app_colors.dart';
 import 'package:my_project/constants/app_dimensions.dart';
 import 'package:my_project/constants/app_text_styles.dart';
 import 'package:my_project/models/track.dart';
+import 'package:my_project/providers/followers_provider.dart';
 
-class FullPlayer extends StatefulWidget {
+class FullPlayer extends ConsumerStatefulWidget {
   const FullPlayer({
     super.key,
     required this.track,
-    required this.isPlaying,
+    required this.player,
     required this.onPlayPause,
+    required this.onSeek,
   });
 
   final Track track;
-  final bool isPlaying;
+  final AudioPlayer player;
   final VoidCallback onPlayPause;
+  final ValueChanged<Duration> onSeek;
 
   @override
-  State<FullPlayer> createState() => _FullPlayerState();
+  ConsumerState<FullPlayer> createState() => _FullPlayerState();
 }
 
-class _FullPlayerState extends State<FullPlayer> {
-  bool showControls = false;
+class _FullPlayerState extends ConsumerState<FullPlayer> {
   bool isLiked = false;
-  bool _initializedControls = false;
-  double progress = 0.0;
 
-  List<double> waveform = [];
+  final List<double> waveform = List.generate(
+    70,
+    (index) => 0.2 + ((index % 7) * 0.08),
+  );
 
   String formatTime(int totalSeconds) {
     final minutes = totalSeconds ~/ 60;
@@ -34,67 +43,147 @@ class _FullPlayerState extends State<FullPlayer> {
     return '$minutes:$seconds';
   }
 
+  void _seekFromDx(double dx, double width, Duration totalDuration) {
+    if (width <= 0 || totalDuration.inMilliseconds <= 0) return;
+
+    final newProgress = (dx / width).clamp(0.0, 1.0);
+    final targetMs = (newProgress * totalDuration.inMilliseconds).round();
+
+    widget.onSeek(Duration(milliseconds: targetMs));
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (!_initializedControls) {
-      showControls = !widget.isPlaying;
-      _initializedControls = true;
-    }
+    // ── Follow state ─────────────────────────────────────────────────────────
+    final artistUsername = widget.track.artist?.username;
+    final artistUserId = widget.track.artist?.userId;
 
-    final int elapsed = (progress * widget.track.duration).round();
+    final followKey = (artistUsername != null && artistUserId != null)
+        ? (userId: artistUserId, username: artistUsername)
+        : null;
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: GestureDetector(
-        onTap: showControls
-            ? null
-            : () {
-                print('Screen tapped is pressed !!');
-                setState(() => showControls = true);
+    final followState = followKey != null
+        ? ref.watch(followProvider(followKey))
+        : null;
+
+    final isFollowing = followState?.isFollowing ?? false;
+    final isFollowLoading = followState?.isLoading ?? false;
+
+    return StreamBuilder<PlayerState>(
+      stream: widget.player.playerStateStream,
+      builder: (context, playerStateSnapshot) {
+        final isPlaying = playerStateSnapshot.data?.playing ?? false;
+
+        return StreamBuilder<Duration?>(
+          stream: widget.player.durationStream,
+          builder: (context, durationSnapshot) {
+            final totalDuration =
+                durationSnapshot.data ??
+                Duration(seconds: widget.track.durationSeconds ?? 0);
+
+            return StreamBuilder<Duration>(
+              stream: widget.player.positionStream,
+              initialData: widget.player.position,
+              builder: (context, positionSnapshot) {
+                final currentPosition = positionSnapshot.data ?? Duration.zero;
+
+                final totalMs = totalDuration.inMilliseconds;
+                final currentMs = currentPosition.inMilliseconds.clamp(
+                  0,
+                  totalMs > 0 ? totalMs : 1,
+                );
+
+                final progress = totalMs > 0 ? currentMs / totalMs : 0.0;
+                final elapsed = currentPosition.inSeconds;
+                final totalSeconds = totalDuration.inSeconds > 0
+                    ? totalDuration.inSeconds
+                    : widget.track.durationSeconds ?? 0;
+
+                final coverUrl = widget.track.coverImageUrl;
+
+                return Scaffold(
+                  backgroundColor: Colors.black,
+                  // Tap anywhere → pause (when playing).
+                  // Buttons/waveform are descendants and win the gesture arena,
+                  // so they are unaffected.
+                  body: GestureDetector(
+                    onTap: isPlaying ? widget.onPlayPause : null,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // ── Background: blurred cover art ─────────────────
+                        _buildBackground(coverUrl),
+
+                        // ── Dim overlay when paused ────────────────────────
+                        if (!isPlaying)
+                          const ColoredBox(
+                            color: Color(0x66000000),
+                            child: SizedBox.expand(),
+                          ),
+
+                        // ── All UI (always visible) ────────────────────────
+                        SafeArea(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildTopSection(
+                                context,
+                                isFollowing: isFollowing,
+                                isFollowLoading: isFollowLoading,
+                                followKey: followKey,
+                              ),
+                              const Spacer(),
+                              _buildWaveform(
+                                elapsed: elapsed,
+                                totalSeconds: totalSeconds,
+                                progress: progress,
+                                totalDuration: totalDuration,
+                              ),
+                              _buildCommentBar(),
+                              _buildBottomBar(),
+                              const SizedBox(height: AppDimensions.spaceSmall),
+                            ],
+                          ),
+                        ),
+
+                        // ── Center play button (paused only) ──────────────
+                        if (!isPlaying)
+                          Center(
+                            child: GestureDetector(
+                              onTap: widget.onPlayPause,
+                              child: Container(
+                                width: 64,
+                                height: 64,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.textPrimary,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.play_arrow_rounded,
+                                  color: AppColors.background,
+                                  size: 36,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
               },
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // ── 1. Background ─────────────────────────────────────────
-            Container(
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment(-0.3, -0.3),
-                  radius: 1.3,
-                  colors: [
-                    Color(0xFF8B1A1A),
-                    Color(0xFF3A0808),
-                    Color(0xFF0D0303),
-                  ],
-                ),
-              ),
-            ),
-
-            // ── 2. Main UI ────────────────────────────────────────────
-            SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildTopSection(context),
-                  const Spacer(),
-                  _buildWaveform(elapsed),
-                  _buildCommentBar(),
-                  _buildBottomBar(),
-                  const SizedBox(height: AppDimensions.spaceSmall),
-                ],
-              ),
-            ),
-
-            // ── 3. Play/Pause overlay ─────────────────────────────────
-            if (showControls) _buildPlayOverlay(),
-          ],
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
   }
 
-  // ── Top Section ───────────────────────────────────────────────────────────
-  Widget _buildTopSection(BuildContext context) {
+  Widget _buildTopSection(
+    BuildContext context, {
+    required bool isFollowing,
+    required bool isFollowLoading,
+    required FollowKey? followKey,
+  }) {
     return Padding(
       padding: const EdgeInsets.all(AppDimensions.spaceMedium),
       child: Row(
@@ -106,7 +195,10 @@ class _FullPlayerState extends State<FullPlayer> {
               children: [
                 Text(widget.track.title, style: AppTextStyles.heading2),
                 const SizedBox(height: 4),
-                Text(widget.track.artist, style: AppTextStyles.artistName),
+                Text(
+                  widget.track.artist?.displayName ?? 'Unknown Artist',
+                  style: AppTextStyles.artistName,
+                ),
                 const SizedBox(height: AppDimensions.spaceSmall),
                 const Row(
                   children: [
@@ -122,26 +214,44 @@ class _FullPlayerState extends State<FullPlayer> {
               ],
             ),
           ),
-
           Column(
             children: [
               IconButton(
                 icon: const Icon(Icons.keyboard_arrow_down_rounded),
                 color: AppColors.textSecondary,
-                onPressed: () {
-                  print('Close is pressed !!');
-                  Navigator.pop(context);
-                },
+                onPressed: () => Navigator.pop(context),
               ),
+
+              // ── Follow / Unfollow button ──────────────────────────────────
               IconButton(
-                icon: const Icon(Icons.person_add_alt_1_outlined),
-                color: AppColors.textSecondary,
-                onPressed: () => print('Follow is pressed !!'),
+                icon: isFollowLoading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.textSecondary,
+                        ),
+                      )
+                    : Icon(
+                        isFollowing
+                            ? Icons.person_remove_outlined
+                            : Icons.person_add_alt_1_outlined,
+                        color: isFollowing
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
+                      ),
+                tooltip: isFollowing ? 'Unfollow' : 'Follow',
+                onPressed: (isFollowLoading || followKey == null)
+                    ? null
+                    : () =>
+                          ref.read(followProvider(followKey).notifier).toggle(),
               ),
+
               IconButton(
                 icon: const Icon(Icons.grid_view_rounded),
                 color: AppColors.textSecondary,
-                onPressed: () => print('Cast is pressed !!'),
+                onPressed: () {},
               ),
             ],
           ),
@@ -150,39 +260,45 @@ class _FullPlayerState extends State<FullPlayer> {
     );
   }
 
-  // ── Waveform ──────────────────────────────────────────────────────────────
-  Widget _buildWaveform(int elapsed) {
+  Widget _buildWaveform({
+    required int elapsed,
+    required int totalSeconds,
+    required double progress,
+    required Duration totalDuration,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        GestureDetector(
-          onHorizontalDragUpdate: (details) {
-            final RenderBox box = context.findRenderObject() as RenderBox;
-            final double newProgress =
-                (details.localPosition.dx / box.size.width).clamp(0.0, 1.0);
-            print(
-              'Waveform seeked to ${(newProgress * 100).toStringAsFixed(0)}% is pressed !!',
+        LayoutBuilder(
+          builder: (context, constraints) {
+            return GestureDetector(
+              onHorizontalDragUpdate: (details) {
+                _seekFromDx(
+                  details.localPosition.dx,
+                  constraints.maxWidth,
+                  totalDuration,
+                );
+              },
+              onTapDown: (details) {
+                _seekFromDx(
+                  details.localPosition.dx,
+                  constraints.maxWidth,
+                  totalDuration,
+                );
+              },
+              child: SizedBox(
+                height: 80,
+                width: double.infinity,
+                child: CustomPaint(
+                  painter: WaveformPainter(
+                    waveform: waveform,
+                    progress: progress,
+                  ),
+                ),
+              ),
             );
-            setState(() => progress = newProgress);
           },
-          onTapDown: (details) {
-            final RenderBox box = context.findRenderObject() as RenderBox;
-            final double newProgress =
-                (details.localPosition.dx / box.size.width).clamp(0.0, 1.0);
-            print(
-              'Waveform seeked to ${(newProgress * 100).toStringAsFixed(0)}% is pressed !!',
-            );
-            setState(() => progress = newProgress);
-          },
-          child: SizedBox(
-            height: 80,
-            width: double.infinity,
-            child: CustomPaint(
-              painter: WaveformPainter(waveform: waveform, progress: progress),
-            ),
-          ),
         ),
-
         Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppDimensions.spaceMedium,
@@ -199,77 +315,68 @@ class _FullPlayerState extends State<FullPlayer> {
               ),
               const SizedBox(width: AppDimensions.spaceSmall),
               Expanded(
-                child: GestureDetector(
-                  onTapDown: (details) {
-                    final RenderBox box =
-                        context.findRenderObject() as RenderBox;
-                    final double tapX = details.localPosition.dx;
-                    final double newProgress = (tapX / box.size.width).clamp(
-                      0.0,
-                      1.0,
-                    );
-                    print('Progress line is pressed !!');
-                    setState(() => progress = newProgress);
-                  },
-                  onHorizontalDragUpdate: (details) {
-                    final RenderBox box =
-                        context.findRenderObject() as RenderBox;
-                    final double newProgress =
-                        (details.localPosition.dx / box.size.width).clamp(
-                          0.0,
-                          1.0,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final knobLeft = (progress * (constraints.maxWidth - 12))
+                        .clamp(0.0, constraints.maxWidth - 12);
+
+                    return GestureDetector(
+                      onTapDown: (details) {
+                        _seekFromDx(
+                          details.localPosition.dx,
+                          constraints.maxWidth,
+                          totalDuration,
                         );
-                    print(
-                      'Progress line dragged to ${(newProgress * 100).toStringAsFixed(0)}% is pressed !!',
+                      },
+                      onHorizontalDragUpdate: (details) {
+                        _seekFromDx(
+                          details.localPosition.dx,
+                          constraints.maxWidth,
+                          totalDuration,
+                        );
+                      },
+                      child: SizedBox(
+                        height: 20,
+                        child: Stack(
+                          alignment: Alignment.centerLeft,
+                          children: [
+                            Container(
+                              height: 3,
+                              decoration: BoxDecoration(
+                                color: AppColors.waveformInactive,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            FractionallySizedBox(
+                              widthFactor: progress,
+                              child: Container(
+                                height: 3,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              left: knobLeft,
+                              child: Container(
+                                width: 12,
+                                height: 12,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     );
-                    setState(() => progress = newProgress);
                   },
-                  child: Stack(
-                    alignment: Alignment.centerLeft,
-                    children: [
-                      Container(
-                        height: 3,
-                        decoration: BoxDecoration(
-                          color: AppColors.waveformInactive,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      FractionallySizedBox(
-                        widthFactor: progress,
-                        child: Container(
-                          height: 3,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        left:
-                            (progress *
-                                    (MediaQuery.of(context).size.width -
-                                        AppDimensions.spaceMedium * 2 -
-                                        AppDimensions.spaceSmall * 2 -
-                                        20))
-                                .clamp(0, double.infinity),
-                        child: Container(
-                          width: 12,
-                          height: 12,
-                          decoration: const BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
               const SizedBox(width: AppDimensions.spaceSmall),
-              Text(
-                formatTime(widget.track.duration),
-                style: AppTextStyles.caption,
-              ),
+              Text(formatTime(totalSeconds), style: AppTextStyles.caption),
             ],
           ),
         ),
@@ -277,10 +384,9 @@ class _FullPlayerState extends State<FullPlayer> {
     );
   }
 
-  // ── Comment Bar ───────────────────────────────────────────────────────────
   Widget _buildCommentBar() {
     return GestureDetector(
-      onTap: () => print('Comment bar is pressed !!'),
+      onTap: () {},
       child: Container(
         margin: const EdgeInsets.all(AppDimensions.spaceSmall),
         padding: const EdgeInsets.symmetric(
@@ -303,34 +409,23 @@ class _FullPlayerState extends State<FullPlayer> {
                 ),
               ),
             ),
-            GestureDetector(
-              onTap: () => print('Fire emoji is pressed !!'),
-              child: const Text('🔥', style: TextStyle(fontSize: 18)),
-            ),
+            const Text('🔥', style: TextStyle(fontSize: 18)),
             const SizedBox(width: AppDimensions.spaceSmall),
-            GestureDetector(
-              onTap: () => print('Clap emoji is pressed !!'),
-              child: const Text('👏', style: TextStyle(fontSize: 18)),
-            ),
+            const Text('👏', style: TextStyle(fontSize: 18)),
             const SizedBox(width: AppDimensions.spaceSmall),
-            GestureDetector(
-              onTap: () => print('Cry emoji is pressed !!'),
-              child: const Text('🥹', style: TextStyle(fontSize: 18)),
-            ),
+            const Text('🥹', style: TextStyle(fontSize: 18)),
           ],
         ),
       ),
     );
   }
 
-  // ── Bottom Bar ────────────────────────────────────────────────────────────
   Widget _buildBottomBar() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         GestureDetector(
           onTap: () {
-            print('Like is pressed !!');
             setState(() => isLiked = !isLiked);
           },
           child: Row(
@@ -348,111 +443,44 @@ class _FullPlayerState extends State<FullPlayer> {
             ],
           ),
         ),
-
-        GestureDetector(
-          onTap: () => print('Comments is pressed !!'),
-          child: const Icon(
-            Icons.chat_bubble_outline,
-            color: AppColors.textSecondary,
-            size: 22,
-          ),
+        const Icon(
+          Icons.chat_bubble_outline,
+          color: AppColors.textSecondary,
+          size: 22,
         ),
-
-        GestureDetector(
-          onTap: () => print('Share is pressed !!'),
-          child: const Icon(
-            Icons.ios_share,
-            color: AppColors.textSecondary,
-            size: 22,
-          ),
-        ),
-
-        GestureDetector(
-          onTap: () => print('Queue is pressed !!'),
-          child: const Icon(
-            Icons.queue_music,
-            color: AppColors.textSecondary,
-            size: 22,
-          ),
-        ),
-
-        GestureDetector(
-          onTap: () => print('More is pressed !!'),
-          child: const Icon(
-            Icons.more_horiz,
-            color: AppColors.textSecondary,
-            size: 22,
-          ),
-        ),
+        const Icon(Icons.ios_share, color: AppColors.textSecondary, size: 22),
+        const Icon(Icons.queue_music, color: AppColors.textSecondary, size: 22),
+        const Icon(Icons.more_horiz, color: AppColors.textSecondary, size: 22),
       ],
     );
   }
 
-  // ── Play Overlay ──────────────────────────────────────────────────────────
-  Widget _buildPlayOverlay() {
-    return Positioned.fill(
-      child: Container(
-        color: Colors.black45,
-        child: Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Play / Pause
-              GestureDetector(
-                onTap: () {
-                  print('Play/Pause is pressed !!');
-                  widget.onPlayPause();
-                  setState(() => showControls = false);
-                },
-                child: Container(
-                  width: 56,
-                  height: 56,
-                  decoration: const BoxDecoration(
-                    color: AppColors.textPrimary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    widget.isPlaying
-                        ? Icons.pause_rounded
-                        : Icons.play_arrow_rounded,
-                    color: AppColors.background,
-                    size: 30,
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: AppDimensions.spaceLarge),
-
-              // Skip next
-              GestureDetector(
-                onTap: () => print('Skip next is pressed !!'),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface.withOpacity(0.85),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.textMuted),
-                  ),
-                  child: const Icon(
-                    Icons.skip_next_rounded,
-                    color: AppColors.textPrimary,
-                    size: 24,
-                  ),
-                ),
-              ),
-            ],
+  Widget _buildBackground(String? coverUrl) {
+    if (coverUrl == null || coverUrl.isEmpty) {
+      return Container(
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment(-0.3, -0.3),
+            radius: 1.3,
+            colors: [Color(0xFF8B1A1A), Color(0xFF3A0808), Color(0xFF0D0303)],
           ),
         ),
+      );
+    }
+    return ImageFiltered(
+      imageFilter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
+      child: Image.network(
+        coverUrl,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (context, error, stackTrace) =>
+            Container(color: Colors.black),
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  WAVEFORM PAINTER
-// ─────────────────────────────────────────────────────────────────────────────
 class WaveformPainter extends CustomPainter {
   final List<double> waveform;
   final double progress;
@@ -463,17 +491,17 @@ class WaveformPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (waveform.isEmpty) return;
 
-    final int count = waveform.length;
-    final double barWidth = size.width / count;
-    final double gap = barWidth * 0.3;
-    final double midY = size.height * 0.6;
-    final double progressX = size.width * progress;
+    final count = waveform.length;
+    final barWidth = size.width / count;
+    final gap = barWidth * 0.3;
+    final midY = size.height * 0.6;
+    final progressX = size.width * progress;
 
     for (int i = 0; i < count; i++) {
-      final double x = i * barWidth + gap / 2;
-      final double w = barWidth - gap;
-      final double h = waveform[i] * midY;
-      final bool played = x < progressX;
+      final x = i * barWidth + gap / 2;
+      final w = barWidth - gap;
+      final h = waveform[i] * midY;
+      final played = x < progressX;
 
       canvas.drawRRect(
         RRect.fromRectAndRadius(
@@ -495,6 +523,7 @@ class WaveformPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(WaveformPainter old) =>
-      old.progress != progress || old.waveform != waveform;
+  bool shouldRepaint(WaveformPainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.waveform != waveform;
+  }
 }
