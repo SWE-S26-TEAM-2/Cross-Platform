@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/app_test_helpers.dart';
@@ -149,7 +150,8 @@ void main() {
 
       // Should remain on login screen with error
       expect(find.text('Log in'), findsWidgets);
-      expect(find.text('Invalid email or password'), findsOneWidget);
+      // Inline error (Key) + SnackBar duplicate the same message.
+      expect(find.byKey(const Key('login.error')), findsOneWidget);
 
       // Shell content still not accessible
       expect(find.text('Home'), findsNothing);

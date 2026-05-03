@@ -50,7 +50,8 @@ void main() {
         await tester.pump();
         await tapAndSettle(tester, actionButton('Log in'));
 
-        expect(find.text('Invalid email or password'), findsOneWidget);
+        // Inline error (Key) + SnackBar both show the same copy.
+        expect(find.byKey(const Key('login.error')), findsOneWidget);
       }
 
       // Form should still be usable
@@ -141,6 +142,15 @@ void main() {
     ) async {
       // Complete user journey: login → visit tabs → search → logout (simulated)
       for (var session = 0; session < 3; session++) {
+        if (session > 0) {
+          await tester.pumpWidget(
+            const Directionality(
+              textDirection: TextDirection.ltr,
+              child: SizedBox.shrink(),
+            ),
+          );
+          await tester.pumpAndSettle();
+        }
         await launchApp(tester);
         await loginAsSeededUser(tester);
 

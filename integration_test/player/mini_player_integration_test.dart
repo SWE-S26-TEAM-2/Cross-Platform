@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_project/mock_data/mock_tracks.dart';
-
 import '../helpers/app_test_helpers.dart';
 
 /// Player integration: Home -> tap a track tile -> MiniPlayer surfaces ->
 /// play/pause toggle -> title in MiniPlayer matches the tile.
 ///
-/// Backed by MockTracks; no audio asset playback is awaited (just_audio is
-/// allowed to fire-and-forget on test devices).
+/// Uses the integration harness feed from `launchApp`: first "Your likes" tile
+/// is keyed `home.trackTile.following-1`. No full audio playback is awaited.
 void main() {
   ensureBinding();
 
@@ -18,9 +16,9 @@ void main() {
       await launchApp(tester);
       await loginAsSeededUser(tester);
 
-      // The first liked track is rendered as a grid tile keyed by its id.
-      final firstTrack = MockTracks.likedTracks.first;
-      final tileFinder = byKey('home.trackTile.${firstTrack.id}');
+      // First tile on Home "Your likes" comes from following feed → following-1.
+      const expectedTitle = 'luther';
+      final tileFinder = byKey('home.trackTile.following-1');
       expect(tileFinder, findsOneWidget);
 
       // Tap the tile to start playback.
@@ -32,7 +30,7 @@ void main() {
 
       // The MiniPlayer title should match the tapped tile's title.
       final titleWidget = tester.widget<Text>(byKey('miniPlayer.title'));
-      expect(titleWidget.data, firstTrack.title);
+      expect(titleWidget.data, expectedTitle);
 
       // The play/pause control should toggle without throwing. We pump
       // briefly between taps to let just_audio swallow its async load.
@@ -49,7 +47,7 @@ void main() {
       await launchApp(tester);
       await loginAsSeededUser(tester);
 
-      final hot = MockTracks.hotTrack;
+      const expectedTitle = 'luther';
       final pickButton = byKey('home.todayPick.0');
       expect(pickButton, findsOneWidget);
 
@@ -59,7 +57,7 @@ void main() {
 
       expect(byKey('miniPlayer.root'), findsOneWidget);
       final titleWidget = tester.widget<Text>(byKey('miniPlayer.title'));
-      expect(titleWidget.data, hot.title);
+      expect(titleWidget.data, expectedTitle);
     });
   });
 }
