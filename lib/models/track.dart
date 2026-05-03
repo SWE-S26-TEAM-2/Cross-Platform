@@ -72,6 +72,9 @@ class Track {
     this.createdAt,
   });
 
+  /// Alias for [trackId] (older UI/tests used `id`).
+  String get id => trackId;
+
   /// Works for both TrackData (GET /tracks/{id}) and FeedTrackItem.
   factory Track.fromJson(Map<String, dynamic> json) {
     return Track(

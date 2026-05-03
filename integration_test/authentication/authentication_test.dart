@@ -4,7 +4,7 @@ import '../helpers/app_test_helpers.dart';
 
 void main() {
   ensureBinding();
- 
+
   group('authentication', () {
     testWidgets('launches welcome screen and supports auth entry navigation', (
       tester,
@@ -36,9 +36,16 @@ void main() {
       expect(find.text('Password is required'), findsOneWidget);
       expect(find.text('Please confirm your password'), findsOneWidget);
 
-      await tester.enterText(authFieldAt(0), 'invalid-email');
-      await tester.enterText(authFieldAt(1), 'short');
-      await tester.enterText(authFieldAt(2), 'different');
+      await tester.enterText(textFormFieldByHint('Username'), 'Invalid User');
+      await tester.enterText(
+        textFormFieldByHint('Email address'),
+        'invalid-email',
+      );
+      await tester.enterText(textFormFieldByHint('Password'), 'short');
+      await tester.enterText(
+        textFormFieldByHint('Confirm password'),
+        'different',
+      );
       await tester.pump();
 
       await tapAndSettle(tester, actionButton('Create account'));
@@ -57,6 +64,7 @@ void main() {
       await launchApp(tester);
       await tapAndSettle(tester, actionButton('Create an account'));
 
+      await tester.enterText(textFormFieldByHint('Username'), 'New Listener');
       await tester.enterText(
         textFormFieldByHint('Email address'),
         TestAccounts.newEmail,
@@ -73,8 +81,11 @@ void main() {
 
       await tapAndSettle(tester, actionButton('Create account'));
 
+      await pumpUntilVisible(tester, find.text('Verify your email'));
+      expect(find.text('Verify your email'), findsOneWidget);
+
+      await tapAndSettle(tester, textButton('Back to login'));
       await pumpUntilVisible(tester, find.text('Welcome back'));
-      expect(find.text('Account created successfully'), findsOneWidget);
 
       await enterLoginCredentials(
         tester,
@@ -94,6 +105,7 @@ void main() {
       await launchApp(tester);
       await tapAndSettle(tester, actionButton('Create an account'));
 
+      await tester.enterText(textFormFieldByHint('Username'), 'Existing User');
       await tester.enterText(
         textFormFieldByHint('Email address'),
         TestAccounts.existingEmail,
@@ -112,7 +124,7 @@ void main() {
 
       expect(
         find.text('This email is already registered, login instead'),
-        findsOneWidget,
+        findsWidgets,
       );
       expect(find.text('Create your account'), findsOneWidget);
     });
@@ -130,7 +142,7 @@ void main() {
         );
         await tapAndSettle(tester, actionButton('Log in'));
 
-        expect(find.text('Invalid email or password'), findsOneWidget);
+        expect(find.text('Invalid email or password'), findsWidgets);
         expect(find.text('Welcome back'), findsOneWidget);
 
         await enterLoginCredentials(
@@ -178,13 +190,12 @@ void main() {
         TestAccounts.existingEmail,
       );
       await tester.pump();
-      await tester.tap(actionButton('Send reset link'));
-      await tester.pump();
+      await tapAndSettle(tester, actionButton('Send reset link'));
 
-      await pumpUntilVisible(tester, find.text('Welcome back'));
+      await pumpUntilVisible(tester, find.text('Set a new password'));
       await tester.pumpAndSettle();
-      expect(find.text('Welcome back'), findsOneWidget);
-      expect(textButton('Forgot password?'), findsOneWidget);
+      expect(find.text('Set a new password'), findsOneWidget);
+      expect(find.textContaining(TestAccounts.existingEmail), findsOneWidget);
     });
 
     testWidgets(
@@ -212,13 +223,11 @@ void main() {
           TestAccounts.existingEmail,
         );
         await tester.pumpAndSettle();
-        await tester.tap(actionButton('Send reset link'));
-        await tester.pump();
+        await tapAndSettle(tester, actionButton('Send reset link'));
 
-        await pumpUntilVisible(tester, find.text('Welcome back'));
+        await pumpUntilVisible(tester, find.text('Set a new password'));
         await tester.pumpAndSettle();
-        expect(find.text('Welcome back'), findsOneWidget);
-        expect(textButton('Forgot password?'), findsOneWidget);
+        expect(find.text('Set a new password'), findsOneWidget);
       },
     );
   });

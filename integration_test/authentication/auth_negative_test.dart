@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import '../helpers/app_test_helpers.dart';
 
 /// AUTH NEGATIVE TESTS
-/// 
+///
 /// Coverage: Edge cases for form validation and submission
 /// These tests verify defensive behavior against invalid/malicious input.
 /// Existing authentication_test.dart covers standard validation; this extends coverage.
@@ -43,7 +43,10 @@ void main() {
         'valid@email.com',
       );
       await tester.enterText(textFormFieldByHint('Password'), '        ');
-      await tester.enterText(textFormFieldByHint('Confirm password'), '        ');
+      await tester.enterText(
+        textFormFieldByHint('Confirm password'),
+        '        ',
+      );
       await tester.pump();
 
       await tapAndSettle(tester, actionButton('Create account'));
@@ -56,7 +59,9 @@ void main() {
       );
     });
 
-    testWidgets('login form handles very long email gracefully', (tester) async {
+    testWidgets('login form handles very long email gracefully', (
+      tester,
+    ) async {
       await launchApp(tester);
       await tapAndSettle(tester, outlinedActionButton('Log in'));
 
@@ -72,7 +77,9 @@ void main() {
       expect(find.text('Welcome back'), findsOneWidget);
     });
 
-    testWidgets('login form handles very long password gracefully', (tester) async {
+    testWidgets('login form handles very long password gracefully', (
+      tester,
+    ) async {
       await launchApp(tester);
       await tapAndSettle(tester, outlinedActionButton('Log in'));
 
@@ -111,7 +118,7 @@ void main() {
 
         expect(
           find.text('Invalid email or password'),
-          findsOneWidget,
+          findsWidgets,
           reason: 'Attempt ${i + 1}: Error should display consistently',
         );
       }

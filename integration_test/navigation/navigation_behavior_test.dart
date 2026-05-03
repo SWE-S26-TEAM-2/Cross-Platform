@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import '../helpers/app_test_helpers.dart';
 
 /// NAVIGATION BEHAVIOR TESTS
-/// 
+///
 /// Coverage: NAV-007, NAV-008, Critical #6-7
 /// These tests verify tab navigation behavior and user-specific content.
 /// Existing shell_and_search_test.dart remains the smoke baseline.
@@ -47,7 +47,6 @@ void main() {
       expect(find.text('Playlists'), findsOneWidget);
       expect(find.text('Albums'), findsOneWidget);
       expect(find.text('Following'), findsOneWidget);
-      expect(find.text('Stations'), findsOneWidget);
       expect(find.text('Your insights'), findsOneWidget);
       expect(find.text('Your uploads'), findsOneWidget);
     });

@@ -43,10 +43,7 @@ void main() {
       await launchApp(tester);
 
       // Public branding content
-      expect(
-        find.text('Where artists & fans connect'),
-        findsOneWidget,
-      );
+      expect(welcomeTaglineFinder(), findsOneWidget);
 
       // User-specific content should NOT be visible
       expect(find.text("TODAY'S PICK"), findsNothing);
@@ -73,29 +70,31 @@ void main() {
   });
 
   group('auth protection - login grants access', () {
-    testWidgets('login transitions user from WelcomeScreen to protected shell',
-        (tester) async {
-      // AUTH-010: Authenticated user redirected to /discover equivalent
-      await launchApp(tester);
+    testWidgets(
+      'login transitions user from WelcomeScreen to protected shell',
+      (tester) async {
+        // AUTH-010: Authenticated user redirected to /discover equivalent
+        await launchApp(tester);
 
-      // Confirm starting on WelcomeScreen
-      expect(find.text('Create an account'), findsOneWidget);
-      expect(find.text('Home'), findsNothing);
+        // Confirm starting on WelcomeScreen
+        expect(find.text('Create an account'), findsOneWidget);
+        expect(find.text('Home'), findsNothing);
 
-      // Perform login
-      await loginAsSeededUser(tester);
+        // Perform login
+        await loginAsSeededUser(tester);
 
-      // Now on protected shell with bottom tabs
-      expect(find.text('Home'), findsWidgets);
-      expect(find.text('Feed'), findsWidgets);
-      expect(find.text('Library'), findsWidgets);
-      expect(find.text('Search'), findsWidgets);
-      expect(find.text('Upgrade'), findsWidgets);
+        // Now on protected shell with bottom tabs
+        expect(find.text('Home'), findsWidgets);
+        expect(find.text('Feed'), findsWidgets);
+        expect(find.text('Library'), findsWidgets);
+        expect(find.text('Search'), findsWidgets);
+        expect(find.text('Upgrade'), findsWidgets);
 
-      // WelcomeScreen content gone
-      expect(find.text('Create an account'), findsNothing);
-      expect(find.text('Where artists & fans connect'), findsNothing);
-    });
+        // WelcomeScreen content gone
+        expect(find.text('Create an account'), findsNothing);
+        expect(welcomeTaglineFinder(), findsNothing);
+      },
+    );
 
     testWidgets('protected tabs show user-specific content after login', (
       tester,
@@ -191,7 +190,7 @@ void main() {
 
       // Should be back on WelcomeScreen
       expect(find.text('Create an account'), findsOneWidget);
-      expect(find.text('Where artists & fans connect'), findsOneWidget);
+      expect(welcomeTaglineFinder(), findsOneWidget);
 
       // Not on shell
       expect(find.text('Home'), findsNothing);
@@ -208,6 +207,7 @@ void main() {
       await tapAndSettle(tester, actionButton('Create an account'));
 
       // Complete signup form
+      await tester.enterText(textFormFieldByHint('Username'), 'New Listener');
       await tester.enterText(
         textFormFieldByHint('Email address'),
         TestAccounts.newEmail,
@@ -217,14 +217,16 @@ void main() {
         TestAccounts.newPassword,
       );
       await tester.enterText(
-        textFormFieldByHint('Confirm Password'),
+        textFormFieldByHint('Confirm password'),
         TestAccounts.newPassword,
       );
       await tester.pump();
 
-      await tapAndSettle(tester, actionButton('Sign Up'));
+      await tapAndSettle(tester, actionButton('Create account'));
 
-      // Should navigate to login screen (success message shown)
+      // Current flow requires email verification before returning to login.
+      await pumpUntilVisible(tester, find.text('Verify your email'));
+      await tapAndSettle(tester, textButton('Back to login'));
       await pumpUntilVisible(tester, find.text('Email address'));
 
       // Still not on shell yet (need to complete login)

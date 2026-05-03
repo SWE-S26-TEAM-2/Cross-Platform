@@ -31,7 +31,7 @@ class _UploadsScreenState extends State<UploadsScreen> {
     _userTracks = MockTracks.recentlyPlayedTracks
         .where(
           (t) =>
-              t.artist.toLowerCase() ==
+              t.formattedArtist.toLowerCase() ==
               (widget.currentUser?.userName ?? '').toLowerCase(),
         )
         .toList();
@@ -52,7 +52,7 @@ class _UploadsScreenState extends State<UploadsScreen> {
           .where(
             (t) =>
                 t.title.toLowerCase().contains(query) ||
-                t.artist.toLowerCase().contains(query),
+                t.formattedArtist.toLowerCase().contains(query),
           )
           .toList();
     });

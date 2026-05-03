@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import '../helpers/app_test_helpers.dart';
 
 /// SEARCH BEHAVIOR TESTS
-/// 
+///
 /// Coverage: SRCH-004, SRCH-005, SRCH-006, SRCH-007
 /// These tests verify search edge cases and empty states.
 /// Existing shell_and_search_test.dart covers positive search; this extends coverage.
@@ -49,24 +49,13 @@ void main() {
       await openBottomTab(tester, 'Search');
 
       final searchField = textFieldByHint('Search');
-      final resultsList = find.byType(ListView);
 
       await tester.enterText(searchField, 'xyznonexistent123');
       await tester.pumpAndSettle();
 
-      // Should have no track results in the list
-      // The ListView exists but should have no track children
-      expect(resultsList, findsOneWidget);
+      expect(find.text('No Results found'), findsOneWidget);
 
-      // Verify no mock tracks appear
-      expect(
-        find.descendant(of: resultsList, matching: find.text('luther')),
-        findsNothing,
-      );
-      expect(
-        find.descendant(of: resultsList, matching: find.text("God's Plan")),
-        findsNothing,
-      );
+      expect(find.byType(ListView), findsNothing);
     });
 
     testWidgets('search is case-insensitive', (tester) async {

@@ -25,7 +25,8 @@ void main() {
       expect(textFieldByHint('Search'), findsOneWidget);
 
       await openBottomTab(tester, 'Library');
-      expect(find.text('Library Screen'), findsOneWidget);
+      expect(find.text('Liked Tracks'), findsOneWidget);
+      expect(find.text('Playlists'), findsOneWidget);
 
       await openBottomTab(tester, 'Upgrade');
       expect(
@@ -47,10 +48,12 @@ void main() {
       final searchField = textFieldByHint('Search');
       final resultsList = find.byType(ListView);
       expect(searchField, findsOneWidget);
-      expect(resultsList, findsOneWidget);
 
       await tester.enterText(searchField, 'luther');
+      await tester.pump(const Duration(milliseconds: 600));
       await tester.pumpAndSettle();
+
+      expect(resultsList, findsOneWidget);
 
       expect(
         find.descendant(of: resultsList, matching: find.text('luther')),
@@ -69,6 +72,7 @@ void main() {
       );
 
       await tester.enterText(searchField, 'plan');
+      await tester.pump(const Duration(milliseconds: 600));
       await tester.pumpAndSettle();
 
       expect(
